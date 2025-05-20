@@ -120,3 +120,5 @@ WHERE TYPE = 'T' AND CREATOR = 'MEUESQUEMA';
 Este módulo introduz o catálogo como fonte essencial para o DBA obter informações sobre o ambiente DB2 for z/OS. Recomenda-se o uso frequente destas queries como parte do arsenal de administração e diagnóstico.
 
 ---
+
+*Última atualização: 20/05/2025*
