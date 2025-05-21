@@ -1,79 +1,117 @@
-# 📁 Tuning e Performance no DB2 for z/OS (Detalhado)
+# 🛠️ Tuning e Performance – DB2 for z/OS
+
+Este documento tem como objetivo reunir práticas recomendadas, técnicas e comandos para identificação e resolução de problemas de performance no ambiente DB2 for z/OS, com foco na atuação de um DBA de desenvolvimento.
+
+---
 
 ## 🔍 Identificação de Problemas de Performance
 
 Antes de otimizar, precisamos identificar exatamente onde está o problema. Abaixo estão os principais sintomas, formas de identificação, exemplos de SQLCODEs e como interpretá-los.
 
-### 1. Alto Tempo de Resposta
+---
 
-- **O que é:** Consultas ou transações que demoram muito para retornar resultados, prejudicando o usuário final e o sistema.
-- **Como identificar:**
-  - Monitoramento do tempo médio de resposta no DB2 PM, SMF ou ferramentas de monitoramento.
-  - Logs de aplicações mostrando tempos altos de execução.
-  - EXPLAIN indicando Full Table Scan em tabelas grandes.
-- **Possíveis causas:**  
-  - Falta de índice adequado.  
-  - Estatísticas desatualizadas (RUNSTATS não executado).  
-  - SQL mal escrito (ex: uso excessivo de funções, SELECT *).  
-- **SQLCODE relacionado:**  
-  - Normalmente não gera SQLCODE de erro, mas o SQLCODE 0 indica sucesso com tempo potencialmente alto.
+## 🎯 Objetivos do Tuning
 
-### 2. Excesso de CPU ou I/O
-
-- **O que é:** Processos que consomem muito CPU ou I/O, impactando a performance geral do sistema.
-- **Como identificar:**  
-  - Análise dos gráficos de CPU e I/O via SMF, RMF ou monitoramento DB2 PM.  
-  - IFCID 003 mostra lock waits e I/O elevados.  
-  - Logs do sistema operacional.  
-- **Possíveis causas:**  
-  - Scans completos desnecessários (full table scans).  
-  - Índices mal configurados ou ausentes.  
-  - Consultas com joins ineficientes ou subqueries mal formuladas.  
-- **SQLCODE relacionado:**  
-  - SQLCODE 200 (row not found) pode indicar queries que varrem toda a tabela buscando algo que não existe.  
-  - SQLCODEs negativos indicam erro, não diretamente relacionado a consumo.
-
-### 3. Locking e Deadlocks
-
-- **O que é:** Conflitos entre transações que acessam os mesmos recursos simultaneamente, levando a esperas ou abortos.
-- **Como identificar:**  
-  - IFCID 003 registra informações detalhadas de locks e deadlocks.  
-  - Monitorar eventos de lock wait e deadlock no SMF.  
-  - Mensagens de erro no sistema ou logs da aplicação.  
-- **Erros/SQLCODE comuns:**  
-  - **SQLCODE -911** (Deadlock ou timeout): Transação é terminada para resolver deadlock.  
-  - **SQLCODE -913** (Lock timeout): Tempo limite excedido aguardando lock.  
-- **Ações recomendadas:**  
-  - Revisar lógica de transações para reduzir tempo de locks.  
-  - Ajustar nível de isolamento, quando possível.  
-  - Utilizar acesso por cursores estáticos para minimizar bloqueios.  
-
-### 4. Wait Times Altos
-
-- **O que é:** Tempos excessivos aguardando recursos, como I/O, CPU, locks, ou recursos do sistema.
-- **Como identificar:**  
-  - Monitoramento de performance para identificar tempos de espera (wait times).  
-  - IFCID 014 e 015 podem ajudar a rastrear esperas.  
-- **Possíveis causas:**  
-  - Contenção por locks.  
-  - Saturação de recursos como buffer pools, sort pools.  
-  - Problemas no subsistema de armazenamento.  
-- **SQLCODE:**  
-  - Normalmente não gera SQLCODE específico, mas os problemas refletem em performance degradada.  
-
-### 5. Planos de Acesso Ineficientes
-
-- **O que é:** O otimizador escolhe um caminho de execução que não é o mais eficiente, resultando em scans desnecessários, muitos I/Os e CPU.
-- **Como identificar:**  
-  - Utilizar o EXPLAIN para analisar o plano de execução.  
-  - Observar se o plano usa índices, ou se faz Full Table Scan.  
-- **Indicadores no plano:**  
-  - High-cost estimado.  
-  - High number of rows acessados.  
-- **SQLCODE:**  
-  - Normalmente sucesso (SQLCODE 0), mas com performance ruim.
+- Reduzir o tempo de resposta das queries
+- Minimizar o uso de recursos (CPU, I/O, locks)
+- Garantir escalabilidade e estabilidade das aplicações
+- Reduzir riscos de abends e deadlocks
+- Otimizar custos operacionais com MIPS
 
 ---
+
+## 🔎 Como Identificar Problemas de Performance
+
+### 1. Queries demoradas
+
+- **Sintoma**: Aplicações com lentidão, principalmente em batch ou relatórios
+- **Causa comum**: Falta de índice, acesso em table scan, joins mal otimizados
+- **SQLCODEs relacionados**: 
+  - `-911`: Timeout por lock
+  - `-805`: Plano não encontrado
+  - `-811`: Retorno de múltiplas linhas quando era esperada uma só
+
+### 2. Uso excessivo de CPU
+
+- **Sintoma**: Jobs com uso alto de CPU
+- **Causa comum**: Loops desnecessários, joins cartesianas, má escolha de acesso
+- **Ferramentas úteis**: SMF, monitoramento de pacotes, indicadores de bufferpool
+
+### 3. Lock contention / deadlocks
+
+- **Sintoma**: Jobs ou transações travando
+- **Causa comum**: Falta de commit, escalonamento de locks
+- **SQLCODEs**:
+  - `-911`: Rollback automático por timeout
+  - `-913`: Deadlock detectado
+
+### 4. Falta de plano ou plano desatualizado
+
+- **Sintoma**: Queries que antes eram rápidas agora lentas
+- **Causa comum**: Estatísticas defasadas, alteração estrutural sem rebind
+- **SQLCODEs**:
+  - `-805`: DBRM não encontrado no pacote
+  - `-818`: Timestamp mismatch entre plano e DBRM
+
+---
+
+## 📊 Ferramentas e Comandos Úteis
+
+### RUNSTATS
+
+Atualiza estatísticas de tabelas e índices, fundamentais para o otimizador:
+
+```sql
+RUNSTATS TABLESPACE DB1.TS1 TABLE(ALL) INDEX(ALL);
+```
+
+> 🔎 Execute após cargas, alterações de volume, reorganizações ou antes de REBINDs.
+
+---
+
+### REBIND
+
+Força recompilação de pacotes, refletindo estatísticas atualizadas:
+
+```sql
+REBIND PACKAGE(COLLECTION.PACKAGE1) VALIDATE(BIND) EXPLAIN(YES);
+```
+
+---
+
+### EXPLAIN
+
+Mostra o plano de acesso gerado para instruções SQL. Usado via `EXPLAIN PLAN SET...` ou na BIND/REBIND com `EXPLAIN(YES)`. Tabelas como `PLAN_TABLE` armazenam o resultado.
+
+> ✅ Fundamental para análise de índice utilizado, tipo de join, ordem de execução, acessos sequenciais.
+
+---
+
+### DISPLAY THREAD / MONITOR
+
+Permite monitorar sessões ativas, locks, consumo de recursos:
+
+```sql
+-DISPLAY THREAD(*) TYPE(ACTIVE)
+```
+
+> Combine com IFCIDs via DB2 PM para detalhes aprofundados.
+
+---
+
+## 🧠 Dicas de Especialista
+
+- ✅ Mantenha estatísticas atualizadas com RUNSTATS bem parametrizado.
+- 🚫 Evite funções no WHERE que impeçam uso de índice.
+- 🧮 Avalie a cardinalidade das colunas antes de criar índices.
+- 📉 Cuidado com índices em colunas de baixa seletividade (ex: ‘sexo’, ‘UF’).
+- 📐 Use índices compostos quando os filtros envolvem múltiplas colunas.
+- 🛠️ Prefira `INNER JOIN` explícito, evite subqueries desnecessárias.
+- 🔄 Recompile pacotes periodicamente e após alterações de estrutura ou carga.
+- 📋 Mantenha scripts de tuning versionados com QUERYNO e comentários.
+
+---
+
 
 ## 🛠️ EXPLAIN: Ferramenta Essencial para Análise de Performance
 
