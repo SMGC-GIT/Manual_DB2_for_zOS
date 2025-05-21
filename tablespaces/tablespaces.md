@@ -142,6 +142,22 @@ Consulte os seguintes tópicos na documentação oficial da IBM:
 - *Creating table spaces explicitly:* https://www.ibm.com/docs/en/db2-for-zos/12?topic=spaces-creating-table-explicitly
 - *SYSTABLESPACE catalog table:* https://www.ibm.com/docs/en/db2-for-zos/13.0.0?topic=tables-systablespace
 
+
+- 🔹 [Tablespaces - Conceitos e Tipos](https://www.ibm.com/docs/en/db2-for-zos/13?topic=objects-table-spaces)
+  > Visão geral dos tipos de tablespaces e suas características principais (segmented, partitioned, universal).
+
+- 🔹 [CREATE TABLESPACE - Sintaxe completa](https://www.ibm.com/docs/en/db2-for-zos/13?topic=statements-create-tablespace)
+  > Descrição detalhada de todos os parâmetros do comando `CREATE TABLESPACE`.
+
+- 🔹 [BUFFERPOOL - Como funciona e boas práticas](https://www.ibm.com/docs/en/db2-for-zos/13?topic=spaces-buffer-pool-selection)
+  > Explica a seleção de bufferpool, critérios de desempenho e configuração.
+
+- 🔹 [LOCKSIZE e LOCKMAX](https://www.ibm.com/docs/en/db2-for-zos/13?topic=statements-create-tablespace#sthref596)
+  > Controle de concorrência e bloqueio de dados em tablespaces.
+
+- 🔹 [SEGSIZE, DSSIZE e MAXROWS](https://www.ibm.com/docs/en/db2-for-zos/13?topic=statements-create-tablespace#sthref589)
+  > Explicações sobre tamanhos de segmentação, tamanhos máximos e restrições físicas de armazenamento.
+
 ---
 
 *Última atualização: 20/05/2025*
