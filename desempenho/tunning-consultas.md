@@ -1,5 +1,3 @@
-# tuning_performance_db2.md
-
 # 📁 Tuning e Performance no DB2 for z/OS (Detalhado)
 
 ## 🔍 Identificação de Problemas de Performance
