@@ -255,41 +255,43 @@ END
 
 ---
 
-## ⚙️ CHECK
+## ⚙️ CHECK DATA
 
 ### 🧩 O que é  
-`CHECK` valida consistência entre tabelas e índices.
+`CHECK DATA` é um utilitário do DB2 usado para validar as restrições de integridade referencial (constraints) em tabelas. Ele verifica a consistência dos dados conforme definido por chaves primárias, estrangeiras e restrições definidas.
 
 ### 🎯 Para que serve  
-- Verificar integridade lógica de dados
-- Confirmar se índices refletem o conteúdo da tabela corretamente
+- Validar os relacionamentos entre tabelas (ex: foreign keys)
+- Verificar se os dados de uma tabela seguem as regras de integridade definidas
+- Remover o estado `CHECK PENDING (CHKP)` quando as validações são bem-sucedidas
 
 ### 🕓 Quando usar  
-- Após `REORG` ou `LOAD`
-- Após recovery
-- Em auditorias ou validações pós-job
+- Após utilizar `LOAD` com `ENFORCE NO`
+- Após `REPAIR SET NOCOPYPEND`
+- Após alteração de estrutura com impacto em constraints
+- Quando uma tabela entra em estado `CHECK PENDING`
 
 ### 🚨 Situações que exigem uso  
-- Erros de consistência detectados em aplicação
-- Suspeita de corrupção lógica
-- Tabelas com anomalias em acesso
+- A tabela está inacessível para DML e marcada com `CHKP`
+- É necessário validar os dados para restabelecer integridade
+- Manutenção preventiva após cargas em massa
+
+⚠️ **Importante:** Se houver dados que violam constraints, o utilitário **não remove o estado CHECK PENDING**. Nesse caso, é necessário **corrigir os dados manualmente** ou com ferramentas auxiliares (ex: SPUFI, QMF, UPDATE/DELETE).
 
 ### 💻 Modelo de JCL
 
 ```jcl
-//CHKJOB   JOB ...
-//STEP1    EXEC PGM=DSNUTILB,PARM='DB2A,CHECKUTIL'
+//CHECKDT JOB ...
+//STEP1   EXEC PGM=DSNUTILB,PARM='DB2A'
 //SYSPRINT DD SYSOUT=*
 //SYSIN    DD *
   CHECK DATA TABLESPACE DB2DB01.TSCLIENTE
-  CHECK INDEX (ALL)
-  CHECK LOB TABLESPACE DB2DB01.TSCLIENTE
 /*
-//
-```
 
-### 📚 Referência IBM  
-[CHECK - IBM Documentation](https://www.ibm.com/docs/en/db2-for-zos/13?topic=utilities-check-utility)
+---
+
+### 📚 Referência IBM
+[CHECK DATA - IBM Documentation](https://www.ibm.com/docs/en/db2-for-zos/13?topic=utilities-check-data-utility)
 
 ---
 
