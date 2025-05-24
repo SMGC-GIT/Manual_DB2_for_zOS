@@ -125,6 +125,32 @@ Este módulo introduz o catálogo como fonte essencial para o DBA obter informa�
 
 Consulte os seguintes tópicos na documentação oficial da IBM:
 
+🔹 *Visão geral do catálogo do DB2:* https://www.ibm.com/docs/en/db2-for-zos/13.0.0?topic=system-db2-catalog
+  > Explica a função do catálogo e descreve sua estrutura geral.
+
+🔹 *Tabelas do catálogo do DB2 for z/OS:* https://www.ibm.com/docs/en/db2-for-zos/13?topic=catalog-catalog-tables
+  > Lista completa das tabelas do catálogo com links individuais para cada uma.
+  
+🔹 *Tabela SYSTABLES:* https://www.ibm.com/docs/en/db2-for-zos/13?topic=tables-systables
+  > Detalhes sobre todas as colunas, chaves e restrições da tabela de metadados das tabelas.
+  
+🔹 *Tabela SYSCOLUMNS:* https://www.ibm.com/docs/en/db2-for-zos/13?topic=tables-syscolumns
+  > Fornece informações de definição das colunas de tabelas.
+  
+🔹 *Tabela SYSINDEXES:* https://www.ibm.com/docs/en/db2-for-zos/13?topic=tables-sysindexes
+  > Informações sobre todos os índices definidos no sistema.
+  
+🔹 *Tabela SYSVIEWS:* https://www.ibm.com/docs/en/db2-for-zos/13?topic=tables-sysviews
+  > Armazena o SQL das views definidas no banco.
+
+🔹 *Tabela SYSPACKAGE:* https://www.ibm.com/docs/en/db2-for-zos/13?topic=tables-syspackage
+  > Contém dados sobre os pacotes DBRM compilados no sistema.
+  
+🔹 *Tabela SYSPLAN:* https://www.ibm.com/docs/en/db2-for-zos/13?topic=tables-sysplan
+  > Informações sobre os planos de execução gerados e armazenados.
+
+
+ 
 - 🔹 [Visão geral do catálogo do DB2](https://www.ibm.com/docs/en/db2-for-zos/13.0.0?topic=system-db2-catalog)  
   > Explica a função do catálogo e descreve sua estrutura geral.
 
