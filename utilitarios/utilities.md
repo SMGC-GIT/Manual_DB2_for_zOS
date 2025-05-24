@@ -4,7 +4,7 @@ Este material detalha os principais utilitários do DB2 for z/OS utilizados em a
 
 ---
 
-## 📘 Sumário de Utilitários
+## 📚📚📚 Sumário de Utilitários  📚📚📚
 
 - [RUNSTATS](#runstats)
 - [REORG](#reorg)
