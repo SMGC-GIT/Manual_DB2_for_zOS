@@ -124,8 +124,8 @@ Este módulo introduz o catálogo como fonte essencial para o DBA obter informa�
 ## 📚 Para mais informações técnicas
 
 Consulte os seguintes tópicos na documentação oficial da IBM:
-                                     https://www.ibm.com/docs/en/db2-for-zos/12.0.0?topic=structures-db2-table-spaces
-🔹 *Visão geral do catálogo do DB2:* https://www.ibm.com/docs/en/db2-for-zos/12.0.0?topic=system-db2-catalog
+                                      
+🔹 *Visão geral do catálogo do DB2:* https://www.ibm.com/docs/en/db2-for-zos/13.0.0?topic=system-db2-catalog
   > Explica a função do catálogo e descreve sua estrutura geral.
 
 🔹 *Tabelas do catálogo do DB2 for z/OS:* https://www.ibm.com/docs/en/db2-for-zos/13?topic=catalog-catalog-tables
