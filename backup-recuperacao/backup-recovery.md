@@ -122,7 +122,7 @@ Garantir a **disponibilidade dos dados**, mesmo em cenários de falha (física o
 
 ---
 
-## 🔐 Tipos de Backup no DB2 for z/OS
+## 🔐 DETALHAMENTO  - Tipos de Backup no DB2 for z/OS
 
 O DB2 for z/OS oferece diferentes formas de realizar **backup lógico e físico**, utilizando utilitários específicos ou recursos nativos do sistema. A escolha da abordagem depende do nível de granularidade necessário, do impacto permitido no ambiente e dos objetivos de RTO/RPO definidos.
 
@@ -216,6 +216,120 @@ O utilitário **COPY** é o principal mecanismo nativo de backup no DB2.
 | Snapshot Storage   | Externo (Flash)  | Físico       | Não                    | Replicação e backup rápido |
 
 ---
+
+
+## 💾 DETALHAMENTO - Tipos de Recuperação no DB2 for z/OS
+
+O DB2 for z/OS oferece vários métodos de recuperação para restaurar objetos a um estado consistente. A escolha do tipo ideal depende do tipo de falha, da granularidade do objeto afetado, dos tempos de recuperação exigidos (RTO) e da existência de backups válidos e logs disponíveis (RPO).
+
+---
+
+### 1. RECOVER TOCOPY
+
+- Restaura o objeto usando uma cópia registrada (COPY FULL ou MERGECOPY).
+- A opção mais direta quando há uma cópia full válida e recente.
+
+#### ✅ Detalhes:
+- Aponta para um `COPY` específico registrado na `SYSCOPY`.
+- Não exige leitura de log se usado com `RETAIN` ou `REUSE`.
+- Pode ser usado para:
+  - TABLESPACE
+  - INDEX
+  - PARTITION
+- Pode ser combinada com `REBUILD INDEX` automaticamente.
+
+---
+
+### 2. RECOVER TORBA (Recover to a Log Point)
+
+- Recupera o objeto até uma **log point específica** (RBA ou LRSN).
+- Permite retornar a um estado exato anterior a uma falha lógica ou erro humano (ex: delete acidental).
+
+#### ✅ Detalhes:
+- Necessário:
+  - Cópia válida (COPY FULL ou MERGECOPY)
+  - Arquivos de log disponíveis até o ponto desejado.
+- `TORBA` é utilizado em sistemas com RBA (modo básico).
+- `TOLRSN` é utilizado em sistemas com LRSN (modo data sharing ou extended logging).
+
+---
+
+### 3. RECOVER TOLOGPOINT/TOLRSN
+
+- Similar ao TORBA, mas usando o logpoint hexadecimal.
+- Geralmente usado em ambientes com Data Sharing ou sistemas que utilizam LRSN.
+
+---
+
+### 4. RECOVER TOCOPY/TOLOGPOINT + TORBA em conjunto
+
+- É possível restringir a aplicação de log até um limite (`TORBA`) mesmo quando se parte de uma cópia (`TOCOPY`).
+- Estratégia comum para **recuperações controladas**, onde se quer restaurar até um ponto anterior a uma falha específica.
+
+---
+
+### 5. RECOVER TOCURRENT
+
+- Aplica toda a sequência de logs desde a cópia mais recente até o momento atual.
+- Utilizado para recuperar objetos após falhas físicas, como *media failure*.
+
+#### ✅ Vantagens:
+- Automatiza todo o processo.
+- Requer apenas a cópia e os logs disponíveis no sistema.
+
+---
+
+### 6. RECOVER TABLESPACESET
+
+- Utilizado para recuperar **múltiplos tablespaces logicamente relacionados**, como:
+  - Tabela base e seus índices
+  - Tabelas com LOBs e XML associados
+
+#### ✅ Benefícios:
+- Garante consistência lógica entre objetos interdependentes.
+- Pode ser usado com TORBA, TOCOPY, TOLOGPOINT, etc.
+
+---
+
+### 7. RECOVER POSTPONED
+
+- Aplica operações de recuperação que foram adiadas anteriormente (ex: falhas no LOG APPLY).
+- Utilizado para automatizar *pendências de recuperação* identificadas em falhas anteriores.
+
+---
+
+### 8. RECOVER BACKOUT (com suporte ao UNDO)
+
+- Desfaz alterações de transações específicas, quando o suporte de UNDO via log estiver habilitado.
+- Aplica-se especialmente a ambientes com suporte a `System Time` (temporal tables).
+
+---
+
+### 9. Manual com DSN1COPY
+
+- Restauração física usando o utilitário DSN1COPY.
+- Bit a bit de datasets VSAM.
+- **Risco elevado**, pois não atualiza catálogo nem SYSCOPY.
+- Exige expertise em estruturas internas e mapeamento de OBIDs.
+
+---
+
+### 🔄 Recuperação de Índices
+
+- O DB2 permite usar `RECOVER INDEX` ou usar `REBUILD INDEX`.
+- `REBUILD INDEX` pode ser automático após um RECOVER de TABLESPACE com `INDEXES ALL`.
+
+---
+
+### ⚠️ Considerações Importantes
+
+- A existência de cópias e logs válidos é essencial.
+- `SYSCOPY` e `SYSIBM.SYSLGRNX` são usados para identificar as entradas de cópia e logs.
+- Utilitários como `REPORT RECOVERY` e `REPORT TABLESPACESET` ajudam a identificar pontos recuperáveis.
+- QUIESCE pode ser utilizado para facilitar identificações de consistência e logpoints seguros.
+
+---
+
 
 ### 📚 REFERÊNCIA
 ```jcl
