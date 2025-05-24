@@ -127,7 +127,7 @@ END
 
 ---
 
-## ⚙️ REORG
+## REORG
 
 ### 🧩 O que é  
 `REORG` reorganiza fisicamente os dados em tabelas e índices, removendo fragmentação e melhorando o acesso.
@@ -219,7 +219,7 @@ END
 
 ---
 
-## ⚙️ LOAD
+## LOAD
 
 ### 🧩 O que é  
 `LOAD` insere dados em massa em tabelas DB2 diretamente de datasets externos, reduzindo overhead de logging.
@@ -305,7 +305,7 @@ END
 
 ---
 
-## ⚙️ UNLOAD
+## UNLOAD
 
 ### 🧩 O que é  
 `UNLOAD` exporta dados de tabelas DB2 para datasets externos em formato legível ou binário.
@@ -389,7 +389,7 @@ END
 
 ---
 
-## ⚙️ COPY
+## COPY
 
 ### 🧩 O que é  
 `COPY` é um utilitário do DB2 que faz backup físico de tablespaces e indexspaces, gerando imagens consistentes para recuperação.
@@ -476,7 +476,7 @@ END
 
 ---
 
-## ⚙️ RECOVER
+## RECOVER
 
 ### 🧩 O que é  
 `RECOVER` restaura tablespaces e indexspaces a partir de imagens de backup (`COPY`) e logs de transação, retornando-os a um estado consistente.
@@ -658,7 +658,7 @@ END
 
 ---
 
-## ⚙️ CHECK DATA
+## CHECK DATA
 
 ### 🧩 O que é  
 `CHECK DATA` é um utilitário do DB2 usado para validar as restrições de integridade referencial (constraints) em tabelas. Ele verifica a consistência dos dados conforme definido por chaves primárias, estrangeiras e restrições definidas.
@@ -878,7 +878,7 @@ CHECK INDEX INDEXSPACE DBPROD.TSCLIENTE_IDX
 
 ---
 
-## 🧪 CHECK LOB
+## CHECK LOB
 
 O utilitário `CHECK LOB` é usado para verificar a integridade física e lógica dos objetos LOB (Large Objects) armazenados em tabelas DB2, garantindo que os dados LOB não estejam corrompidos.
 
@@ -971,7 +971,7 @@ CHECK LOB LOBSPACE DBPROD.TSCLIENTE_LOB
 
 ---
 
-## ⚙️ MODIFY RECOVERY
+## MODIFY RECOVERY
 
 ### 🧩 O que é  
 `MODIFY RECOVERY` limpa entradas antigas do catálogo (`SYSCOPY`) e remove imagens de backup desnecessárias.
@@ -1032,7 +1032,7 @@ CHECK LOB LOBSPACE DBPROD.TSCLIENTE_LOB
 
 ---
 
-## ⚙️ DSN1COPY
+## DSN1COPY
 
 ### 🧩 O que é  
 `DSN1COPY` é um utilitário stand-alone que copia fisicamente datasets VSAM (LDS) de tablespaces ou indexspaces, sem passar pelo subsistema DB2. Ele trabalha em nível de dataset, replicando bit a bit o conteúdo.
@@ -1117,7 +1117,7 @@ CHECK LOB LOBSPACE DBPROD.TSCLIENTE_LOB
 
 ---
 
-## ⚙️ QUIESCE
+## QUIESCE
 
 ### 🧩 O que é  
 `QUIESCE` é um utilitário que cria um ponto de consistência (checkpoint) no subsistema DB2 sem interromper as aplicações ativas. Ele garante que todos os buffers modificados (dirty pages) sejam gravados no log, estabelecendo um ponto seguro para operações subsequentes.
@@ -1196,7 +1196,7 @@ CHECK LOB LOBSPACE DBPROD.TSCLIENTE_LOB
 
 ---
 
-## ⚙️ DIAGNOSE
+## DIAGNOSE
 
 ### 🧩 O que é  
 `DIAGNOSE` é um programa stand-alone de diagnóstico avançado do DB2, distribuído com módulos internos de suporte IBM, mas **não faz parte** do conjunto de utilities rotineiros para DBAs em produção. Não é documentado para uso geral e só está disponível quando solicitado pelo suporte IBM.
@@ -1256,7 +1256,7 @@ Embora faça parte dos módulos de diagnóstico do DB2, o `DIAGNOSE` **não é**
 
 ---
 
-## ⚙️ MERGECOPY
+## MERGECOPY
 
 ### 🧩 O que é  
 `MERGECOPY` é um utilitário oficial do DB2 for z/OS que consolida múltiplas cópias incrementais de backup (`COPY INCREMENTAL`) em uma única imagem completa, armazenando o resultado como nova imagem de `SYSCOPY`.
@@ -1326,7 +1326,7 @@ Embora faça parte dos módulos de diagnóstico do DB2, o `DIAGNOSE` **não é**
 
 ---
 
-## ⚙️ REPORT RECOVERY
+## REPORT RECOVERY
 
 ### 🧩 O que é  
 `REPORT RECOVERY` é um utilitário oficial do DB2 for z/OS que gera um inventário das imagens de backup (COPY) e arquivos de log necessários para recuperar um tablespace, indexspace ou conjunto de tablespaces (TABLESPACESET).
@@ -1396,7 +1396,7 @@ Embora faça parte dos módulos de diagnóstico do DB2, o `DIAGNOSE` **não é**
 
 ---
 
-## ⚙️ REPORT TABLESPACESET
+## REPORT TABLESPACESET
 
 ### 🧩 O que é  
 `REPORT TABLESPACESET` é um utilitário oficial do DB2 for z/OS que gera um relatório dos objetos (tablespaces, indexspaces, LOB e aux tables) que compõem um conjunto lógico de tablespaces.
@@ -1459,7 +1459,7 @@ Embora faça parte dos módulos de diagnóstico do DB2, o `DIAGNOSE` **não é**
 
 ---
 
-## ⚙️ DSN1LOGP
+## DSN1LOGP
 
 ### 🧩 O que é  
 `DSN1LOGP` é um programa stand-alone de diagnóstico do DB2 for z/OS, utilizado para ler e imprimir registros de log de transação em formato legível. Não faz parte do conjunto de utilitários rotineiros de DBA.
@@ -1525,7 +1525,7 @@ O DSN1LOGP não é um utilitário de rotina para DBAs, mas um programa de diagn�
 
 ---
 
-## ⚙️ DSN1COPY
+## DSN1COPY
 
 ### 🧩 O que é  
 `DSN1COPY` é um utilitário stand-alone do DB2 for z/OS que realiza cópia física bit a bit de datasets VSAM (LDS) de tablespaces ou indexspaces, independentemente do subsistema DB2.
@@ -1593,7 +1593,7 @@ Embora poderoso, o DSN1COPY deve ser usado com cautela e apenas em cenários de 
 
 ---
 
-### ⚙️ DSN1PRNT
+## DSN1PRNT
 
 ### 🧩 O que é  
 `DSN1PRNT` é um utilitário stand-alone do DB2 for z/OS usado para imprimir o conteúdo físico de datasets VSAM (LDS) de tablespaces ou indexspaces em formato hexadecimal e ASCII, permitindo análise forense de páginas de dados.
