@@ -451,6 +451,120 @@ O gerenciamento de backups no DB2 for z/OS não se limita a armazenar cópias �
 | Recuperação de testes                             | Utilizar `DSN1COPY` para restauração em ambientes dev  |
 
 ---
+---
+
+### 📋 Plano Automatizado de Retenção de Backups
+
+A seguir, um modelo completo e profissional de estratégia automatizada de retenção de backups, incluindo:
+
+- Política de retenção (com base em idade e número de cópias)
+- Execução automatizada com `MODIFY RECOVERY`
+- Auditoria semanal com `REPORT RECOVERY`
+- Organização e controle de logs e datasets
+- Templates de JCL para agendamento no JES2/3 ou scheduler corporativo (Control-M, OPC, etc.)
+
+---
+
+### 🧠 Política de Retenção Recomendada (Exemplo Prático)
+
+| Tipo de Backup             | Retenção Recomendada     |
+|---------------------------|--------------------------|
+| COPY FULL                 | 15 dias                  |
+| COPY INCREMENTAL          | 7 dias                   |
+| MERGECOPY                 | 30 dias (se aplicável)   |
+| LOGs Arquivados           | 30 dias (mínimo)         |
+| DSN1COPY (ambiente teste) | Retido por ambiente      |
+
+> ⚠️ *A retenção deve respeitar o período mínimo necessário para recuperação segura (RPO) e ser ajustada conforme o SLA da empresa.*
+
+---
+
+### 🛠️ Utilitário: MODIFY RECOVERY
+
+#### Exemplo 1: Excluir cópias com mais de 15 dias
+
+```jcl
+//MODRECOV JOB (ACCT),'MODIFY COPY',CLASS=A,MSGCLASS=X
+//STEP1 EXEC DSNUPROC,SYSTEM=DB2P,UID='MODRCV01',UTPROC=''
+//SYSIN    DD *
+  MODIFY RECOVERY TABLESPACE DBX.TSCLIENT
+     DELETE YES
+     AGE 15
+/*
+//SYSPRINT DD SYSOUT=*
+//SYSUDUMP DD SYSOUT=*
+```
+
+#### Exemplo 2: Excluir entradas baseadas em data (backup feito antes de 2024-12-01)
+
+```jcl
+//MODRECOV JOB (ACCT),'MODIFY COPY',CLASS=A,MSGCLASS=X
+//STEP1 EXEC DSNUPROC,SYSTEM=DB2P,UID='MODRCV02',UTPROC=''
+//SYSIN    DD *
+  MODIFY RECOVERY TABLESPACE DBX.TSCLIENT
+     DELETE YES
+     DATE 2024-12-01
+/*
+//SYSPRINT DD SYSOUT=*
+```
+
+---
+
+### 📑 Utilitário: REPORT RECOVERY (Auditoria Semanal)
+
+```jcl
+//REPRCOV  JOB (ACCT),'AUDITORIA BACKUP',CLASS=A,MSGCLASS=X
+//STEP1 EXEC DSNUPROC,SYSTEM=DB2P,UID='REPRCV01',UTPROC=''
+//SYSIN    DD *
+  REPORT RECOVERY
+    TABLESPACE DBX.*
+    LIMIT 30
+/*
+//SYSPRINT DD SYSOUT=*
+```
+
+> 🔎 Gera um relatório dos objetos que **ainda têm caminho de recuperação válido** com base nas cópias disponíveis e nos logs arquivados.
+
+---
+
+### 📊 Relatório de SYSCOPY (Query de Apoio)
+
+```sql
+SELECT DBNAME, TSNAME, TIMESTAMP, ICTYPE, DSNAME
+FROM SYSIBM.SYSCOPY
+WHERE DBNAME = 'DBX'
+  AND TSNAME = 'TSCLIENT'
+ORDER BY TIMESTAMP DESC;
+```
+
+> Use como apoio para verificação manual ou construção de dashboards internos.
+
+---
+
+### 🧰 Outras Recomendações
+
+- 🚨 Sempre rodar `REPORT RECOVERY` antes de `MODIFY RECOVERY`.
+- 🎯 Após `REORG LOG NO`, garanta uma nova `COPY`.
+- 📁 Verifique se os logs arquivados estão disponíveis (não eliminados precocemente).
+- 📦 Utilize **GDG** para backups físicos: `COPY001.GDG`, `COPY002.GDG`, etc.
+- 🔄 Use `MERGECOPY` periodicamente para consolidar backups incrementais.
+
+
+---
+
+## ✅ Conclusão
+
+A automação da retenção de backups e a limpeza de `SYSCOPY` são fundamentais para garantir:
+
+- Catálogo limpo e eficiente
+- Redução no uso de disco e fitas
+- Cumprimento de SLAs de recuperação
+- Maior confiança nas operações de `RECOVER`
+
+> Um DBA bem preparado não só faz o backup — ele **garante que a recuperação aconteça de forma rápida e segura.**
+
+
+---
 
 ### 📚 Referência IBM
 
