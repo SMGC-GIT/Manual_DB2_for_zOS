@@ -151,6 +151,162 @@ O dimensionamento adequado de uma tabela é fundamental para garantir desempenho
 
 ---
 
+## 🛠️ Exemplos Práticos: Criação de Tabelas no Db2 for z/OS
+
+Esta seção apresenta exemplos reais e comentados de como estruturar tabelas em Db2 for z/OS, considerando padrões técnicos, desempenho, segurança e escalabilidade.
+
+---
+
+### 📋 Exemplo 1: Tabela Básica com PK, FK, Index e Comentários
+
+```sql
+CREATE TABLE CORP.CLIENTES (
+    ID_CLIENTE     INTEGER         NOT NULL,
+    NOME           VARCHAR(100)    NOT NULL,
+    CPF            CHAR(11)        NOT NULL,
+    DT_NASCIMENTO  DATE,
+    EMAIL          VARCHAR(255),
+    TELEFONE       CHAR(11),
+    ID_CIDADE      INTEGER         NOT NULL,
+    DT_INCLUSAO    TIMESTAMP       NOT NULL DEFAULT CURRENT TIMESTAMP,
+    CONSTRAINT PK_CLIENTES PRIMARY KEY (ID_CLIENTE),
+    CONSTRAINT FK_CLIENTES_CIDADES FOREIGN KEY (ID_CIDADE)
+        REFERENCES CORP.CIDADES(ID_CIDADE)
+);
+
+-- Índice adicional para acelerar busca por CPF
+CREATE INDEX CORP.IX_CLIENTES_CPF ON CORP.CLIENTES (CPF);
+
+-- Comentários descritivos
+COMMENT ON TABLE  CORP.CLIENTES IS 'Cadastro de clientes da empresa.';
+COMMENT ON COLUMN CORP.CLIENTES.ID_CLIENTE IS 'Identificador único do cliente.';
+COMMENT ON COLUMN CORP.CLIENTES.ID_CIDADE IS 'Chave estrangeira para a cidade do cliente.';
+```
+
+🧩 **Melhorias possíveis:**
+- Se a tabela crescer rapidamente, considere particionamento por crescimento (PBG).
+- Atente ao tamanho dos campos `VARCHAR` (use o menor necessário).
+
+---
+
+### 🧱 Exemplo 2: Tabela com Particionamento por Faixa (PBR)
+
+```sql
+CREATE TABLE CORP.VENDAS (
+    ID_VENDA       BIGINT         NOT NULL,
+    ID_CLIENTE     INTEGER        NOT NULL,
+    VALOR_TOTAL    DECIMAL(12,2)  NOT NULL,
+    DT_VENDA       DATE           NOT NULL,
+    MEIO_PAGAMENTO CHAR(3),
+    DT_INCLUSAO    TIMESTAMP      NOT NULL DEFAULT CURRENT TIMESTAMP,
+    CONSTRAINT PK_VENDAS PRIMARY KEY (ID_VENDA),
+    CONSTRAINT FK_VENDAS_CLIENTE FOREIGN KEY (ID_CLIENTE)
+        REFERENCES CORP.CLIENTES(ID_CLIENTE)
+)
+IN CORP.TS_VENDAS_PBR;
+
+-- Definição do tablespace particionado por faixa
+CREATE TABLESPACE TS_VENDAS_PBR
+    IN CORPDB
+    USING STOGROUP STG_DADOS
+    PRIQTY 720 SECQTY 240
+    LOCKSIZE ROW
+    SEGSIZE 64
+    DSSIZE 4G
+    BUFFERPOOL BP32K
+    PARTITION BY RANGE (DT_VENDA) (
+        PART 01 ENDING ('2021-12-31'),
+        PART 02 ENDING ('2022-12-31'),
+        PART 03 ENDING ('2023-12-31'),
+        PART 04 ENDING ('2024-12-31'),
+        PART 05 ENDING (MAXVALUE)
+    );
+```
+
+🧠 **Boas práticas aplicadas:**
+- Particionamento baseado em data: comum em sistemas de vendas, permite manutenção por ano.
+- `DSSIZE` definido por partição (até 4 GB cada).
+- `BUFFERPOOL` 32K escolhido para registrar linhas largas e cargas massivas.
+
+---
+
+### 📊 Exemplo 3: Tabela com Particionamento por Crescimento (PBG)
+
+```sql
+CREATE TABLE CORP.LOG_PROCESSOS (
+    ID_LOG         BIGINT         NOT NULL GENERATED ALWAYS AS IDENTITY,
+    NOME_PROCESSO  VARCHAR(100),
+    STATUS         CHAR(1),
+    MENSAGEM       VARCHAR(500),
+    DT_EVENTO      TIMESTAMP      NOT NULL DEFAULT CURRENT TIMESTAMP,
+    CONSTRAINT PK_LOG_PROCESSOS PRIMARY KEY (ID_LOG)
+)
+IN CORP.TS_LOG_PBG;
+
+-- Tablespace particionado por crescimento
+CREATE TABLESPACE TS_LOG_PBG
+    IN CORPDB
+    USING STOGROUP STG_LOG
+    PRIQTY 720 SECQTY 240
+    LOCKSIZE ROW
+    SEGSIZE 64
+    DSSIZE 2G
+    MAXPARTITIONS 20
+    BUFFERPOOL BP8K
+    DEFINE YES
+    PARTITION BY GROWTH;
+```
+
+⚙️ **Motivos para usar PBG:**
+- Tabela de log tende a crescer indefinidamente.
+- Não exige planejamento de valores de particionamento.
+- Cresce automaticamente até o limite de partições.
+
+---
+
+### 📁 Exemplo 4: Tabela Temporária Declarada (Declares Global Temporary Table)
+
+```sql
+DECLARE GLOBAL TEMPORARY TABLE SESSION.ITENS_TEMP (
+    ID_ITEM     INTEGER,
+    NOME        VARCHAR(100),
+    VALOR_UNIT  DECIMAL(10,2),
+    QTDE        INTEGER
+)
+ON COMMIT DELETE ROWS
+NOT LOGGED;
+
+-- Comentário: usada em processamento em lote intermediário
+```
+
+🔐 **Observações:**
+- Os dados só existem durante a sessão.
+- Ideal para processamento intermediário sem impacto em tabelas permanentes.
+- `NOT LOGGED` evita overhead desnecessário.
+
+---
+
+### 🔄 Exemplo 5: Alterando Tabelas (Inclusão de Coluna e Comentário)
+
+```sql
+ALTER TABLE CORP.CLIENTES
+    ADD COLUMN IND_ATIVO CHAR(1) DEFAULT 'S' NOT NULL;
+
+COMMENT ON COLUMN CORP.CLIENTES.IND_ATIVO IS 'Indicador de cliente ativo (S/N).';
+```
+
+---
+
+📎 **Recomendações Gerais:**
+
+- Use `VARCHAR` apenas quando a variabilidade de tamanho for relevante.
+- Utilize `TIMESTAMP` com `DEFAULT CURRENT TIMESTAMP` para rastreabilidade.
+- Prefira `BIGINT` para chaves que podem ultrapassar 2 bilhões de registros.
+- Mantenha consistência no uso de nomes, comentários e regras de integridade.
+- Sempre crie `TABLESPACE` com tamanho e particionamento adequado à volumetria.
+
+---
+
 📌 **Após essa análise, utilize os prompts para gerar os scripts com mais precisão.**
 
 ---
