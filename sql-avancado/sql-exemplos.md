@@ -433,6 +433,64 @@ SELECT T.NAME AS TABELA,
 
 ---
 
+### ⏳ 6. Consultas que Monitoram Tempo de Execução
+
+📌 **Objetivo:** Identificar as 10 últimas queries executadas com maior tempo de CPU, úteis para análise de gargalos.
+
+```sql
+SELECT SUBSTR(STMT_TEXT, 1, 80) AS STMT,
+       ELAPSED_TIME_TOTAL / 1000 AS TEMPO_TOTAL_MS,
+       CPU_TIME_TOTAL / 1000 AS CPU_TOTAL_MS,
+       NUM_EXECUTIONS
+  FROM SYSIBMADM.TOP_DYNAMIC_SQL
+ ORDER BY ELAPSED_TIME_TOTAL DESC
+ FETCH FIRST 10 ROWS ONLY;
+```
+
+📋 **Resultado Esperado:**
+
+| STMT                                  | TEMPO_TOTAL_MS | CPU_TOTAL_MS | NUM_EXECUTIONS |
+|---------------------------------------|----------------|--------------|----------------|
+| SELECT * FROM FATURAMENTO WHERE ...   | 18891          | 10321        | 5              |
+| DELETE FROM LOG_ACESSO WHERE ...      | 15422          | 9210         | 3              |
+| UPDATE CLIENTES SET ...               | 14230          | 9100         | 2              |
+
+📚 **Referência:** [TOP_DYNAMIC_SQL - IBM Docs](https://www.ibm.com/docs/en/db2-for-zos/latest?topic=views-top-dynamic-sql)
+
+---
+
+### 🔐 7. Objetos sem REORG desde Última Atualização
+
+📌 **Objetivo:** Verificar quais objetos não passaram por REORG após sua última modificação. Pode indicar fragmentação e degradação de performance.
+
+```sql
+SELECT NAME AS TABELA,
+       CREATOR AS ESQUEMA,
+       STATS_TIMESTAMP,
+       REORGLASTTIME,
+       CASE
+         WHEN REORGLASTTIME IS NULL THEN 'NUNCA'
+         WHEN REORGLASTTIME < STATS_TIMESTAMP THEN 'REORG NECESSÁRIO'
+         ELSE 'OK'
+       END AS STATUS_REORG
+  FROM SYSIBM.SYSTABLESPACESTATS
+ ORDER BY REORGLASTTIME NULLS FIRST
+ FETCH FIRST 10 ROWS ONLY;
+```
+
+📋 **Resultado Esperado:**
+
+| TABELA        | ESQUEMA  | STATS_TIMESTAMP     | REORGLASTTIME       | STATUS_REORG     |
+|---------------|----------|---------------------|---------------------|------------------|
+| TRANSACOES    | FINADM   | 2024-11-10-14.00.00 | NULL                | NUNCA            |
+| VENDAS_MENSAL | ERP      | 2025-01-05-08.00.00 | 2024-12-01-03.20.00 | REORG NECESSÁRIO |
+| CLIENTES      | DBUSER01 | 2025-05-01-10.30.00 | 2025-05-01-10.35.00 | OK               |
+
+📚 **Referência:** [SYSTABLESPACESTATS - IBM Docs](https://www.ibm.com/docs/en/db2-for-zos/latest?topic=catalog-systablespacestats)
+
+---
+
+
 ## ✅ Boas Práticas de Execução
 
 - Sempre utilize `WITH UR` em ambientes produtivos para evitar locks desnecessários.
