@@ -29,7 +29,6 @@ Inclui **descrições objetivas**, **planos (pago ou gratuito)** e **casos de us
 - [🖌️ Edição de Imagem (Image Editing)](#-edição-de-imagem-image-editing)
 - [📚 Conteúdo Gratuito sobre IA](#-conteúdo-gratuito-sobre-ia)
 - [✅ Contribuindo com este Repositório](#-contribuindo-com-este-repositório)
-- [📄 Licença](#-licença)
 
 ---
 
@@ -186,13 +185,6 @@ Sinta-se à vontade para sugerir novas ferramentas, atualizar descrições ou re
 - Abra uma *issue* com sua sugestão ou dúvida
 - Faça um *fork* e envie um *Pull Request*
 - Compartilhe com colegas que também atuam com Mainframe
-
----
-
-## 📄 Licença
-
-Este repositório está sob a Licença MIT.  
-Consulte o arquivo [LICENSE](./LICENSE) para mais detalhes.
 
 ---
 
