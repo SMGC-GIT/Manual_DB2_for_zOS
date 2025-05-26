@@ -284,6 +284,165 @@ SELECT NAME AS TABELA,
 
 ---
 
+
+## 🎯 16. Exemplos Práticos com Resultados Esperados
+
+Consultas avançadas otimizadas para o dia a dia do DBA, com amostras de resultados esperados e links de referência para aprofundamento.
+
+---
+
+### 🔍 1. Tabelas sem Índices
+
+📌 **Objetivo:** Encontrar tabelas que não possuem nenhum índice associado. Pode indicar problemas de performance em acessos.
+
+```sql
+SELECT A.NAME AS TABELA,
+       A.CREATOR AS ESQUEMA
+  FROM SYSIBM.SYSTABLES A
+ WHERE A.TYPE = 'T'
+   AND NOT EXISTS (
+       SELECT 1
+         FROM SYSIBM.SYSINDEXES B
+        WHERE B.TBCREATOR = A.CREATOR
+          AND B.TBNAME = A.NAME
+       )
+ ORDER BY A.CREATOR, A.NAME
+ WITH UR;
+```
+
+📋 **Resultado Esperado:**
+
+| TABELA     | ESQUEMA   |
+|------------|-----------|
+| CLIENTES   | DBUSER01  |
+| AUDITORIA  | LOGSADM   |
+| TEMP_PEDID | TEMPZONE  |
+
+📚 **Referência:** [SYSINDEXES - IBM Docs](https://www.ibm.com/docs/en/db2-for-zos/latest?topic=catalog-sysindexes)
+
+---
+
+### 📊 2. Tabelas com Maior Volume de Registros
+
+📌 **Objetivo:** Listar as tabelas com maior quantidade de registros (estatísticas coletadas via RUNSTATS).
+
+```sql
+SELECT NAME AS TABELA,
+       CREATOR AS ESQUEMA,
+       CARDF AS NUMERO_LINHAS
+  FROM SYSIBM.SYSTABLES
+ WHERE TYPE = 'T'
+   AND CARDF IS NOT NULL
+ ORDER BY CARDF DESC
+ FETCH FIRST 10 ROWS ONLY
+ WITH UR;
+```
+
+📋 **Resultado Esperado:**
+
+| TABELA       | ESQUEMA   | NUMERO_LINHAS |
+|--------------|-----------|----------------|
+| TRANSACOES   | FINADM    | 25.439.882     |
+| FATURAMENTO  | FINADM    | 12.110.024     |
+| CLIENTES     | DBUSER01  | 1.380.922      |
+
+📚 **Referência:** [SYSTABLES - IBM Docs](https://www.ibm.com/docs/en/db2-for-zos/latest?topic=catalog-systables)
+
+---
+
+### 🛠️ 3. Tabelas em Estado CHECK PENDING
+
+📌 **Objetivo:** Identificar tabelas que exigem verificação via `CHECK DATA`.
+
+```sql
+SELECT NAME AS TABELA,
+       CREATOR AS ESQUEMA,
+       CHECKPEND AS ESTADO_CHECKPENDING
+  FROM SYSIBM.SYSTABLES
+ WHERE CHECKPEND = 'Y'
+ ORDER BY CREATOR, NAME
+ WITH UR;
+```
+
+📋 **Resultado Esperado:**
+
+| TABELA     | ESQUEMA | ESTADO_CHECKPENDING |
+|------------|---------|---------------------|
+| FAT_CUSTOS | FINADM  | Y                   |
+| LOG_ERRO   | APPLOG  | Y                   |
+
+📚 **Referência:** [CHECKPEND Column - IBM Docs](https://www.ibm.com/docs/en/db2-for-zos/latest?topic=columns-checkpend)
+
+---
+
+### 🔗 4. Relação de Tabelas Filhas sem Tabela Pai (Referential Orphans)
+
+📌 **Objetivo:** Detectar tabelas que têm FK, mas a tabela referenciada não existe (ou foi removida incorretamente).
+
+```sql
+SELECT R.TBCREATOR AS ESQUEMA_FILHA,
+       R.TBNAME AS TABELA_FILHA,
+       R.REFTBCREATOR AS ESQUEMA_PAI,
+       R.REFTBNAME AS TABELA_PAI
+  FROM SYSIBM.SYSRELS R
+ WHERE NOT EXISTS (
+       SELECT 1
+         FROM SYSIBM.SYSTABLES T
+        WHERE T.CREATOR = R.REFTBCREATOR
+          AND T.NAME = R.REFTBNAME
+       )
+ ORDER BY R.TBCREATOR, R.TBNAME
+ WITH UR;
+```
+
+📋 **Resultado Esperado:**
+
+| ESQUEMA_FILHA | TABELA_FILHA | ESQUEMA_PAI | TABELA_PAI |
+|---------------|---------------|--------------|-------------|
+| LOGAPP        | HIST_ACESSO   | APPADM       | USUARIOS    |
+| CONTROLE      | MOV_ESTOQUE   | ERP          | PRODUTOS    |
+
+📚 **Referência:** [SYSRELS - IBM Docs](https://www.ibm.com/docs/en/db2-for-zos/latest?topic=catalog-sysrels)
+
+---
+
+### 🧾 5. Todas as Tabelas de um Tablespace
+
+📌 **Objetivo:** Identificar todas as tabelas associadas a determinado tablespace.
+
+```sql
+SELECT T.NAME AS TABELA,
+       T.CREATOR AS ESQUEMA,
+       T.DBNAME,
+       T.TSNAME
+  FROM SYSIBM.SYSTABLES T
+ WHERE T.DBNAME = 'DBFINANCA'
+   AND T.TSNAME = 'TS_CONTABIL'
+ ORDER BY T.CREATOR, T.NAME
+ WITH UR;
+```
+
+📋 **Resultado Esperado:**
+
+| TABELA      | ESQUEMA | DBNAME     | TSNAME       |
+|-------------|---------|------------|--------------|
+| BALANCETE   | FINADM  | DBFINANCA  | TS_CONTABIL  |
+| LANCAMENTOS | FINADM  | DBFINANCA  | TS_CONTABIL  |
+
+📚 **Referência:** [SYSTABLES - IBM Docs](https://www.ibm.com/docs/en/db2-for-zos/latest?topic=catalog-systables)
+
+---
+
+## ✅ Boas Práticas de Execução
+
+- Sempre utilize `WITH UR` em ambientes produtivos para evitar locks desnecessários.
+- Valide estatísticas com `RUNSTATS` antes de confiar nos valores de `CARDF`.
+- Use *`FETCH FIRST n ROWS ONLY`* quando for necessário limitar amostras com performance.
+- Personalize consultas substituindo nomes genéricos (ex: `'TS_CONTABIL'`, `'DBFINANCA'`) conforme seu ambiente.
+
+---
+
+
 ## 📚 Referências
 
 - [IBM Db2 for z/OS Documentation](https://www.ibm.com/docs/en/db2-for-zos/)
