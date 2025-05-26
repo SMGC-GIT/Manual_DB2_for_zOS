@@ -1,10 +1,7 @@
-# 🧠 Guia Prático de IAs por Funcionalidade ( Para uso dos DBA's )
-
+# 🧠 IAs por Funcionalidade
+##   *Um guia prático para auxiliar os DBA's*
 > Ferramentas de Inteligência Artificial organizadas por categoria, com foco em aplicações úteis para DBAs de **DB2 for z/OS** e profissionais que atuam com **Mainframe**.
 
-![GitHub last commit](https://img.shields.io/github/last-commit/seu-usuario/seu-repo?color=purple)
-![GitHub Repo stars](https://img.shields.io/github/stars/seu-usuario/seu-repo)
-![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
 
 ---
 
