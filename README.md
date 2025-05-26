@@ -12,13 +12,14 @@ Este repositório é um guia técnico e prático para profissionais que atuam co
 |--------|-----------|
 | [📁 Catálogo DB2](catalogo/catalogo-db2.md) | Estrutura, tabelas e queries úteis do catálogo do sistema |
 | [📁 Tablespaces](tablespaces/tablespaces.md) | Organização física dos dados e segmentação |
+| [📁 Tables](tables/tables.md) | Organização dentro do tablespace |
 | [📁 Estatísticas e Otimizador](estatisticas/estatisticas.md) | Uso de RUNSTATS, estatísticas e tuning do otimizador |
 | [📁 Tuning e Performance](desempenho/tunning-consultas.md) | Diagnóstico e otimização de queries |
 | [📁 Utilitários DB2](utilitarios/utilities.md) | Comandos como REORG, CHECK, COPY, LOAD etc. |
 | [📁 Backup e Recuperação](backup-recuperacao/backup-recovery.md) | Estratégias de segurança e restore |
 | [📁 Syscopy](syscopy/syscopy.md) | Detalhes do catálogo  - seção especial |
 | [📁 SQL Avançado](sql-avancado/sql-exemplos.md) | Consultas avançadas aplicáveis ao dia a dia |
-| [📁 Lista de IA's](ia/ia-para-dba.md) | Lista de IA's para consultas pelos DBA's 
+| [📁 Lista de IA's](ia/ia-para-dba.md) | Lista de IA's para consultas pelos DBA's | 
 
 
 ---
