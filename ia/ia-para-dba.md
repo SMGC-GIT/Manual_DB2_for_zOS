@@ -185,3 +185,18 @@ Sinta-se à vontade para sugerir novas ferramentas, atualizar descrições ou re
 
 ---
 
+## 📌 Licença
+
+Este projeto é de uso pessoal/profissional aberto. Utilize, adapte e compartilhe com responsabilidade.
+
+---
+
+## 📌 Créditos e Contato
+
+> Criado por **SILVIA GUIMARÃES** como parte de portfólio de projetos.
+
+Para dúvidas ou sugestões, entre em contato comigo:
+- **E-mail:** (sguimaraes1004@gmail.com)
+- **Redes Sociais: [LinkedIn](https://www.linkedin.com/in/silvia-maria-guimar%C3%A3es-costa-3a01b423b)**
+
+---
