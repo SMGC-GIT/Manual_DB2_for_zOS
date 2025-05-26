@@ -1,4 +1,4 @@
-# Manual Básico DB2 for zOS
+# Manual Básico DB2 for z/OS
 
 🗂️ **Manual de Boas Práticas para DBAs de Desenvolvimento – DB2 for z/OS**
 
