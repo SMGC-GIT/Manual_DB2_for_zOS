@@ -1,4 +1,4 @@
-## ⚡ Dicas de Performance para DBAs em DB2 – Parte 1: SQL e Acesso a Dados
+## ⚡ Dicas de Performance para DBAs em DB2 – Parte 1
 
 ### 📌 1. **Evite o uso de `SELECT *`**
 
