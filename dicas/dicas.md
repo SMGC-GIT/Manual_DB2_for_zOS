@@ -183,8 +183,8 @@ SELECT NOME, CPF FROM CLIENTES WITH UR;
 ```
 
 **🔗 Referência IBM:**  
-[Db2 concurrency control](https://www.ibm.com/docs/en/db2-for-zos/12.0.0?topic=control-concurrency)
-
+[Db2 concurrency control](https://www.ibm.com/docs/en/db2-for-zos/13.0.0?topic=concurrency-controls-locking)
+ 
 ---
 
 > ⚠️ **Importante:** Sempre valide otimizações com base no ambiente, volume de dados, tipo de workload e histórico de acessos. Uma melhoria em um ambiente pode ser um gargalo em outro.
