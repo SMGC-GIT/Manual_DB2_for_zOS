@@ -19,6 +19,7 @@ Este repositório é um guia técnico e prático para profissionais que atuam co
 | [📁 Backup e Recuperação](backup-recuperacao/backup-recovery.md) | Estratégias de segurança e restore |
 | [📁 Syscopy](syscopy/syscopy.md) | Detalhes do catálogo  - seção especial |
 | [📁 Queries SQL](sql-avancado/sql-exemplos.md) | Consultas avançadas aplicáveis ao dia a dia |
+| [📁 Dicas](dicas/dicas.md) | Dicas aplicáveis ao dia a dia para queries e performance |
 | [📁 Lista de IA's](ia/ia-para-dba.md) | Lista de IA's para consultas pelos DBA's | 
 
 
