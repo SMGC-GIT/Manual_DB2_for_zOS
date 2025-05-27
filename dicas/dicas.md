@@ -168,40 +168,38 @@ Agende `RUNSTATS` em janelas de baixa carga ou após grandes cargas de dados.
 
 ### 📌 8. **Evite LOCKs desnecessários e contenção**
 
-**❗ Por quê?**  
-- LOCKs mal gerenciados causam *waits*, *deadlocks*, *timeout* e degradação de performance.
+**❗ Por que isso impacta a performance?**  
+LOCKs mal gerenciados causam *waits*, *deadlocks*, *timeouts* e degradação geral da performance. Quanto mais tempo uma transação mantém os recursos travados, maior o risco de concorrência e gargalos.
 
-**Dicas:**
-- Use `WITH UR` (Uncommitted Read) para consultas de leitura em dados estáveis.
-- Para aplicações OLTP, minimize o tempo de transação.
-- Evite SELECTs longos em tabelas ativamente atualizadas.
+**💡 Dicas práticas:**
+- Use `WITH UR` (Uncommitted Read) para consultas somente leitura em tabelas estáveis.
+- Em aplicações OLTP, mantenha as transações o mais curtas possível.
+- Evite SELECTs muito longos ou complexos em tabelas que estão sendo frequentemente atualizadas.
 
 **🔍 Exemplo:**
 ```sql
--- ✅ Leitura sem LOCK em ambientes de leitura apenas
+-- ✅ Leitura sem bloqueio, ideal para relatórios ou consultas não críticas
 SELECT NOME, CPF FROM CLIENTES WITH UR;
 ```
 
 **🔗 Referência IBM:**  
-[Db2 concurrency control](https://www.ibm.com/docs/en/db2-for-zos/13.0.0?topic=concurrency-controls-locking)
- 
----
-
-> ⚠️ **Importante:** Sempre valide otimizações com base no ambiente, volume de dados, tipo de workload e histórico de acessos. Uma melhoria em um ambiente pode ser um gargalo em outro.
+[Db2 concurrency control – IBM Docs](https://www.ibm.com/docs/en/db2-for-zos/13.0.0?topic=concurrency-controls-locking)
 
 ---
 
-
-> **💡 Dica bônus:** Mantenha estatísticas atualizadas usando RUNSTATS com frequência adequada e com as opções corretas (`WITH DISTRIBUTION`, `INDEXES ALL`, etc.) para garantir a escolha de planos eficientes pelo otimizador do DB2.
-
----
-
-**🔗 Referência IBM:**  
-:contentReference[oaicite:84]{index=84}:contentReference[oaicite:86]{index=86}
+> ⚠️ **Importante:**  
+> Sempre valide otimizações com base no contexto: volume de dados, tipo de workload, índices existentes e padrões de acesso. Uma estratégia que melhora performance em um cenário pode prejudicar em outro.
 
 ---
 
-> ⚠️ **Importante:** :contentReference[oaicite:88]{index=88}:contentReference[oaicite:90]{index=90}
+> 💡 **Dica bônus:**  
+> Mantenha estatísticas atualizadas com `RUNSTATS` utilizando opções como `WITH DISTRIBUTION`, `INDEXES ALL`, `FREQVAL`, entre outras. Isso garante que o otimizador escolha os melhores planos de execução possíveis.
+
+**🔗 Referência adicional:**  
+[RUNSTATS Utility – IBM Docs](https://www.ibm.com/docs/en/db2-for-zos/13.0.0?topic=utilities-runstats-utility)
+
+---
+
 
 ---
 
