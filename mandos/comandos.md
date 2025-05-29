@@ -1,11 +1,4 @@
-
-# Manual de Boas Práticas para DB2 for z/OS
-
-## Introdução
-
-Este manual fornece um guia prático para DBAs de desenvolvimento que trabalham com DB2 for z/OS. Inclui dicas úteis e relevantes focadas em manter a produtividade do dia a dia e a performance de aplicações e tabelas.
-
-## Comandos Úteis para DB2 for z/OS
+# Comandos Úteis para DB2 for z/OS
 
 ### Comandos Básicos
 
@@ -198,4 +191,148 @@ COPY TABLESPACE DBNAME.TBSPACE_NAME FULL YES SHRLEVEL REFERENCE
 - [Db2 Command Reference Book (PDF)](https://www.ibm.com/docs/SSEPEK/pdf/db2z_12_comrefbook.pdf)
 
 ---
+
+## 🧯 Comandos Corretivos no Db2 for z/OS
+
+Esta seção reúne os principais comandos utilizados para **corrigir situações operacionais** em objetos Db2 como *tablespaces*, *índices* e *databases*, comuns na rotina do DBA de desenvolvimento.
+
+---
+
+### 🔄 1. Remover `CHECK PENDING` (CHKP)
+
+**📌 Situação:** Após um `LOAD`, a integridade referencial pode estar comprometida.
+
+**✅ Comando corretivo:**
+
+```sql
+CHECK DATA TABLESPACE DBNAME.TBSPACE_NAME;
+```
+
+**💡 Dica:** Use apenas se os dados carregados estão corretos, ou ocorrerá falha.
+
+**🔗 Referência IBM:**  
+[CHECK DATA - IBM Db2 for z/OS](https://www.ibm.com/docs/en/db2-for-zos/13.1?topic=statements-check-data)
+
+---
+
+### 💾 2. Resolver `COPY PENDING` (COPY)
+
+**📌 Situação:** O objeto requer backup após um `LOAD`, `REORG` ou `RECOVER`.
+
+**✅ Comando corretivo:**
+
+```plaintext
+COPY TABLESPACE DBNAME.TBSPACE_NAME FULL YES SHRLEVEL REFERENCE
+```
+
+**💡 Dica:** Use `FULL YES` para garantir cobertura completa e liberar o status.
+
+**🔗 Referência IBM:**  
+[COPY Utility - IBM Db2 for z/OS](https://www.ibm.com/docs/en/db2-for-zos/13.1?topic=utilities-copy)
+
+---
+
+### 🧹 3. Limpar `LPL` (Logical Page List)
+
+**📌 Situação:** Páginas corrompidas ou inconsistentes após falha.
+
+**✅ Comando corretivo:**
+
+```plaintext
+-START DATABASE(DBNAME) SP(TBSPACE_NAME) ACCESS(FORCE)
+```
+
+**💡 Dica:** Verifique com `-DIS DB(...) SP(...) LIMIT(*)` antes.
+
+**🔗 Referência IBM:**  
+[START DATABASE - IBM Db2 for z/OS](https://www.ibm.com/docs/en/db2-for-zos/13.1?topic=commands-start-database)
+
+---
+
+### 🛠️ 4. Corrigir `RBDP` (Rebuild Pending)
+
+**📌 Situação:** Índice está pendente de reconstrução.
+
+**✅ Comando corretivo:**
+
+```plaintext
+REBUILD INDEX(IXOWNER.IXNAME)
+```
+
+**💡 Dica:** Verifique se o índice está inutilizável via `-DISPLAY INDEX(...)`.
+
+**🔗 Referência IBM:**  
+[REBUILD INDEX Utility - IBM Db2 for z/OS](https://www.ibm.com/docs/en/db2-for-zos/13.1?topic=utilities-rebuild-index)
+
+---
+
+### 🚀 5. Iniciar objetos parados (`STOP`)
+
+**📌 Situação:** Objeto foi manualmente ou automaticamente parado.
+
+**✅ Comando corretivo:**
+
+```plaintext
+-START DATABASE(DBNAME) SP(TBSPACE_NAME)
+```
+
+**💡 Dica:** Sempre verifique o status antes com `-DISPLAY DATABASE(...)`.
+
+**🔗 Referência IBM:**  
+[START DATABASE Command - IBM Docs](https://www.ibm.com/docs/en/db2-for-zos/13.1?topic=commands-start-database)
+
+---
+
+### 🔧 6. Retirar objetos de `AREO*` (After Reorg Pending)
+
+**📌 Situação:** Após um `REORG`, o objeto precisa de reorganização adicional.
+
+**✅ Comando corretivo:**
+
+```plaintext
+REORG TABLESPACE DBNAME.TBSPACE_NAME REPAIR SET CURRENT
+```
+
+**💡 Dica:** Pode ser necessário após DROP COLUMN, alterar VARCHAR etc.
+
+**🔗 Referência IBM:**  
+[REORG Utility - IBM Db2 for z/OS](https://www.ibm.com/docs/en/db2-for-zos/13.1?topic=utilities-reorg)
+
+---
+
+### 🧩 7. Finalizar Utilitários em Conflito
+
+**📌 Situação:** Um utilitário travado ou inativo permanece registrado.
+
+**✅ Comando corretivo:**
+
+```plaintext
+-TERM UTIL(UTILID)
+```
+
+**💡 Dica:** Liste utilitários ativos com:
+
+```plaintext
+-DIS UTIL(*)
+```
+
+**🔗 Referência IBM:**  
+[TERM UTIL Command - IBM Db2 for z/OS](https://www.ibm.com/docs/en/db2-for-zos/13.1?topic=commands-term-util)
+
+---
+
+> 🧠 **Dica importante:** Sempre avalie o impacto dos comandos corretivos com base em:
+> - Volume de dados
+> - Ambiente (produção x teste)
+> - Workload concorrente
+> - Backup disponível
+
+---
+
+## 📘 Referência Geral
+
+- [Comandos do Db2 for z/OS - IBM Documentation](https://www.ibm.com/docs/en/db2-for-zos/13.1?topic=commands-db2)
+
+---
+
 
