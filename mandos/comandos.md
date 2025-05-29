@@ -108,3 +108,94 @@ DSN SYSTEM(DB2SSID)
 -DISPLAY DB(SILVD000) SP(*) LIMIT(*) USE
 -DISPLAY THREAD(*)
 ```
+
+---
+
+## 🛠️ Como Executar Comandos `-DISPLAY` no Db2 for z/OS
+
+Os comandos `-DISPLAY` devem ser executados no ambiente z/OS através de:
+
+- **Console SDSF** (linha de comando no TSO)
+- **Tool como SPUFI, QMF ou JCL** (em algumas situações)
+- **Painéis de administração do Db2I (DSN command interface)**
+
+### ✅ Exemplo via console:
+
+```plaintext
+-DIS DB(SILVD000) SP(*) LIMIT(*) USE RESTRICT
+```
+
+> 🔹 O comando inicia com `-DIS`, pode usar tanto `-DISPLAY` quanto `-DIS` como forma abreviada.  
+> 🔹 O prefixo `-` é necessário para indicar comandos de sistema.
+
+---
+
+## 🚦 Significados de Status Retornados pelos Comandos `-DISPLAY`
+
+Abaixo estão os principais **status que podem aparecer** ao executar comandos `-DISPLAY`, especialmente com `-DISPLAY DATABASE`, e o que fazer em cada caso:
+
+| **Status**     | **Significado**                                                                 | **Ação Recomendada**                                                                 |
+|----------------|----------------------------------------------------------------------------------|---------------------------------------------------------------------------------------|
+| `RO`           | Read Only – tablespace ou tabela está disponível somente para leitura           | Verifique se o recurso foi posto em `STOP ACCESS(RO)`. Usar `-START` se necessário.  |
+| `UT`           | Utilities – objeto está sendo usado por algum utilitário                        | Espere o término do utilitário ou investigue com `-DIS UTIL(*)`.                    |
+| `COPY`         | COPY Pending – requer backup via COPY                                            | Execute um `COPY` com utilitário para liberar o uso.                                |
+| `CHKP`         | Check Pending – falha na integridade referencial ou carga não validada          | Use `CHECK DATA` ou `LOAD REPLACE ENFORCE` para validar os dados.                   |
+| `LPL`          | Logical Page List – páginas inconsistentes, requer recuperação manual           | Use `START DATABASE ... SP ... ACCESS(FORCE)` para tentar limpar o LPL.             |
+| `RBDP`         | Rebuild Pending – índice precisa ser reconstruído                               | Use utilitário `REBUILD INDEX` para recriar os índices afetados.                    |
+| `STOP`         | Objeto está parado (`STOP` manual ou automático)                                | Use `-START DATABASE(...)` ou `-START INDEX(...)`.                                   |
+| `ADB`          | Advisory Reorg – objeto recomenda reorganização por degradação de performance    | Planeje um `REORG TABLESPACE` ou `REORG INDEX` conforme impacto.                    |
+| `AREO*`        | After Reorg – objeto precisa de reorganização adicional após alterações          | Execute `REORG` com `REPAIR SET CURRENT`.                                            |
+
+---
+
+## 💡 Dica Avançada: Interpretando o Output
+
+Quando executar:
+
+```plaintext
+-DIS DB(SILVD000) SP(*) LIMIT(*) USE RESTRICT
+```
+
+Você verá algo como:
+
+```plaintext
+DATABASE = SILVD000  STATUS = RW
+   SPACENAM = TBCLI01   STATUS = RW
+   SPACENAM = TBPED01   STATUS = CHKP COPY
+```
+
+> 🔍 Isso indica que `TBPED01` está com dois problemas: pendente de `CHECK` e requer backup com `COPY`.
+
+---
+
+## 🔄 Ações Comuns com Base nos Status
+
+### ✅ Liberar CHECK PENDING:
+
+```sql
+CHECK DATA TABLESPACE DBNAME.TBSPACE_NAME;
+```
+
+### ✅ Resolver COPY PENDING:
+
+Execute utilitário:
+
+```plaintext
+COPY TABLESPACE DBNAME.TBSPACE_NAME FULL YES SHRLEVEL REFERENCE
+```
+
+### ✅ Retirar objeto de LPL:
+
+```plaintext
+-START DATABASE(DBNAME) SP(TBSPACE_NAME) ACCESS(FORCE)
+```
+
+---
+
+## 📚 Referência IBM Oficial
+
+- [Db2 for z/OS -DISPLAY Commands (IBM)](https://www.ibm.com/docs/en/db2-for-zos/12.0.0?topic=commands-display-database-db2)
+- [Db2 Command Reference Book (PDF)](https://www.ibm.com/docs/SSEPEK/pdf/db2z_12_comrefbook.pdf)
+
+---
+
