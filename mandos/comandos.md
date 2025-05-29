@@ -78,3 +78,33 @@ Este manual fornece um guia prático para DBAs de desenvolvimento que trabalham 
    ```plaintext
    TSO DSN SYSTEM(DB2SSID)
    ```
+
+2. Depois de entrar no ambiente do DB2, execute os comandos desejados:
+
+```plaintext
+-DISPLAY DB(SILVD000) SP(*) LIMIT(*) USE
+```
+
+ 
+### ISPF (Interactive System Productivity Facility)
+
+1. No ISPF, acesse o menu de comandos do DB2 usando a opção DB2I e selecione a opção 7 para comandos do DB2.
+2. No menu de comandos do DB2, insira os comandos diretamente:
+ 
+```plaintext
+-DISPLAY DB(SILVD000) SP(*) LIMIT(*) USE
+```
+
+
+### Execução em Lote (Batch)
+1. Crie um job JCL para executar comandos do DB2 em lote:
+
+```plaintext
+//JOBNAME  JOB ...
+//STEP01   EXEC PGM=IKJEFT01
+//SYSTSPRT DD SYSOUT=*
+//SYSTSIN  DD *
+DSN SYSTEM(DB2SSID)
+-DISPLAY DB(SILVD000) SP(*) LIMIT(*) USE
+-DISPLAY THREAD(*)
+```
