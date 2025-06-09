@@ -21,6 +21,7 @@ Este repositório é um guia técnico e prático para profissionais que atuam co
 | [📁 Queries SQL](sql-avancado/sql-exemplos.md) | Consultas avançadas aplicáveis ao dia a dia |
 | [📁 Dicas](dicas/dicas.md) | Dicas aplicáveis ao dia a dia para queries e performance |
 | [📁 Comandos](mandos/comandos.md) | Comandos DB2 para visualizar situação de tabelas |
+| [📁 JCL](jcl/jcl.md) | JCL ( JOB CONTROL LANGUAGE ) |
 | [📁 Lista de IA's](ia/ia-para-dba.md) | Lista de IA's para consultas pelos DBA's | 
 
 
