@@ -270,5 +270,131 @@ DCB=(RECFM=FB,LRECL=80,BLKSIZE=800)
 
 ---
 
+## 💻 Seção: JCL - Parte 3  
+### Execução de Programas COBOL com DB2 (via IKJEFT01)
+
+---
+
+### 📘 Tópicos Abordados:
+1. O que é o IKJEFT01
+2. Como executar um programa COBOL que usa DB2
+3. Parâmetros essenciais: DBRM, PLAN, STEPLIB
+4. Utilização do DSN e RUN PROGRAM
+5. Como tratar o retorno SQL e RC do JCL
+6. Exemplo comentado de execução completa
+7. Referências oficiais IBM
+
+---
+
+### 🔹 1. O que é IKJEFT01?
+
+O IKJEFT01 é um programa **do ambiente TSO (Time Sharing Option)** que permite executar comandos TSO em batch. Ele é frequentemente utilizado para executar programas que interagem com o **DB2** através do utilitário **DSN**.
+
+✅ Quando usamos IKJEFT01:
+- Para rodar programas COBOL que usam SQL embutido (pré-compilados)
+- Para executar comandos DB2 como BIND, REBIND, RUNSTATS, etc.
+
+---
+
+### 🔹 2. Estrutura de um JCL para rodar programa COBOL + DB2
+
+```jcl
+//RODASQL  JOB (1234),'EXECUTA DB2',CLASS=A,MSGCLASS=X,NOTIFY=&SYSUID
+//STEP1    EXEC PGM=IKJEFT01
+//STEPLIB  DD DSN=DSNLOAD.LIB.PRODUCAO,DISP=SHR
+//         DD DSN=COBOL.LOAD.LIB,DISP=SHR
+//SYSTSPRT DD SYSOUT=*
+//SYSTSIN  DD *
+  DSN SYSTEM(DB2P)
+  RUN PROGRAM(MINHAPGM) PLAN(MEUPLANO) -
+      LIB('LOAD.LIB.PRODUCAO')
+  END
+```
+
+---
+
+### 🔹 3. Detalhamento dos componentes
+
+| Componente    | Função                                                                 |
+|---------------|------------------------------------------------------------------------|
+| `PGM=IKJEFT01`| Chama o interpretador TSO em batch                                     |
+| `SYSTSIN`     | Instruções que seriam digitadas no TSO (como DSN, RUN, END)           |
+| `DSN SYSTEM()`| Inicia o ambiente DB2 conectado ao sistema (ex: DB2P ou DB2T)          |
+| `RUN PROGRAM()`| Nome do programa COBOL pré-compilado e ligado                         |
+| `PLAN()`      | Plano DB2 associado (criado via BIND do DBRM)                          |
+| `LIB()`       | Biblioteca onde está o módulo LOAD do programa                         |
+| `STEPLIB`     | Bibliotecas adicionais para localizar o módulo executável e utilitários|
+| `SYSTSPRT`    | Saída de impressão do TSO (inclui mensagens DB2 e resultados SQL)      |
+
+---
+
+### 🔹 4. Pré-requisitos para o programa rodar corretamente
+
+✅ Antes de executar o JCL acima, é necessário que:
+
+- O programa COBOL tenha sido **pré-compilado com o DB2 precompiler**, gerando o **DBRM**.
+- O **DBRM tenha sido BINDado** em um **PLAN** correspondente.
+- O módulo **LOAD tenha sido gerado pelo linkage editor** e esteja disponível na biblioteca `LIB()` usada no RUN.
+
+---
+
+### 🔹 5. Interpretação de retornos
+
+- **RC=0000** → Execução normal.
+- **SQLCODE=0** → Sucesso SQL.
+- **SQLCODE<0** → Erro SQL (ex: -904 = recurso indisponível).
+- **SQLCODE>0** → Alerta (ex: +100 = fim de dados).
+
+🔎 Os retornos SQL são mostrados em `SYSTSPRT`, que deve ser verificado com atenção.
+
+---
+
+### 🔹 6. Exemplo completo e comentado
+
+```jcl
+//EXECDB2  JOB (9999),'PROGRAMA DB2',CLASS=A,MSGCLASS=X,NOTIFY=&SYSUID
+//*
+//* STEP EXECUTA PROGRAMA COBOL COM SQL EMBUTIDO
+//*
+//PASSODB2 EXEC PGM=IKJEFT01
+//STEPLIB  DD DSN=DB2P.DSNLOAD,DISP=SHR
+//         DD DSN=EMPRESA.LOADLIB,DISP=SHR
+//SYSTSPRT DD SYSOUT=*
+//SYSPRINT DD SYSOUT=*
+//SYSOUT   DD SYSOUT=*
+//SYSTSIN  DD *
+  DSN SYSTEM(DB2P)
+  RUN PROGRAM(PROGSQL1) PLAN(PLNSQL1) -
+      LIB('EMPRESA.LOADLIB')
+  END
+```
+
+💬 Comentários:
+- `PROGSQL1`: nome do módulo gerado com o linkage editor
+- `PLNSQL1`: plano DB2 já associado via BIND ao DBRM do programa
+- `DB2P`: identificação do subsistema DB2 de produção
+- `EMPRESA.LOADLIB`: biblioteca onde está o módulo executável
+
+---
+
+### 🔹 7. Erros comuns e soluções rápidas
+
+| Erro                             | Causa provável                                    | Ação sugerida                       |
+|----------------------------------|---------------------------------------------------|-------------------------------------|
+| SQLCODE -805                     | DBRM não encontrado no PLAN                       | Verificar BIND e nome correto do PLAN |
+| RC=12 ou RC=16 no JCL            | Falha no step / erro grave                        | Verificar `SYSTSPRT` e parâmetros   |
+| ABEND S806                       | Programa não encontrado no LOADLIB                | Verificar STEPLIB ou LIB()          |
+| SQLCODE -911 ou -913             | Deadlock ou timeout                               | Analisar locks e tempo de execução  |
+
+---
+
+### 📎 Referências Oficiais
+
+- [IBM - Executando programas DB2 com IKJEFT01](https://www.ibm.com/docs/en/db2-for-zos/13?topic=applications-running-batch)
+- [TSO/E Programming Services - IKJEFT01](https://www.ibm.com/docs/en/zos/2.5.0?topic=interfaces-ikjeft01)
+
+---
+
+
 
 
