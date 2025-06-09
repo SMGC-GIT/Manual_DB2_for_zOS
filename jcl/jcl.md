@@ -395,6 +395,173 @@ O IKJEFT01 é um programa **do ambiente TSO (Time Sharing Option)** que permite 
 
 ---
 
+## 💻 Seção: JCL - Parte 4  
+### Execução de Utilitários DB2 no JCL (RUNSTATS, REORG, COPY, etc.)
+
+---
+
+### 📘 Tópicos Abordados:
+1. O que são utilitários DB2 e para que servem
+2. Visão geral do uso em JCL
+3. Utilitário RUNSTATS (estatísticas)
+4. Utilitário REORG (reestruturação física)
+5. Utilitário COPY (backup)
+6. Utilitário CHECK DATA (validação de integridade)
+7. Utilitário LOAD/UNLOAD (carga e descarga de dados)
+8. Cuidados, parâmetros importantes e retorno de execução
+9. Referências IBM
+
+---
+
+### 🔹 1. O que são utilitários DB2?
+
+Utilitários DB2 são **programas fornecidos pelo DB2** para executar tarefas administrativas ou operacionais, como:
+- Atualizar estatísticas do catálogo
+- Reorganizar tabelas
+- Realizar backups (image copy)
+- Validar integridade referencial
+- Carregar ou extrair dados em massa
+
+São executados geralmente em batch via **JCL + IKJEFT01** ou diretamente via **PGM=DSNUTILB**.
+
+---
+
+### 🔹 2. Visão geral do uso em JCL
+
+A forma mais comum de executar utilitários DB2 é através do programa **DSNUTILB**, que interpreta comandos no formato utilitário, fornecidos na entrada (`SYSIN`).
+
+---
+
+### 🔹 3. Utilitário RUNSTATS
+
+Atualiza estatísticas sobre tabelas e índices no catálogo do DB2, ajudando o otimizador de consultas.
+
+```jcl
+//RUNSTATS JOB (9999),'ESTATISTICAS',CLASS=A,MSGCLASS=X,NOTIFY=&SYSUID
+//STEP1    EXEC PGM=DSNUTILB,PARM='DB2P'
+//STEPLIB  DD DSN=DB2P.DSNLOAD,DISP=SHR
+//SYSPRINT DD SYSOUT=*
+//SYSIN    DD *
+  RUNSTATS TABLESPACE DBNOME.TSNOME
+           TABLE(ALL)
+           INDEX(ALL)
+           FREQVAL NUMCOLS 10
+           HISTOGRAM
+           REPORT YES
+/*
+```
+
+📝 Parâmetros úteis:
+- `TABLE(ALL)` → estatísticas de todas as tabelas
+- `INDEX(ALL)` → inclui índices
+- `FREQVAL`, `HISTOGRAM` → melhoram distribuição estatística para o otimizador
+
+---
+
+### 🔹 4. Utilitário REORG
+
+Reorganiza fisicamente os dados das tabelas para eliminar fragmentação e melhorar performance.
+
+```jcl
+//REORGTAB JOB (9999),'REORG TABELA',CLASS=A,MSGCLASS=X,NOTIFY=&SYSUID
+//STEP1    EXEC PGM=DSNUTILB,PARM='DB2P'
+//STEPLIB  DD DSN=DB2P.DSNLOAD,DISP=SHR
+//SYSPRINT DD SYSOUT=*
+//SYSIN    DD *
+  REORG TABLESPACE DBNOME.TSNOME
+         LOG YES
+         SHRLEVEL REFERENCE
+         STATISTICS TABLE(ALL) INDEX(ALL)
+/*
+```
+
+📌 Tipos de `SHRLEVEL`:
+- `REFERENCE` → leitura permitida, mas sem escrita
+- `CHANGE` → permite leitura e escrita (alta disponibilidade)
+
+---
+
+### 🔹 5. Utilitário COPY
+
+Gera cópia física de tabelaspaces e índices, essencial para backup e recuperação.
+
+```jcl
+//COPYTS JOB (9999),'BACKUP DB2',CLASS=A,MSGCLASS=X,NOTIFY=&SYSUID
+//STEP1  EXEC PGM=DSNUTILB,PARM='DB2P'
+//STEPLIB  DD DSN=DB2P.DSNLOAD,DISP=SHR
+//SYSPRINT DD SYSOUT=*
+//SYSUT1   DD DSN=BACKUP.DBNOME.TSNOME(+1),DISP=(NEW,CATLG),
+//            UNIT=SYSDA,SPACE=(CYL,(100,10)),DCB=DSORG=PS
+//SYSIN    DD *
+  COPY TABLESPACE DBNOME.TSNOME
+       COPYDDN(SYSUT1)
+/*
+```
+
+⚠️ É preciso configurar corretamente o `DD` de destino (`SYSUT1`) e definir GDG para manter versões do backup.
+
+---
+
+### 🔹 6. Utilitário CHECK DATA
+
+Verifica se os dados de uma tabela respeitam regras de integridade referencial.
+
+```jcl
+//CHECKDT JOB (9999),'CHECK INTEGRIDADE',CLASS=A,MSGCLASS=X,NOTIFY=&SYSUID
+//STEP1  EXEC PGM=DSNUTILB,PARM='DB2P'
+//STEPLIB DD DSN=DB2P.DSNLOAD,DISP=SHR
+//SYSPRINT DD SYSOUT=*
+//SYSIN    DD *
+  CHECK DATA TABLESPACE DBNOME.TSNOME
+/*
+```
+
+🎯 Ajuda a identificar por que uma tabela está em `CHECK PENDING`.
+
+---
+
+### 🔹 7. Utilitário LOAD/UNLOAD
+
+- **LOAD** → carga em massa de dados
+- **UNLOAD** → exportação de dados
+
+```jcl
+//UNLOADT JOB (9999),'UNLOAD TABELA',CLASS=A,MSGCLASS=X,NOTIFY=&SYSUID
+//STEP1 EXEC PGM=DSNUTILB,PARM='DB2P'
+//STEPLIB DD DSN=DB2P.DSNLOAD,DISP=SHR
+//SYSPRINT DD SYSOUT=*
+//UNLDOUT  DD DSN=EXPORT.DADOS.CLIENTE(+1),DISP=(NEW,CATLG),
+//            SPACE=(CYL,(100,10)),UNIT=SYSDA
+//SYSIN    DD *
+  UNLOAD DATA FROM TABLE EMPRESA.CLIENTES
+         OUTFILE(UNLDOUT)
+/*
+```
+
+---
+
+### 🔹 8. Cuidados e retorno de execução
+
+| Situação                          | Causa provável                               | Solução sugerida                         |
+|-----------------------------------|----------------------------------------------|-------------------------------------------|
+| RC=04 no utilitário               | Avisos não críticos                          | Verifique logs para ajustes               |
+| RC=08 ou RC=12                    | Erros graves                                 | Verifique parâmetros, permissões          |
+| Tabela em `REORG PENDING`        | Falta de REORG após alterações               | Executar REORG e RUNSTATS                 |
+| Tabela em `COPY PENDING`         | Falta de COPY após carga                     | Executar COPY imediatamente               |
+| `CHECK PENDING` persistente      | Dados inválidos para restrições referenciais | Executar CHECK DATA e tratar exceções     |
+
+---
+
+### 📎 Referências Oficiais IBM
+
+- [IBM - DB2 Utilities Overview](https://www.ibm.com/docs/en/db2-for-zos/13?topic=utilities-overview)
+- [RUNSTATS Utility](https://www.ibm.com/docs/en/db2-for-zos/13?topic=utilities-runstats-utility)
+- [REORG Utility](https://www.ibm.com/docs/en/db2-for-zos/13?topic=utilities-reorg-utility)
+- [COPY Utility](https://www.ibm.com/docs/en/db2-for-zos/13?topic=utilities-copy-utility)
+- [CHECK Utility](https://www.ibm.com/docs/en/db2-for-zos/13?topic=utilities-check-utility)
+- [UNLOAD Utility](https://www.ibm.com/docs/en/db2-for-zos/13?topic=utilities-unload-utility)
+
+---
 
 
 
