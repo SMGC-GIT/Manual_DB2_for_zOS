@@ -563,5 +563,152 @@ Verifica se os dados de uma tabela respeitam regras de integridade referencial.
 
 ---
 
+## 💻 Seção: JCL - Parte 5  
+### Controle de Execução: Condições, Encadeamento e Orquestração de Steps
+
+---
+
+### 📘 Tópicos Abordados:
+1. Agendamento e execução de JOBs
+2. Encadeamento de steps com COND
+3. Controle com IF/THEN/ELSE/ENDIF
+4. Interpretação do código de retorno (RETCODE)
+5. Melhores práticas de controle e orquestração
+6. Exemplos práticos
+7. Referência IBM
+
+---
+
+### 🔹 1. Agendamento e execução de JOBs
+
+Os JOBs JCL podem ser:
+- Submetidos manualmente (`SUB`)
+- Agendados via scheduler (ex: **TWS**, **Control-M**, **ZEKE**)
+
+Um JOB típico:
+```jcl
+//NOMEJOB JOB (ACCT),'MINHA ROTINA',CLASS=A,MSGCLASS=X,NOTIFY=&SYSUID
+```
+
+📌 Campos importantes:
+- `CLASS` → define prioridade
+- `MSGCLASS` → onde será enviada a saída
+- `NOTIFY` → notifica o usuário após execução
+
+---
+
+### 🔹 2. Encadeamento com COND
+
+O parâmetro `COND` permite **controlar a execução de steps com base em códigos de retorno anteriores**.
+
+#### Sintaxe:
+```jcl
+//ETAPA2 EXEC PGM=PROG2,COND=(8,LT)
+```
+
+👆 Significa: "Se algum step anterior retornou RC **menor que 8**, **não execute** este step".
+
+| Código | Significado                |
+|--------|----------------------------|
+| `COND=(4,LT)` | NÃO executa se RC anterior for < 4 |
+| `COND=(0,EQ)` | NÃO executa se RC anterior for = 0 |
+
+🎯 Lógica é **inversa**: se condição for **VERDADEIRA**, o step é **ignorado**.
+
+---
+
+### 🔹 3. Controle com IF/THEN/ELSE/ENDIF
+
+Para maior controle, o JCL permite estrutura condicional com `IF`.
+
+```jcl
+//STEP1 EXEC PGM=PROG1
+//STEP2 IF (STEP1.RC = 0) THEN
+//         EXEC PGM=PROG2
+//      ELSE
+//         EXEC PGM=PROG3
+//      ENDIF
+```
+
+📌 `STEP1.RC` → refere-se ao código de retorno da etapa anterior
+
+🔍 Comparações possíveis:
+- `=`, `¬=`, `<`, `>`, `<=`, `>=`
+
+---
+
+### 🔹 4. Interpretação do código de retorno (RETCODE)
+
+Cada programa ou utilitário retorna um **RC (return code)**. O JCL avalia este valor para:
+- Saber se o step terminou com sucesso
+- Decidir se o próximo step será executado
+
+| RC    | Significado                      |
+|-------|----------------------------------|
+| 0     | Sucesso                          |
+| 4     | Sucesso com alertas              |
+| 8     | Erros ou falhas                  |
+| 12+   | Falhas críticas, exceções        |
+
+---
+
+### 🔹 5. Melhores práticas de controle
+
+✅ **Padronize RC esperados** por step  
+✅ Use `IF/THEN/ELSE` para lógica mais clara que `COND`  
+✅ Utilize `STEPn.RC` para leitura direta de códigos  
+✅ Evite cascatas desnecessárias de steps não controlados  
+✅ Em jobs críticos, registre todos RCs em `SYSOUT` para auditoria
+
+---
+
+### 🔹 6. Exemplos práticos
+
+#### ✔️ Exemplo com COND
+```jcl
+//STEP01 EXEC PGM=PROGRAMA1
+//STEP02 EXEC PGM=PROGRAMA2,COND=(0,EQ)
+```
+📌 STEP02 **não será executado se STEP01 terminar com RC=0**.
+
+---
+
+#### ✔️ Exemplo com IF/THEN/ELSE
+```jcl
+//STEP01 EXEC PGM=VALIDA
+//STEP02 IF (STEP01.RC = 0) THEN
+//         EXEC PGM=CONTINUA
+//      ELSE
+//         EXEC PGM=ABORTA
+//      ENDIF
+```
+📌 Roteia a execução com base no resultado da validação anterior.
+
+---
+
+#### ✔️ Exemplo com múltiplos níveis
+```jcl
+//STP1 EXEC PGM=INICIO
+//STP2 IF (STP1.RC <= 4) THEN
+//        EXEC PGM=MEIO
+//        IF (STP2.RC = 0) THEN
+//            EXEC PGM=FIM
+//        ELSE
+//            EXEC PGM=FALHA2
+//        ENDIF
+//     ELSE
+//        EXEC PGM=FALHA1
+//     ENDIF
+```
+
+---
+
+### 📎 Referências Oficiais IBM
+
+- [JCL - IF/THEN/ELSE/ENDIF](https://www.ibm.com/docs/en/zos/2.5.0?topic=statements-ifthenelseendif-statement)
+- [JCL - COND Parameter](https://www.ibm.com/docs/en/zos/2.5.0?topic=statements-cond-parameter)
+- [Return Codes in Batch Jobs](https://www.ibm.com/docs/en/zos/2.5.0?topic=statements-job-return-codes)
+
+---
 
 
