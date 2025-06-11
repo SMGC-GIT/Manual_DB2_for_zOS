@@ -1817,3 +1817,105 @@ Para aprofundamento no uso de simbólicos em JCL:
 O uso adequado de variáveis e parâmetros simbólicos no JCL é **essencial para padronizar, simplificar e escalar a execução de jobs**, especialmente em ambientes complexos como os que envolvem **DB2 for z/OS**. Saber usar parâmetros de forma consciente melhora a **manutenibilidade**, reduz erros humanos e favorece a automação.
 
 ---
+
+# 🧩 JCL - Parte 12: Uso de Condicionais no JCL (IF / THEN / ELSE / ENDIF)
+
+## 📘 Objetivo
+
+Controlar o fluxo de execução de steps com base no **código de retorno (RC)** de steps anteriores, utilizando comandos condicionais no JCL.
+
+Muito útil para:
+- Executar um step apenas se o anterior foi bem-sucedido (ex: RC = 0)
+- Pular utilitários se uma carga falhou
+- Redirecionar execução para steps de correção ou análise
+- Evitar reruns desnecessários
+
+---
+
+## 🧩 Estrutura básica
+
+```jcl
+//STEP01   EXEC PGM=PGMA
+//IF (STEP01.RC = 0) THEN
+//STEP02   EXEC PGM=PGMB
+//ELSE
+//ERROSTEP EXEC PGM=IEBGENER
+//ENDIF
+```
+
+**Notas:**
+- `STEP01.RC` refere-se ao Return Code do step anterior.
+- As comparações podem ser: `=`, `>`, `<`, `>=`, `<=`, `¬=`
+- Você pode usar nomes simbólicos de step (como `PGMCHECK.RC`)
+
+---
+
+## 🧪 Exemplo prático com programa DB2
+
+```jcl
+//PGMCHECK EXEC PGM=IKJEFT01
+//STEPLIB  DD DSN=DB2.V13.RUNLIB.LOAD,DISP=SHR
+//SYSTSIN  DD *
+  DSN SYSTEM(DSN1)
+  RUN PROGRAM(VALIDA) PLAN(PLANVAL) -
+      LIB('USR.LOAD')
+  END
+/*
+//SYSTSPRT DD SYSOUT=*
+
+//IF (PGMCHECK.RC = 0) THEN
+//DB2LOAD  EXEC PGM=IKJEFT01
+//STEPLIB  DD DSN=DB2.V13.RUNLIB.LOAD,DISP=SHR
+//SYSTSIN  DD *
+  DSN SYSTEM(DSN1)
+  RUN PROGRAM(CARGA) PLAN(PLANCARGA) -
+      LIB('USR.LOAD')
+  END
+/*
+//SYSTSPRT DD SYSOUT=*
+
+//ELSE
+//ERROMSG EXEC PGM=IKJEFT01
+//SYSTSIN  DD *
+  ECHO PROBLEMA NA VALIDAÇÃO! NÃO EXECUTAR CARGA.
+/*
+//SYSTSPRT DD SYSOUT=*
+//ENDIF
+```
+
+---
+
+## 🔄 Comparações válidas
+
+| Sintaxe           | Significado                  |
+|------------------|------------------------------|
+| `=`, `EQ`         | Igual                        |
+| `¬=`, `NE`, `^=`  | Diferente                    |
+| `<`, `LT`         | Menor                        |
+| `>`, `GT`         | Maior                        |
+| `<=`, `LE`        | Menor ou igual               |
+| `>=`, `GE`        | Maior ou igual               |
+
+---
+
+## ⚠️ Boas práticas
+
+- Sempre use nomes de steps significativos (`VALIDA`, `CARGA`, `ERROMSG` etc.)
+- Documente as decisões do fluxo condicional
+- Evite lógicas confusas com muitos níveis aninhados
+- Utilize condicionais para evitar reruns de jobs inteiros
+- Sempre teste as condições em ambiente controlado antes da produção
+
+---
+
+## 🔗 Referência oficial IBM
+
+🔹 [IBM z/OS MVS JCL Reference – IF/THEN/ELSE/ENDIF Statements](https://www.ibm.com/docs/en/zos/3.1.0?topic=statements-if-then-else-endif)
+
+---
+
+## ✅ Conclusão da Parte 12
+
+O uso de `IF/THEN/ELSE` no JCL é essencial para controlar logicamente a execução de jobs, reagir a falhas, automatizar rotinas corretivas e garantir a execução somente quando as condições certas forem atendidas. É amplamente utilizado em ambientes DB2, especialmente para controlar sequência de programas e utilitários com base nos RCs.
+
+---
