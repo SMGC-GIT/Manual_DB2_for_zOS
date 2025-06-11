@@ -711,4 +711,148 @@ Cada programa ou utilitário retorna um **RC (return code)**. O JCL avalia este 
 
 ---
 
+# 🗂️ JCL - Parte 6: Arquivos e Datasets
+
+O controle de arquivos no JCL é essencial para a execução de programas no ambiente z/OS. Datasets (arquivos) são utilizados para entrada, saída, controle, temporários, entre outros usos, e seu correto entendimento e manipulação são cruciais para evitar falhas, perda de dados e garantir performance.
+
+---
+
+## 📘 1. O que são Datasets?
+
+Datasets são estruturas de armazenamento de dados no z/OS, podendo ser **sequenciais**, **particionados (PDS)** ou **VSAM**. Cada dataset possui atributos específicos, como organização, tipo de registro, tamanho e alocação.
+
+---
+
+## 📂 2. Tipos de Datasets
+
+| Tipo          | Descrição                                                                 |
+|---------------|---------------------------------------------------------------------------|
+| **Sequencial**| Armazenamento linear. Leitura e gravação em sequência.                   |
+| **PDS**       | Particionado. Contém vários membros (como se fossem arquivos dentro de um).|
+| **PDS/E**     | PDS estendido. Permite maior número de membros e uso em ambientes modernos.|
+| **VSAM**      | Acesso direto com índices. Usado em arquivos com estrutura mais complexa. |
+
+---
+
+## 🧾 3. Atributos comuns em DD statements
+
+| Parâmetro       | Significado                                                                 |
+|-----------------|------------------------------------------------------------------------------|
+| `DSN=`          | Nome do dataset                                                             |
+| `DISP=`         | Disposição do dataset (NEW, OLD, SHR, MOD)                                 |
+| `SPACE=`        | Espaço a ser alocado (ex: SPACE=(TRK,(10,5)))                              |
+| `UNIT=`         | Unidade onde o dataset será alocado (ex: SYSDA)                           |
+| `DCB=`          | Parâmetros de controle (RECFM, LRECL, BLKSIZE, DSORG)                     |
+| `VOL=SER=`      | Volume onde o dataset está armazenado                                      |
+| `LABEL=`        | Informações de rotulagem do dataset (LABEL=(1,SL))                        |
+
+---
+
+## 🔄 4. DISP – Disposition
+
+Define como o sistema trata o dataset no início e fim do step.
+
+```jcl
+DISP=(status,normal-abend,abnormal-abend)
+```
+
+| Status  | Ação na Abertura           |
+|---------|----------------------------|
+| NEW     | Cria novo dataset          |
+| OLD     | Usa dataset exclusivamente |
+| SHR     | Permite compartilhamento   |
+| MOD     | Acrescenta no final        |
+
+| Encerramento | Ação                              |
+|--------------|-----------------------------------|
+| CATLG        | Catalogar dataset                 |
+| KEEP         | Manter, mas não catalogar         |
+| DELETE       | Apagar                            |
+| UNCATLG      | Remover do catálogo, mas manter   |
+
+---
+
+## 🛠️ 5. Exemplo de uso de datasets no JCL
+
+```jcl
+//STEP01  EXEC PGM=PROGRAMA
+//INFILE  DD DSN=MEU.INPUT.DATASET,DISP=SHR
+//OUTFILE DD DSN=MEU.OUTPUT.DATASET,
+//            DISP=(NEW,CATLG,DELETE),
+//            UNIT=SYSDA,SPACE=(TRK,(5,2)),
+//            DCB=(RECFM=FB,LRECL=80,BLKSIZE=800)
+```
+
+---
+
+## 🧪 6. Arquivos temporários
+
+Utilizados dentro do JOB para passagem de dados entre steps:
+
+```jcl
+//TEMPFILE DD DSN=&&TEMPDS,DISP=(NEW,PASS),
+//            SPACE=(CYL,(1,1)),UNIT=SYSDA
+```
+
+- **&&TEMPDS**: indica dataset temporário
+- **DISP=PASS**: mantém o dataset para uso em steps seguintes
+
+---
+
+## 🧩 7. Arquivos SYSIN e SYSOUT
+
+Usados para entrada embutida e saída padrão de programas e utilitários.
+
+```jcl
+//SYSIN    DD *
+INSTRUÇÃO AQUI
+OUTRA INSTRUÇÃO
+/*
+//SYSOUT   DD SYSOUT=*
+```
+
+- `SYSIN`: entrada em linha no próprio JCL
+- `SYSOUT=*`: saída vai para spool do usuário atual
+
+---
+
+## 🗂️ 8. Nomeação de datasets
+
+Regras básicas:
+- Máximo de 44 caracteres
+- Segmentos separados por ponto (ex: EMPRESA.ARQ.CUSTOS)
+- Cada segmento com até 8 caracteres
+- Não pode conter espaços, traços ou caracteres especiais
+
+---
+
+## 🔐 9. Acesso e segurança
+
+A permissão de acesso é controlada por ferramentas como RACF (ou ACF2, Top Secret), e pode restringir leitura, escrita ou execução. Exemplo de erro por acesso negado:
+
+```
+IEC150I 613-18,IFG0194E,JOBNAME,STEPNAME,DDNAME
+```
+
+---
+
+## 🧮 10. Boas práticas com arquivos em JCL
+
+| Prática                                   | Justificativa                                                                 |
+|-------------------------------------------|------------------------------------------------------------------------------|
+| Use `SHR` sempre que não for modificar    | Evita LOCK desnecessário                                                    |
+| Alocar apenas o necessário com `SPACE`    | Otimiza uso de disco                                                        |
+| Use nomes significativos e padronizados   | Facilita rastreio e manutenção                                              |
+| Use `DISP=MOD` com cuidado                | Pode causar duplicação ou inconsistência                                    |
+| Prefira `SYSOUT=*` para debug inicial     | Direciona saída para spool sem necessidade de definir datasets externos     |
+| Use `DCB` compatível com programa         | Erros de formato causam abend                                               |
+
+---
+
+## 📚 Referências
+
+- 🔗 [IBM JCL Reference for z/OS](https://www.ibm.com/docs/en/zos/3.1.0?topic=language-job-control-jcl)
+- 🔗 [IBM Datasets Concepts](https://www.ibm.com/docs/en/zos/2.4.0?topic=datasets-using)
+
+---
 
