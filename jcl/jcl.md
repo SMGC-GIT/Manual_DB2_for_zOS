@@ -20,22 +20,20 @@ As explicações aqui foram elaboradas com **nível crescente de complexidade**,
 
 ---
 
-## 📚 Índice da Seção JCL
+## 🧭 Índice da Seção JCL
 
-> 🔗 **Clique em uma parte para ir direto ao conteúdo correspondente:**
-
-- [🔹 Parte 1 – Introdução ao JCL](#parte-1--introdução-ao-jcl)
-- [🔹 Parte 2 – Estrutura básica de um JOB](#parte-2--estrutura-básica-de-um-job)
-- [🔹 Parte 3 – PARM e Programas COBOL com DB2](#parte-3--parm-e-programas-cobol-com-db2)
-- [🔹 Parte 4 – Parâmetros de EXEC e uso de STEPLIB](#parte-4--parâmetros-de-exec-e-uso-de-steplib)
-- [🔹 Parte 5 – Conceito de DD (Data Definition)](#parte-5--conceito-de-dd-data-definition)
-- [🔹 Parte 6 – Entrada e saída padrão (SYSIN, SYSOUT, SYSTSIN, SYSTSPRT)](#parte-6--entrada-e-saída-padrão-sysin-sysout-systsin-systsprt)
-- [🔹 Parte 7 – Tipos de datasets (SEQ, GDG, VSAM)](#parte-7--tipos-de-datasets-seq-gdg-vsam)
-- [🔹 Parte 8 – Criação e alocação de datasets (SPACE, DCB, DISP)](#parte-8--criação-e-alocação-de-datasets-space-dcb-disp)
-- [🔹 Parte 9 – Execução de utilitários DB2 via JCL](#parte-9--execução-de-utilitários-db2-via-jcl)
-- [🔹 Parte 10 – JOBs com múltiplos steps e controle de retorno (COND)](#parte-10--jobs-com-múltiplos-steps-e-controle-de-retorno-cond)
-- [🔹 Parte 11 – Como analisar RCs e mensagens de erro (SYSOUT, SDSF)](#parte-11--como-analisar-rcs-e-mensagens-de-erro-sysout-sdsf)
-- [🔹 Parte 12 – Uso de condicionais no JCL (IF, THEN, ELSE, ENDIF)](#parte-12--uso-de-condicionais-no-jcl-if-then-else-endif)
+- [Parte 1 – Introdução ao JCL](#parte-1--introducao-ao-jcl)
+- [Parte 2 – Estrutura de um JOB](#parte-2--estrutura-de-um-job)
+- [Parte 3 – Parâmetros EXEC e PGM](#parte-3--parametros-exec-e-pgm)
+- [Parte 4 – SYSIN, SYSOUT e DDs](#parte-4--sysin-sysout-e-dds)
+- [Parte 5 – COND e controle de execução condicional](#parte-5--cond-e-controle-de-execucao-condicional)
+- [Parte 6 – Passagem de Parâmetros com PARM](#parte-6--passagem-de-parametros-com-parm)
+- [Parte 7 – Execução de utilitários DB2: DSNUTILB](#parte-7--execucao-de-utilitarios-db2-dsnutilb)
+- [Parte 8 – Execução de programas DB2 via IKJEFT01](#parte-8--execucao-de-programas-db2-via-ikjeft01)
+- [Parte 9 – Execução de programas batch COBOL + DB2](#parte-9--execucao-de-programas-batch-cobol--db2)
+- [Parte 10 – Controle de retorno com RC e COND](#parte-10--controle-de-retorno-com-rc-e-cond)
+- [Parte 11 – Tabelas temporárias e arquivos VSAM no JCL](#parte-11--tabelas-temporarias-e-arquivos-vsam-no-jcl)
+- [Parte 12 – Dataset temporário vs permanente](#parte-12--dataset-temporario-vs-permanente)
 
 ---
 
