@@ -1107,4 +1107,191 @@ Dominar o uso de `COND` e dos códigos de retorno no JCL é essencial para o con
 
 ---
 
+# 🧩 JCL - Parte 8: IF/THEN/ELSE/ENDIF – Controle Condicional Estruturado no JCL com foco em DB2
+
+O uso de `IF/THEN/ELSE/ENDIF` no JCL traz clareza e controle estrutural avançado à execução condicional de steps. Essa abordagem moderna é preferida em ambientes corporativos, especialmente quando lidamos com **programas COBOL com DB2** ou **utilitários de manutenção de objetos do banco de dados**.
+
+---
+
+## 🧠 1. O que é IF/THEN/ELSE/ENDIF no JCL?
+
+É uma construção **estruturada de decisão** que permite controlar a execução de steps com base em códigos de retorno anteriores.
+
+> 💡 É mais legível e flexível que `COND=`, além de facilitar a manutenção de fluxos complexos.
+
+---
+
+## 🔤 2. Sintaxe Básica
+
+```jcl
+//STEP1 EXEC PGM=PGM1
+// IF (STEP1.RC = 0) THEN
+//STEP2 EXEC PGM=PGM2
+// ELSE
+//STEP3 EXEC PGM=PGM3
+// ENDIF
+```
+
+---
+
+## 🧾 3. Condições Suportadas
+
+| Comparador | Significado |
+|------------|-------------|
+| `=`        | Igual       |
+| `¬=` ou `NE` | Diferente  |
+| `>`        | Maior       |
+| `<`        | Menor       |
+| `>=`       | Maior ou igual |
+| `<=`       | Menor ou igual |
+
+Também é possível combinar múltiplas condições com `AND`, `OR`.
+
+---
+
+## 📌 4. Aplicações em DB2 – Exemplos Comuns
+
+### ✅ Exemplo 1 – Executar DSNTIAUL somente se programa COBOL+DB2 tiver sucesso
+
+```jcl
+//STEP1 EXEC PGM=IKJEFT01
+//SYSTSIN DD *
+DSN SYSTEM(DB01)
+RUN PROGRAM(MYPROG) PLAN(MYPLAN) LIB('PROG.LOADLIB')
+END
+/*
+// IF (STEP1.RC = 0) THEN
+//STEP2 EXEC PGM=IKJEFT01
+//SYSTSIN DD *
+DSN SYSTEM(DB01)
+RUN PROGRAM(DSNTIAUL) PLAN(DSNTIAUL) LIB('SYS3.DB2.LOADLIB')
+END
+/*
+//SYSTSPRT DD SYSOUT=*
+//SYSPRINT DD SYSOUT=*
+// ELSE
+//ERROMSG EXEC PGM=IEBGENER
+//SYSPRINT DD SYSOUT=*
+//SYSUT1   DD *
+==> FALHA NA EXECUÇÃO DO PROGRAMA DB2
+/*
+//SYSUT2   DD SYSOUT=*
+//SYSIN    DD DUMMY
+// ENDIF
+```
+
+> 📌 Se o programa principal (MYPROG) rodar com RC=0, executa DSNTIAUL para extração. Caso contrário, exibe mensagem de erro.
+
+---
+
+### ✅ Exemplo 2 – Reorganizar apenas se análise indicou necessidade
+
+```jcl
+//ANALISA EXEC PGM=DSNUTILB,REGION=0M,
+//         PARM='DB01,ANALISE'
+//SYSIN DD *
+  REPORT TABLESPACE DBNAME.TSNAME
+/*
+// IF (ANALISA.RC = 4 OR ANALISA.RC = 8) THEN
+//REORG EXEC PGM=DSNUTILB,REGION=0M,
+//       PARM='DB01,REORGTABLESPACE'
+//SYSIN DD *
+  REORG TABLESPACE DBNAME.TSNAME LOG NO
+/*
+// ENDIF
+```
+
+> ✅ RC 4 ou 8 pode indicar necessidade de reorganização. O IF garante que o REORG só será executado nesses casos.
+
+---
+
+### ✅ Exemplo 3 – Validar se programa retornou RC=12 e fazer tratamento
+
+```jcl
+//RUNPGM EXEC PGM=IKJEFT01
+//SYSTSIN DD *
+DSN SYSTEM(DB01)
+RUN PROGRAM(MYPROG) PLAN(MYPLAN)
+END
+/*
+// IF (RUNPGM.RC = 12) THEN
+//NOTIFY EXEC PGM=IEBGENER
+//SYSUT1 DD *
+ATENÇÃO: O PROGRAMA DB2 RETORNOU RC=12. VERIFIQUE O LOG.
+/*
+//SYSUT2 DD SYSOUT=*
+//SYSIN  DD DUMMY
+//SYSPRINT DD SYSOUT=*
+// ENDIF
+```
+
+> ✅ Permite criar mensagens de alerta quando o programa retorna RC específico (ex: erro de lógica ou falha de leitura).
+
+---
+
+## 🧰 5. Combinando Condições: IF com múltiplos testes
+
+```jcl
+// IF ((STEP1.RC > 0) AND (STEP2.RC = 0)) THEN
+//...
+// ENDIF
+```
+
+> 💡 Usa-se parênteses para agrupar e garantir avaliação correta de múltiplas condições.
+
+---
+
+## 🧵 6. Uso em Manutenção de Tabelas DB2
+
+### ✅ Exemplo – Realizar RUNSTATS após LOAD se RC for 0 ou 4
+
+```jcl
+//LOAD EXEC PGM=DSNUTILB,PARM='DB01,LOAD'
+//SYSIN DD *
+  LOAD DATA INDDN(SYSREC) INTO TABLE MYDB.MYTBL
+/*
+// IF (LOAD.RC = 0 OR LOAD.RC = 4) THEN
+//STATS EXEC PGM=DSNUTILB,PARM='DB01,RUNSTATS'
+//SYSIN DD *
+  RUNSTATS TABLESPACE MYDB.TS01 TABLE(MYDB.MYTBL)
+/*
+// ENDIF
+```
+
+> 💡 Garantimos que o RUNSTATS será executado apenas após LOAD bem-sucedido ou com advertência tolerável.
+
+---
+
+## 🛠️ 7. Boas Práticas
+
+| Prática | Justificativa |
+|--------|----------------|
+| Prefira `IF/THEN/ELSE` para fluxos legíveis | Evita armadilhas do `COND=` e facilita leitura por outros profissionais |
+| Nomeie os steps com clareza | Ex: `RUNLOAD`, `RUNREORG`, `VALIDA`, `NOTIFYERR` |
+| Documente os motivos dos blocos `IF` | Comentários no JCL ajudam na manutenção |
+| Evite encadeamentos complexos de IF | Prefira dividir em steps separados se necessário |
+| Valide em ambiente de testes com RCs simulados | Para garantir que fluxos com `IF` se comportem como esperado |
+
+---
+
+## 🧠 Conclusão
+
+O uso de `IF/THEN/ELSE/ENDIF` no JCL traz controle de execução estruturado e robusto, ideal para rotinas críticas com DB2, como:
+
+- Execução condicional de programas COBOL+DB2
+- Manutenção de objetos DB2 (REORG, STATS, LOAD)
+- Controle de fluxo com base em RCs conhecidos
+
+Dominar essa estrutura permite construir JCLs mais inteligentes, seguros e fáceis de manter.
+
+---
+
+## 📚 Referências
+
+- 🔗 [IBM JCL User Guide - IF/THEN/ELSE/ENDIF](https://www.ibm.com/docs/en/zos/3.1.0?topic=statements-ifthenelseendif-construct)
+- 🔗 [IBM DB2 Utilities Guide](https://www.ibm.com/docs/en/db2-for-zos/12?topic=utilities-db2-utility-guide-reference)
+
+---
+
+
 
