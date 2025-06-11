@@ -22,18 +22,18 @@ As explicações aqui foram elaboradas com **nível crescente de complexidade**,
 
 ## 🧭 Índice da Seção JCL
 
-- [Parte 1 – Introdução ao JCL](#parte-1--introducao-ao-jcl)
-- [Parte 2 – Estrutura de um JOB](#parte-2--estrutura-de-um-job)
-- [Parte 3 – Parâmetros EXEC e PGM](#parte-3--parametros-exec-e-pgm)
-- [Parte 4 – SYSIN, SYSOUT e DDs](#parte-4--sysin-sysout-e-dds)
-- [Parte 5 – COND e controle de execução condicional](#parte-5--cond-e-controle-de-execucao-condicional)
-- [Parte 6 – Passagem de Parâmetros com PARM](#parte-6--passagem-de-parametros-com-parm)
-- [Parte 7 – Execução de utilitários DB2: DSNUTILB](#parte-7--execucao-de-utilitarios-db2-dsnutilb)
-- [Parte 8 – Execução de programas DB2 via IKJEFT01](#parte-8--execucao-de-programas-db2-via-ikjeft01)
-- [Parte 9 – Execução de programas batch COBOL + DB2](#parte-9--execucao-de-programas-batch-cobol--db2)
-- [Parte 10 – Controle de retorno com RC e COND](#parte-10--controle-de-retorno-com-rc-e-cond)
-- [Parte 11 – Tabelas temporárias e arquivos VSAM no JCL](#parte-11--tabelas-temporarias-e-arquivos-vsam-no-jcl)
-- [Parte 12 – Dataset temporário vs permanente](#parte-12--dataset-temporario-vs-permanente)
+- [Parte 1 – Introdução ao JCL](#parte-1--introdução-ao-jcl)
+- [Parte 2 – Estrutura de um Job JCL](#parte-2--estrutura-de-um-job-jcl)
+- [Parte 3 – Tipos de DD Statements](#parte-3--tipos-de-dd-statements)
+- [Parte 4 – Execução Condicional no JCL](#parte-4--execução-condicional-no-jcl)
+- [Parte 5 – Conceito de RETURN CODE (RC)](#parte-5--conceito-de-return-code-rc)
+- [Parte 6 – Parâmetros REGION e TIME](#parte-6--parâmetros-region-e-time)
+- [Parte 7 – Uso de Parâmetros SYMBOLIC](#parte-7--uso-de-parâmetros-symbolic)
+- [Parte 8 – Trabalhando com Arquivos Sequenciais e VSAM](#parte-8--trabalhando-com-arquivos-sequenciais-e-vsam)
+- [Parte 9 – Job para Executar Programa COBOL com DB2](#parte-9--job-para-executar-programa-cobol-com-db2)
+- [Parte 10 – JOB de Utilitário DB2 com JCL](#parte-10--job-de-utilitário-db2-com-jcl)
+- [Parte 11 – JOBs com Condições e Saídas Diversas](#parte-11--jobs-com-condições-e-saídas-diversas)
+- [Parte 12 – JOB com Várias Etapas, Utilizando INCLUDE, PROC e OUTPUT](#parte-12--job-com-várias-etapas-utilizando-include-proc-e-output)
 
 ---
 
@@ -161,9 +161,9 @@ REORG TABLESPACE DB01.TS01 LOG YES SHRLEVEL CHANGE
 
 ---
 
-## 🧩 Seção: JCL Básico - Parte 2
+### Parte 2 – Estrutura de um Job JCL
 
-### 📘 Tópicos Abordados:
+## 📘 Tópicos Abordados:
 1. Como funciona o fluxo de execução de um JOB
 2. O papel das DD statements
 3. Tipos de datasets (SEQ, PDS, VSAM, SYSOUT)
@@ -174,7 +174,7 @@ REORG TABLESPACE DB01.TS01 LOG YES SHRLEVEL CHANGE
 
 ---
 
-### 🔹 1. 🚦 Fluxo de execução de um JOB
+## 🔹 1. 🚦 Fluxo de execução de um JOB
 
 Um JOB é composto por:
 - Uma **declaração de JOB** (`//NOMEJOB JOB ...`)
@@ -190,7 +190,7 @@ Um JOB é composto por:
 
 ---
 
-### 🔹 2. 📂 Instruções DD (Data Definition)
+## 🔹 2. 📂 Instruções DD (Data Definition)
 
 As `DD` statements associam **arquivos/datasets** a programas.
 
@@ -209,7 +209,7 @@ As `DD` statements associam **arquivos/datasets** a programas.
 
 ---
 
-### 🔹 3. 🧾 Tipos de datasets
+## 🔹 3. 🧾 Tipos de datasets
 
 | Tipo      | Descrição                               | Exemplo                          |
 |-----------|------------------------------------------|----------------------------------|
@@ -220,7 +220,7 @@ As `DD` statements associam **arquivos/datasets** a programas.
 
 ---
 
-### 🔹 4. 📌 JOBLIB vs STEPLIB
+## 🔹 4. 📌 JOBLIB vs STEPLIB
 
 - **JOBLIB**: válido para **todos os steps**
 - **STEPLIB**: válido apenas para **o step atual**
@@ -236,7 +236,7 @@ As `DD` statements associam **arquivos/datasets** a programas.
 
 ---
 
-### 🔹 5. 📐 Parâmetros DISP, SPACE, DCB
+## 🔹 5. 📐 Parâmetros DISP, SPACE, DCB
 
 #### DISP: Controle de uso
 
@@ -266,7 +266,7 @@ DCB=(RECFM=FB,LRECL=80,BLKSIZE=800)
 
 ---
 
-### 🔹 6. 🔁 Controle Condicional (COND, IF/THEN)
+## 🔹 6. 🔁 Controle Condicional (COND, IF/THEN)
 
 #### ✅ Usando COND
 
@@ -288,7 +288,7 @@ DCB=(RECFM=FB,LRECL=80,BLKSIZE=800)
 
 ---
 
-### 🔹 7. 🔒 Outras boas práticas
+## 🔹 7. 🔒 Outras boas práticas
 
 | Prática                             | Vantagem                                                  |
 |------------------------------------|------------------------------------------------------------|
@@ -299,15 +299,14 @@ DCB=(RECFM=FB,LRECL=80,BLKSIZE=800)
 
 ---
 
-### 📎 Referências Oficiais
+## 📎 Referências Oficiais
 
 - [IBM JCL Language Reference (z/OS 2.5)](https://www.ibm.com/docs/en/zos/2.5.0?topic=reference-job-control-language)
 - [IBM JCL User Guide](https://www.ibm.com/docs/en/zos/2.5.0?topic=zos-job-control-language-users-guide)
 
 ---
 
-## 💻 Seção: JCL - Parte 3  
-### Execução de Programas COBOL com DB2 (via IKJEFT01)
+### Parte 3 - Execução de Programas COBOL com DB2 (via IKJEFT01)
 
 ---
 
@@ -322,7 +321,7 @@ DCB=(RECFM=FB,LRECL=80,BLKSIZE=800)
 
 ---
 
-### 🔹 1. O que é IKJEFT01?
+## 🔹 1. O que é IKJEFT01?
 
 O IKJEFT01 é um programa **do ambiente TSO (Time Sharing Option)** que permite executar comandos TSO em batch. Ele é frequentemente utilizado para executar programas que interagem com o **DB2** através do utilitário **DSN**.
 
@@ -332,7 +331,7 @@ O IKJEFT01 é um programa **do ambiente TSO (Time Sharing Option)** que permite 
 
 ---
 
-### 🔹 2. Estrutura de um JCL para rodar programa COBOL + DB2
+## 🔹 2. Estrutura de um JCL para rodar programa COBOL + DB2
 
 ```jcl
 //RODASQL  JOB (1234),'EXECUTA DB2',CLASS=A,MSGCLASS=X,NOTIFY=&SYSUID
@@ -349,7 +348,7 @@ O IKJEFT01 é um programa **do ambiente TSO (Time Sharing Option)** que permite 
 
 ---
 
-### 🔹 3. Detalhamento dos componentes
+## 🔹 3. Detalhamento dos componentes
 
 | Componente    | Função                                                                 |
 |---------------|------------------------------------------------------------------------|
@@ -364,7 +363,7 @@ O IKJEFT01 é um programa **do ambiente TSO (Time Sharing Option)** que permite 
 
 ---
 
-### 🔹 4. Pré-requisitos para o programa rodar corretamente
+## 🔹 4. Pré-requisitos para o programa rodar corretamente
 
 ✅ Antes de executar o JCL acima, é necessário que:
 
@@ -374,7 +373,7 @@ O IKJEFT01 é um programa **do ambiente TSO (Time Sharing Option)** que permite 
 
 ---
 
-### 🔹 5. Interpretação de retornos
+## 🔹 5. Interpretação de retornos
 
 - **RC=0000** → Execução normal.
 - **SQLCODE=0** → Sucesso SQL.
@@ -385,7 +384,7 @@ O IKJEFT01 é um programa **do ambiente TSO (Time Sharing Option)** que permite 
 
 ---
 
-### 🔹 6. Exemplo completo e comentado
+## 🔹 6. Exemplo completo e comentado
 
 ```jcl
 //EXECDB2  JOB (9999),'PROGRAMA DB2',CLASS=A,MSGCLASS=X,NOTIFY=&SYSUID
@@ -413,7 +412,7 @@ O IKJEFT01 é um programa **do ambiente TSO (Time Sharing Option)** que permite 
 
 ---
 
-### 🔹 7. Erros comuns e soluções rápidas
+## 🔹 7. Erros comuns e soluções rápidas
 
 | Erro                             | Causa provável                                    | Ação sugerida                       |
 |----------------------------------|---------------------------------------------------|-------------------------------------|
@@ -424,15 +423,14 @@ O IKJEFT01 é um programa **do ambiente TSO (Time Sharing Option)** que permite 
 
 ---
 
-### 📎 Referências Oficiais
+## 📎 Referências Oficiais
 
 - [IBM - Executando programas DB2 com IKJEFT01](https://www.ibm.com/docs/en/db2-for-zos/13?topic=applications-running-batch)
 - [TSO/E Programming Services - IKJEFT01](https://www.ibm.com/docs/en/zos/2.5.0?topic=interfaces-ikjeft01)
 
 ---
 
-## 💻 Seção: JCL - Parte 4  
-### Execução de Utilitários DB2 no JCL (RUNSTATS, REORG, COPY, etc.)
+### Parte 4 - Execução de Utilitários DB2 no JCL (RUNSTATS, REORG, COPY, etc.)
 
 ---
 
@@ -449,7 +447,7 @@ O IKJEFT01 é um programa **do ambiente TSO (Time Sharing Option)** que permite 
 
 ---
 
-### 🔹 1. O que são utilitários DB2?
+## 🔹 1. O que são utilitários DB2?
 
 Utilitários DB2 são **programas fornecidos pelo DB2** para executar tarefas administrativas ou operacionais, como:
 - Atualizar estatísticas do catálogo
@@ -462,13 +460,13 @@ São executados geralmente em batch via **JCL + IKJEFT01** ou diretamente via **
 
 ---
 
-### 🔹 2. Visão geral do uso em JCL
+## 🔹 2. Visão geral do uso em JCL
 
 A forma mais comum de executar utilitários DB2 é através do programa **DSNUTILB**, que interpreta comandos no formato utilitário, fornecidos na entrada (`SYSIN`).
 
 ---
 
-### 🔹 3. Utilitário RUNSTATS
+## 🔹 3. Utilitário RUNSTATS
 
 Atualiza estatísticas sobre tabelas e índices no catálogo do DB2, ajudando o otimizador de consultas.
 
@@ -494,7 +492,7 @@ Atualiza estatísticas sobre tabelas e índices no catálogo do DB2, ajudando o 
 
 ---
 
-### 🔹 4. Utilitário REORG
+## 🔹 4. Utilitário REORG
 
 Reorganiza fisicamente os dados das tabelas para eliminar fragmentação e melhorar performance.
 
@@ -517,7 +515,7 @@ Reorganiza fisicamente os dados das tabelas para eliminar fragmentação e melho
 
 ---
 
-### 🔹 5. Utilitário COPY
+## 🔹 5. Utilitário COPY
 
 Gera cópia física de tabelaspaces e índices, essencial para backup e recuperação.
 
@@ -538,7 +536,7 @@ Gera cópia física de tabelaspaces e índices, essencial para backup e recupera
 
 ---
 
-### 🔹 6. Utilitário CHECK DATA
+## 🔹 6. Utilitário CHECK DATA
 
 Verifica se os dados de uma tabela respeitam regras de integridade referencial.
 
@@ -556,7 +554,7 @@ Verifica se os dados de uma tabela respeitam regras de integridade referencial.
 
 ---
 
-### 🔹 7. Utilitário LOAD/UNLOAD
+## 🔹 7. Utilitário LOAD/UNLOAD
 
 - **LOAD** → carga em massa de dados
 - **UNLOAD** → exportação de dados
@@ -576,7 +574,7 @@ Verifica se os dados de uma tabela respeitam regras de integridade referencial.
 
 ---
 
-### 🔹 8. Cuidados e retorno de execução
+## 🔹 8. Cuidados e retorno de execução
 
 | Situação                          | Causa provável                               | Solução sugerida                         |
 |-----------------------------------|----------------------------------------------|-------------------------------------------|
@@ -588,7 +586,7 @@ Verifica se os dados de uma tabela respeitam regras de integridade referencial.
 
 ---
 
-### 📎 Referências Oficiais IBM
+## 📎 Referências Oficiais IBM
 
 - [IBM - DB2 Utilities Overview](https://www.ibm.com/docs/en/db2-for-zos/13?topic=utilities-overview)
 - [RUNSTATS Utility](https://www.ibm.com/docs/en/db2-for-zos/13?topic=utilities-runstats-utility)
@@ -599,8 +597,7 @@ Verifica se os dados de uma tabela respeitam regras de integridade referencial.
 
 ---
 
-## 💻 Seção: JCL - Parte 5  
-### Controle de Execução: Condições, Encadeamento e Orquestração de Steps
+### Parte 5 - Controle de Execução: Condições, Encadeamento e Orquestração de Steps
 
 ---
 
@@ -615,7 +612,7 @@ Verifica se os dados de uma tabela respeitam regras de integridade referencial.
 
 ---
 
-### 🔹 1. Agendamento e execução de JOBs
+## 🔹 1. Agendamento e execução de JOBs
 
 Os JOBs JCL podem ser:
 - Submetidos manualmente (`SUB`)
@@ -633,7 +630,7 @@ Um JOB típico:
 
 ---
 
-### 🔹 2. Encadeamento com COND
+## 🔹 2. Encadeamento com COND
 
 O parâmetro `COND` permite **controlar a execução de steps com base em códigos de retorno anteriores**.
 
@@ -653,7 +650,7 @@ O parâmetro `COND` permite **controlar a execução de steps com base em códig
 
 ---
 
-### 🔹 3. Controle com IF/THEN/ELSE/ENDIF
+## 🔹 3. Controle com IF/THEN/ELSE/ENDIF
 
 Para maior controle, o JCL permite estrutura condicional com `IF`.
 
@@ -673,7 +670,7 @@ Para maior controle, o JCL permite estrutura condicional com `IF`.
 
 ---
 
-### 🔹 4. Interpretação do código de retorno (RETCODE)
+## 🔹 4. Interpretação do código de retorno (RETCODE)
 
 Cada programa ou utilitário retorna um **RC (return code)**. O JCL avalia este valor para:
 - Saber se o step terminou com sucesso
@@ -688,7 +685,7 @@ Cada programa ou utilitário retorna um **RC (return code)**. O JCL avalia este 
 
 ---
 
-### 🔹 5. Melhores práticas de controle
+## 🔹 5. Melhores práticas de controle
 
 ✅ **Padronize RC esperados** por step  
 ✅ Use `IF/THEN/ELSE` para lógica mais clara que `COND`  
@@ -698,7 +695,7 @@ Cada programa ou utilitário retorna um **RC (return code)**. O JCL avalia este 
 
 ---
 
-### 🔹 6. Exemplos práticos
+## 🔹 6. Exemplos práticos
 
 #### ✔️ Exemplo com COND
 ```jcl
@@ -747,7 +744,7 @@ Cada programa ou utilitário retorna um **RC (return code)**. O JCL avalia este 
 
 ---
 
-# 🗂️ JCL - Parte 6: Arquivos e Datasets no z/OS
+### Parte 6 - Arquivos e Datasets no z/OS
 
 O uso correto de **arquivos (datasets)** no JCL é essencial para garantir que os programas executem com sucesso, sem erros de alocação, acesso, lock ou falta de espaço. Esta seção explora **em profundidade** como utilizar datasets no JCL, desde o básico até exemplos mais completos.
 
@@ -887,7 +884,7 @@ DCB=(RECFM=FB,LRECL=80,BLKSIZE=800,DSORG=PS)
 
 ---
 
-## 🧩 7. Organização de arquivos por convenção
+### 🧩 7. Organização de arquivos por convenção
 
 Use nomes padronizados para facilitar rastreio, segurança e gerenciamento.
 
@@ -939,7 +936,7 @@ O acesso a datasets pode ser controlado via **RACF (Resource Access Control Faci
 
 ---
 
-# 🗂️ JCL - Parte 7: COND, Códigos de Retorno (RC) e Controle de Execução Condicional
+### Parte 7 - COND, Códigos de Retorno (RC) e Controle de Execução Condicional
 
 Controlar a execução condicional de steps com base em **códigos de retorno (Return Code, RC)** é uma das práticas mais poderosas e críticas no JCL. Permite a construção de fluxos inteligentes, evitando a execução de steps desnecessários, controlando dependências e prevenindo reprocessamentos indevidos.
 
@@ -1143,7 +1140,7 @@ Dominar o uso de `COND` e dos códigos de retorno no JCL é essencial para o con
 
 ---
 
-# 🧩 JCL - Parte 8: IF/THEN/ELSE/ENDIF – Controle Condicional Estruturado no JCL com foco em DB2
+### Parte 8 - IF/THEN/ELSE/ENDIF – Controle Condicional Estruturado no JCL com foco em DB2
 
 O uso de `IF/THEN/ELSE/ENDIF` no JCL traz clareza e controle estrutural avançado à execução condicional de steps. Essa abordagem moderna é preferida em ambientes corporativos, especialmente quando lidamos com **programas COBOL com DB2** ou **utilitários de manutenção de objetos do banco de dados**.
 
@@ -1329,7 +1326,7 @@ Dominar essa estrutura permite construir JCLs mais inteligentes, seguros e fáce
 
 ---
 
-# 🧩 JCL - Parte 9: Parâmetros de Execução no JCL (EXEC & JOB) – Uso em DB2
+### Parte 9 - Parâmetros de Execução no JCL (EXEC & JOB) – Uso em DB2
 
 Os parâmetros de execução permitem controlar **como, quando e onde** um job será processado no ambiente z/OS. Entender cada um deles é essencial para garantir a correta **execução de programas COBOL/DB2** e **utilitários como RUNSTATS, REORG, DSNTIAUL, etc**.
 
@@ -1472,7 +1469,7 @@ END
 
 ---
 
-# 🧩 JCL - Parte 10: Controle de Dados – DD Statements aplicados ao DB2
+### Parte 10 - Controle de Dados – DD Statements aplicados ao DB2
 
 As instruções `DD` (Data Definition) são fundamentais para o funcionamento dos steps JCL, pois definem **onde o programa encontra dados de entrada, onde grava saídas, quais bibliotecas usar, arquivos temporários, tabelas DB2, e muito mais**.
 
@@ -1668,7 +1665,7 @@ Mensagens de erro, dumps de abend, logs de execução.
 
 ---
 
-# 🧩 JCL - Parte 11: Uso de Variáveis e Parâmetros Simbólicos no JCL
+### Parte 11 - Uso de Variáveis e Parâmetros Simbólicos no JCL
 
 ## 🧠 O que são parâmetros simbólicos?
 
@@ -1854,7 +1851,7 @@ O uso adequado de variáveis e parâmetros simbólicos no JCL é **essencial par
 
 ---
 
-# 🧩 JCL - Parte 12: Uso de Condicionais no JCL (IF / THEN / ELSE / ENDIF)
+### Parte 12 - Uso de Condicionais no JCL (IF / THEN / ELSE / ENDIF)
 
 ## 📘 Objetivo
 
