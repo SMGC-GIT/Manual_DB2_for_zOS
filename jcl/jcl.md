@@ -903,5 +903,208 @@ O acesso a datasets pode ser controlado via **RACF (Resource Access Control Faci
 
 ---
 
+# 🗂️ JCL - Parte 7: COND, Códigos de Retorno (RC) e Controle de Execução Condicional
+
+Controlar a execução condicional de steps com base em **códigos de retorno (Return Code, RC)** é uma das práticas mais poderosas e críticas no JCL. Permite a construção de fluxos inteligentes, evitando a execução de steps desnecessários, controlando dependências e prevenindo reprocessamentos indevidos.
+
+---
+
+## 🧠 1. O que é COND no JCL?
+
+O parâmetro `COND=` define **condições para *pular* (não executar)** um step com base no RC de steps anteriores.
+
+> 💡 **Importante:** `COND=` **NÃO controla a execução** de um step diretamente, mas **impede a execução caso a condição seja satisfeita**.
+
+---
+
+## ⚙️ 2. Sintaxe e Significado
+
+```jcl
+COND=(rc,operador)
+```
+
+| Elemento   | Significado |
+|------------|-------------|
+| `rc`       | Return Code a ser comparado (ex: 4, 8, 12) |
+| `operador` | `LT`, `LE`, `EQ`, `NE`, `GE`, `GT` |
+
+> 🛑 Se a condição for **verdadeira**, o step será **ignorado** (SKIPPED).
+
+---
+
+### ✔️ Exemplos Práticos
+
+#### ✅ Exemplo 1 – Ignora se RC anterior for maior que 4:
+
+```jcl
+//STEP02 EXEC PGM=PROG2,COND=(4,LT)
+```
+
+> Se **algum step anterior** retornou RC **< 4**, a condição **não é satisfeita**, o step executa normalmente.  
+> Se **RC ≥ 4**, então `4 LT RC` → **condição verdadeira**, **STEP02 é ignorado**.
+
+---
+
+#### ✅ Exemplo 2 – Ignorar se o step anterior deu RC=12
+
+```jcl
+//STEP02 EXEC PGM=PROG2,COND=(12,EQ)
+```
+
+> Se **RC = 12**, então `12 EQ 12` → condição satisfeita → step é ignorado.
+
+---
+
+#### ✅ Exemplo 3 – Ignorar se qualquer step anterior deu RC maior ou igual a 8:
+
+```jcl
+//STEP03 EXEC PGM=PROG3,COND=(8,LE)
+```
+
+> Se RC = 8, 12 ou 16 → `8 LE RC` é verdadeiro → step é ignorado.
+
+---
+
+## 🧾 3. Parâmetro COND no JOB vs no STEP
+
+| Onde usar? | Efeito |
+|------------|--------|
+| `COND=` no JOB card | Avalia **todos os RCs** dos steps anteriores no job inteiro |
+| `COND=` no STEP     | Avalia RCs de steps anteriores **apenas até aquele ponto** |
+
+---
+
+### 🧠 Exemplo: `COND` no JOB card
+
+```jcl
+//JOBX     JOB (ACCT),'TESTE',COND=(4,GT)
+//STEP01   EXEC PGM=OK1
+//STEP02   EXEC PGM=OK2
+```
+
+> Se qualquer step retornar RC > 4, o JCL ignora os steps seguintes.
+
+---
+
+## ✅ 4. Uso de RETURN CODE (RC) no COBOL e Outros Programas
+
+Ao final da execução de um programa, é comum retornar um código de status:
+
+```cobol
+    MOVE 8 TO RETURN-CODE.
+```
+
+| RC  | Significado típico                      |
+|-----|------------------------------------------|
+| 0   | Sucesso                                  |
+| 4   | Sucesso com advertência                  |
+| 8   | Erro (dados inválidos, falha de lógica)  |
+| 12  | Erro grave (sintaxe, arquivo não lido)   |
+| 16  | Erro de sistema ou falta de recurso      |
+
+> 💡 Você pode criar sua lógica de RC no programa para controlar o fluxo no JCL.
+
+---
+
+## 🧪 5. Exemplos Completos de Controle Condicional
+
+### 🧷 Cenário A – Executar somente se o step anterior foi OK (RC=0)
+
+```jcl
+//STEP1   EXEC PGM=PROG1
+//STEP2   EXEC PGM=PROG2,COND=(0,NE)
+```
+
+> Se STEP1 retornar RC = 0 → `0 NE 0` é falso → STEP2 é executado  
+> Se STEP1 retornar RC ≠ 0 → condição verdadeira → STEP2 é ignorado
+
+---
+
+### 🧷 Cenário B – Fazer rollback apenas se houver erro no processamento
+
+```jcl
+//PROCESS EXEC PGM=COBPROC
+//ROLLBCK EXEC PGM=UNDO,COND=(0,EQ)
+```
+
+> `0 EQ 0` só é verdadeiro se o RC anterior for 0 → nesse caso o rollback é ignorado.  
+> Se houve erro (RC ≠ 0), rollback será executado.
+
+---
+
+### 🧷 Cenário C – Executar utilitário de análise só se RC for 8 ou mais
+
+```jcl
+//ANALISA EXEC PGM=PROG3,COND=(8,GT)
+```
+
+> RC = 0, 4 → `8 GT RC` = verdadeiro → step **ignorado**  
+> RC = 8, 12 → `8 GT RC` = falso → step **executado**
+
+---
+
+## 🚧 6. Cuidado com múltiplos steps: Avaliação de COND
+
+### ❗ Erro comum:
+
+```jcl
+//STEP1 EXEC PGM=OK1
+//STEP2 EXEC PGM=OK2,COND=(4,LT)
+```
+
+Se STEP1 retornar RC = 8: `4 LT 8` é verdadeiro → STEP2 é ignorado  
+Porém se STEP1 retornar RC = 0: `4 LT 0` = falso → STEP2 é executado
+
+> 🔍 Sempre pense como: **"se a condição for verdadeira, o step é ignorado"**.
+
+---
+
+## 💎 7. Boas Práticas com COND e RC
+
+| Prática                                 | Justificativa |
+|-----------------------------------------|----------------|
+| Use `COND=(0,NE)` para steps dependentes | Garante que o step só rode se o anterior tiver sucesso total (RC=0) |
+| Evite `COND=EVEN` e `COND=ONLY`, exceto se realmente necessário | Essas formas legadas são menos claras e dificultam a leitura/manutenção |
+| Use nomes significativos nos steps      | Ajuda a rastrear qual step produziu qual RC e sua influência na execução |
+| Avalie RCs no programa COBOL            | Permite controle preciso de comportamento no JCL (ex: diferenciar RC=4 e RC=8) |
+| Teste em ambiente seguro com RCs simulados | Ajuda a validar lógicas de COND antes da produção |
+| Sempre documente a lógica de COND no JCL | Melhora compreensão futura, principalmente se o RC não for 0 |
+
+---
+
+## 🧰 8. Alternativas a COND: IF/THEN/ELSE no JCL
+
+O JCL moderno permite controle condicional usando blocos estruturados:
+
+```jcl
+//STEP1 EXEC PGM=PROG1
+// IF (STEP1.RC = 0) THEN
+//STEP2 EXEC PGM=PROG2
+// ELSE
+//STEP3 EXEC PGM=ERROLOG
+// ENDIF
+```
+
+> Mais legível e estruturado. Ideal para fluxos complexos.
+
+---
+
+## 🧠 Conclusão
+
+Dominar o uso de `COND` e dos códigos de retorno no JCL é essencial para o controle eficaz de fluxos batch. Ele permite:
+
+- Evitar execução desnecessária
+- Garantir consistência de dados
+- Controlar dependências de steps
+- Reduzir riscos de falhas em produção
+
+---
+
+## 📚 Referências
+
+- 🔗 [z/OS JCL Reference – COND](https://www.ibm.com/docs/en/zos/3.1.0?topic=statements-exec-cond-parameter)
+- 🔗 [Structured Conditional Processing (IF/THEN/ELSE)](https://www.ibm.com/docs/en/zos/3.1.0?topic=statements-ifthenelseendif-construct)
+
+---
 
 
