@@ -22,17 +22,17 @@ As explicações aqui foram elaboradas com **nível crescente de complexidade**,
 
 ## 📚 Índice da Seção JCL
 
-- [Parte 1 – Introdução ao JCL](#parte-1---introducao-ao-jcl)
-- [Parte 2 – Estrutura de um Job JCL](#parte-2---estrutura-de-um-job-jcl)
-- [Parte 3 - Execução de Programas COBOL com DB2 (via IKJEFT01)](#parte-3---execucao-de-programas-cobol-com-db2-via-ikjeft01)
-- [Parte 4 - Execução de Utilitários DB2 no JCL (RUNSTATS, REORG, COPY, etc.)](#parte-4---execucao-de-utilitarios-db2-no-jcl-runstats-reorg-copy-etc)
-- [Parte 5 - Controle de Execução: Condições, Encadeamento e Orquestração de Steps](#parte-5---controle-de-execucao-condicoes-encadeamento-e-orquestracao-de-steps)
+- [Parte 1 – Introducao ao JCL](#parte-1--introducao-ao-jcl)
+- [Parte 2 – Estrutura de um Job JCL](#parte-2--estrutura-de-um-job-jcl)
+- [Parte 3 - Execucao de Programas COBOL com DB2 (via IKJEFT01)](#parte-3---execucao-de-programas-cobol-com-db2-via-ikjeft01)
+- [Parte 4 - Execucao de Utilitarios DB2 no JCL (RUNSTATS, REORG, COPY, etc.)](#parte-4---execucao-de-utilitarios-db2-no-jcl-runstats-reorg-copy-etc)
+- [Parte 5 - Controle de Execucao: Condicoes, Encadeamento e Orquestracao de Steps](#parte-5---controle-de-execucao-condicoes-encadeamento-e-orquestracao-de-steps)
 - [Parte 6 - Arquivos e Datasets no z/OS](#parte-6---arquivos-e-datasets-no-zos)
-- [Parte 7 - COND, Códigos de Retorno (RC) e Controle de Execução Condicional](#parte-7---cond-codigos-de-retorno-rc-e-controle-de-execucao-condicional)
+- [Parte 7 - COND, Codigos de Retorno (RC) e Controle de Execucao Condicional](#parte-7---cond-codigos-de-retorno-rc-e-controle-de-execucao-condicional)
 - [Parte 8 - IF/THEN/ELSE/ENDIF – Controle Condicional Estruturado no JCL com foco em DB2](#parte-8---ifthenelseifendif--controle-condicional-estruturado-no-jcl-com-foco-em-db2)
-- [Parte 9 - Parâmetros de Execução no JCL (EXEC & JOB) – Uso em DB2](#parte-9---parametros-de-execucao-no-jcl-exec--job--uso-em-db2)
+- [Parte 9 - Parametros de Execucao no JCL (EXEC & JOB) – Uso em DB2](#parte-9---parametros-de-execucao-no-jcl-exec--job--uso-em-db2)
 - [Parte 10 - Controle de Dados – DD Statements aplicados ao DB2](#parte-10---controle-de-dados--dd-statements-aplicados-ao-db2)
-- [Parte 11 - Uso de Variáveis e Parâmetros Simbólicos no JCL](#parte-11---uso-de-variaveis-e-parametros-simbolicos-no-jcl)
+- [Parte 11 - Uso de Variaveis e Parametros Simbolicos no JCL](#parte-11---uso-de-variaveis-e-parametros-simbolicos-no-jcl)
 - [Parte 12 - Uso de Condicionais no JCL (IF / THEN / ELSE / ENDIF)](#parte-12---uso-de-condicionais-no-jcl-if--then--else--endif)
 
 
@@ -42,7 +42,7 @@ As explicações aqui foram elaboradas com **nível crescente de complexidade**,
 
 ---
 
-### Parte 1 – Introdução ao JCL
+### Parte 1 – Introducao ao JCL
 
 ## 📂 1. Estrutura Básica de um Job JCL
 
@@ -307,7 +307,7 @@ DCB=(RECFM=FB,LRECL=80,BLKSIZE=800)
 
 ---
 
-### Parte 3 - Execução de Programas COBOL com DB2 (via IKJEFT01)
+### Parte 3 - Execucao de Programas COBOL com DB2 (via IKJEFT01)
 
 ---
 
@@ -431,7 +431,7 @@ O IKJEFT01 é um programa **do ambiente TSO (Time Sharing Option)** que permite 
 
 ---
 
-### Parte 4 - Execução de Utilitários DB2 no JCL (RUNSTATS, REORG, COPY, etc.)
+### Parte 4 - Execucao de Utilitarios DB2 no JCL (RUNSTATS, REORG, COPY, etc.)
 
 ---
 
@@ -598,7 +598,7 @@ Verifica se os dados de uma tabela respeitam regras de integridade referencial.
 
 ---
 
-### Parte 5 - Controle de Execução: Condições, Encadeamento e Orquestração de Steps
+### Parte 5 - Controle de Execucao: Condicoes, Encadeamento e Orquestracao de Steps
 
 ---
 
@@ -937,7 +937,7 @@ O acesso a datasets pode ser controlado via **RACF (Resource Access Control Faci
 
 ---
 
-### Parte 7 - COND, Códigos de Retorno (RC) e Controle de Execução Condicional
+### Parte 7 - COND, Codigos de Retorno (RC) e Controle de Execucao Condicional
 
 Controlar a execução condicional de steps com base em **códigos de retorno (Return Code, RC)** é uma das práticas mais poderosas e críticas no JCL. Permite a construção de fluxos inteligentes, evitando a execução de steps desnecessários, controlando dependências e prevenindo reprocessamentos indevidos.
 
@@ -1327,7 +1327,7 @@ Dominar essa estrutura permite construir JCLs mais inteligentes, seguros e fáce
 
 ---
 
-### Parte 9 - Parâmetros de Execução no JCL (EXEC & JOB) – Uso em DB2
+### Parte 9 - Parametros de Execucao no JCL (EXEC & JOB) – Uso em DB2
 
 Os parâmetros de execução permitem controlar **como, quando e onde** um job será processado no ambiente z/OS. Entender cada um deles é essencial para garantir a correta **execução de programas COBOL/DB2** e **utilitários como RUNSTATS, REORG, DSNTIAUL, etc**.
 
@@ -1666,7 +1666,7 @@ Mensagens de erro, dumps de abend, logs de execução.
 
 ---
 
-### Parte 11 - Uso de Variáveis e Parâmetros Simbólicos no JCL
+### Parte 11 - Uso de Variaveis e Parametros Simbolicos no JCL
 
 ## 🧠 O que são parâmetros simbólicos?
 
