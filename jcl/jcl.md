@@ -1632,3 +1632,188 @@ Mensagens de erro, dumps de abend, logs de execução.
 
 ---
 
+# 🧩 JCL - Parte 11: Uso de Variáveis e Parâmetros Simbólicos no JCL
+
+## 🧠 O que são parâmetros simbólicos?
+
+Parâmetros simbólicos são **variáveis substituíveis** no JCL, definidos e resolvidos no momento da submissão do job. Eles proporcionam **flexibilidade, reutilização e padronização** de jobs, permitindo a passagem de valores como datas, nomes de datasets, identificadores de ambiente e muito mais.
+
+---
+
+## 🎯 1. Tipos de variáveis mais comuns
+
+### 🔹 Variáveis automáticas (simbólicos do sistema)
+São fornecidas pelo z/OS automaticamente:
+
+| Variável       | Significado                                  |
+|----------------|----------------------------------------------|
+| `&SYSUID`      | ID do usuário que submeteu o job             |
+| `&SYSDATE`     | Data da submissão (formato YYMMDD)           |
+| `&SYSTIME`     | Hora da submissão (formato HHMMSS)           |
+| `&SYSNAME`     | Nome do sistema                              |
+| `&JOBNAME`     | Nome do job                                  |
+
+Exemplo:
+
+```jcl
+//MYJOB JOB (ACCT),'&SYSUID',CLASS=A,MSGCLASS=X
+```
+
+---
+
+### 🔹 Parâmetros simbólicos definidos pelo usuário
+
+Você pode definir seus próprios parâmetros em **procedimentos (PROCs)** ou diretamente em **parâmetros de steps**, assim:
+
+```jcl
+//MYPROC PROC DB2SYS=DBP1,PROG=MYPROG
+//STEP01 EXEC PGM=IKJEFT01
+//SYSTSIN DD *
+  DSN SYSTEM(&DB2SYS)
+  RUN PROGRAM(&PROG) PLAN(&PROG) -
+    LIB('USR.LOADLIB')
+  END
+/*
+//MYPROC PEND
+```
+
+Chamada do PROC:
+
+```jcl
+//CALLDB2 EXEC MYPROC,DB2SYS=DSN1,PROG=PROGTEST
+```
+
+---
+
+## 🛠️ 2. Exemplos práticos no contexto DB2
+
+### 🔸 Exemplo 1: Job parametrizado para diferentes programas
+
+```jcl
+//RUNDB2  JOB (ACCT),'DB2 PROG PARAM',
+//  CLASS=A,MSGCLASS=X
+//*
+//STEP01 EXEC PGM=IKJEFT01
+//STEPLIB  DD DSN=DB2.V13.RUNLIB.LOAD,DISP=SHR
+//         DD DSN=USR.LOADLIB,DISP=SHR
+//SYSTSIN  DD *
+  DSN SYSTEM(&DB2SYS)
+  RUN PROGRAM(&PROG) PLAN(&PLAN) -
+    LIB('&LIB')
+  END
+/*
+//SYSTSPRT DD SYSOUT=*
+```
+
+Chamada com substituições:
+
+```jcl
+//  SET DB2SYS=DBP1
+//  SET PROG=FATURADB
+//  SET PLAN=FATURA13
+//  SET LIB=USR.LOADLIB
+```
+
+---
+
+### 🔸 Exemplo 2: Gerar datasets com data e usuário no nome
+
+```jcl
+//STEP01  EXEC PGM=IEBGENER
+//SYSPRINT DD SYSOUT=*
+//SYSUT1   DD DSN=INPUT.DATA,DISP=SHR
+//SYSUT2   DD DSN=BACKUP.&SYSUID..&SYSDATE,
+//            DISP=(NEW,CATLG,DELETE),
+//            SPACE=(CYL,(1,1)),UNIT=SYSDA
+//SYSIN    DD DUMMY
+```
+
+Resultado:  
+`DSN=BACKUP.JOSE.250522` (exemplo)
+
+---
+
+## 📌 3. Boas práticas com simbólicos (continuação)
+
+| Boas práticas                                 | Justificativa                                |
+|-----------------------------------------------|-----------------------------------------------|
+| Usar simbólicos para sistemas DB2             | Facilita execução em múltiplos ambientes      |
+| Centralizar parâmetros em PROC ou SET         | Melhora manutenção e clareza                  |
+| Combinar com IF/THEN/ELSE (condicional JCL)   | Permite lógica mais inteligente no job flow   |
+| Evitar nomes genéricos como &A, &B             | Torna o código difícil de entender e manter   |
+| Comentar o uso das variáveis                  | Ajuda na manutenção por outros profissionais  |
+| Evitar substituições dinâmicas em produção    | Minimiza risco de erro e facilita auditoria   |
+
+---
+
+## 🔄 4. Como os simbólicos são resolvidos?
+
+A substituição das variáveis simbólicas ocorre na **expansão do job** no momento da submissão. A prioridade de resolução é:
+
+1. Parâmetros informados no `EXEC` do PROC
+2. Instruções `SET` no início do job
+3. Valores default no `PROC`
+
+Exemplo completo:
+
+```jcl
+//SETENV  SET DB2SYS=DSN1,PROG=CLIENTES,PLAN=PLCLIENT,LIB=MY.LOAD
+//*
+//EXEC01  EXEC PGM=IKJEFT01
+//STEPLIB  DD DSN=DB2.V13.RUNLIB.LOAD,DISP=SHR
+//         DD DSN=&LIB,DISP=SHR
+//SYSTSIN  DD *
+  DSN SYSTEM(&DB2SYS)
+  RUN PROGRAM(&PROG) PLAN(&PLAN) -
+    LIB('&LIB')
+  END
+/*
+//SYSTSPRT DD SYSOUT=*
+```
+
+Esse modelo permite alterar facilmente o ambiente DB2 (`DSN1`, `DSN2`, etc.), o programa e seu plano, apenas ajustando os valores no `SET`.
+
+---
+
+## 🧩 5. Integração simbólica em PROCs
+
+### 🧷 Exemplo de PROC reutilizável
+
+```jcl
+//DB2PROC PROC DB2SYS=DSN1,PROG=GENERIC,PLAN=GENPLAN,LIB=USR.LOAD
+//RUNSTEP EXEC PGM=IKJEFT01
+//STEPLIB  DD DSN=DB2.V13.RUNLIB.LOAD,DISP=SHR
+//         DD DSN=&LIB,DISP=SHR
+//SYSTSIN  DD *
+  DSN SYSTEM(&DB2SYS)
+  RUN PROGRAM(&PROG) PLAN(&PLAN) -
+    LIB('&LIB')
+  END
+/*
+//SYSTSPRT DD SYSOUT=*
+//DB2PROC PEND
+```
+
+### 🧷 Chamada personalizada do PROC
+
+```jcl
+//EXECDB2 EXEC DB2PROC,DB2SYS=DSN2,PROG=FATURAMENTO,PLAN=FATURA13
+```
+
+Este modelo torna possível padronizar todos os jobs de programas DB2 na empresa e só alterar os parâmetros conforme necessário. Ajuda no controle de versões, auditoria e mudança de ambientes de forma segura e prática.
+
+---
+
+## 🔗 Referência oficial IBM
+
+Para aprofundamento no uso de simbólicos em JCL:
+
+🔹 [IBM z/OS MVS JCL Reference – Symbolic Parameters](https://www.ibm.com/docs/en/zos/3.1.0?topic=jobs-symbolic-parameters)
+
+---
+
+## ✅ Conclusão da Parte 11
+
+O uso adequado de variáveis e parâmetros simbólicos no JCL é **essencial para padronizar, simplificar e escalar a execução de jobs**, especialmente em ambientes complexos como os que envolvem **DB2 for z/OS**. Saber usar parâmetros de forma consciente melhora a **manutenibilidade**, reduz erros humanos e favorece a automação.
+
+---
