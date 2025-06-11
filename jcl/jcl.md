@@ -5,6 +5,44 @@
 Este guia tem como objetivo fornecer uma base sólida e prática sobre JCL voltado ao dia a dia de um DBA, com foco em execução de utilitários, controle de jobs, manipulação de datasets e entendimento de execução no JES.
 
 ---
+
+# 🧾 Seção JCL – Job Control Language no contexto do DB2 for z/OS
+
+Esta seção tem como objetivo **capacitar o leitor no uso prático, claro e eficiente do JCL**, com foco em operações diretamente relacionadas ao ambiente **DB2 for z/OS**, incluindo:
+
+- Execução de programas COBOL com acesso ao DB2
+- Submissão e controle de utilitários DB2
+- Alocação de datasets
+- Análise de retorno e diagnóstico de erros
+- Estruturas de controle condicional
+
+As explicações aqui foram elaboradas com **nível crescente de complexidade**, partindo do básico até abordagens mais avançadas, sempre com **exemplos práticos e bem explicados**.
+
+---
+
+## 📚 Índice da Seção JCL
+
+> 🔗 **Clique em uma parte para ir direto ao conteúdo correspondente:**
+
+- [🔹 Parte 1 – Introdução ao JCL](#parte-1--introdução-ao-jcl)
+- [🔹 Parte 2 – Estrutura básica de um JOB](#parte-2--estrutura-básica-de-um-job)
+- [🔹 Parte 3 – PARM e Programas COBOL com DB2](#parte-3--parm-e-programas-cobol-com-db2)
+- [🔹 Parte 4 – Parâmetros de EXEC e uso de STEPLIB](#parte-4--parâmetros-de-exec-e-uso-de-steplib)
+- [🔹 Parte 5 – Conceito de DD (Data Definition)](#parte-5--conceito-de-dd-data-definition)
+- [🔹 Parte 6 – Entrada e saída padrão (SYSIN, SYSOUT, SYSTSIN, SYSTSPRT)](#parte-6--entrada-e-saída-padrão-sysin-sysout-systsin-systsprt)
+- [🔹 Parte 7 – Tipos de datasets (SEQ, GDG, VSAM)](#parte-7--tipos-de-datasets-seq-gdg-vsam)
+- [🔹 Parte 8 – Criação e alocação de datasets (SPACE, DCB, DISP)](#parte-8--criação-e-alocação-de-datasets-space-dcb-disp)
+- [🔹 Parte 9 – Execução de utilitários DB2 via JCL](#parte-9--execução-de-utilitários-db2-via-jcl)
+- [🔹 Parte 10 – JOBs com múltiplos steps e controle de retorno (COND)](#parte-10--jobs-com-múltiplos-steps-e-controle-de-retorno-cond)
+- [🔹 Parte 11 – Como analisar RCs e mensagens de erro (SYSOUT, SDSF)](#parte-11--como-analisar-rcs-e-mensagens-de-erro-sysout-sdsf)
+- [🔹 Parte 12 – Uso de condicionais no JCL (IF, THEN, ELSE, ENDIF)](#parte-12--uso-de-condicionais-no-jcl-if-then-else-endif)
+
+---
+
+> ✳️ **Nota:** Todo conteúdo foi validado com base em práticas reais e referências confiáveis da IBM. Use este material como guia prático no dia a dia de desenvolvimento, suporte e administração de sistemas mainframe com DB2 for z/OS.
+
+---
+
 ## 🧩 Seção: JCL Básico - Parte 1
 
 ## 📂 1. Estrutura Básica de um Job JCL
