@@ -20,20 +20,21 @@ As explicações aqui foram elaboradas com **nível crescente de complexidade**,
 
 ---
 
-## 🧭 Índice da Seção JCL
+## 📚 Índice da Seção JCL
 
-- [Parte 1 – Introdução ao JCL](#parte-1--introdução-ao-jcl)
-- [Parte 2 – Estrutura de um Job JCL](#parte-2--estrutura-de-um-job-jcl)
-- [Parte 3 – Tipos de DD Statements](#parte-3--tipos-de-dd-statements)
-- [Parte 4 – Execução Condicional no JCL](#parte-4--execução-condicional-no-jcl)
-- [Parte 5 – Conceito de RETURN CODE (RC)](#parte-5--conceito-de-return-code-rc)
-- [Parte 6 – Parâmetros REGION e TIME](#parte-6--parâmetros-region-e-time)
-- [Parte 7 – Uso de Parâmetros SYMBOLIC](#parte-7--uso-de-parâmetros-symbolic)
-- [Parte 8 – Trabalhando com Arquivos Sequenciais e VSAM](#parte-8--trabalhando-com-arquivos-sequenciais-e-vsam)
-- [Parte 9 – Job para Executar Programa COBOL com DB2](#parte-9--job-para-executar-programa-cobol-com-db2)
-- [Parte 10 – JOB de Utilitário DB2 com JCL](#parte-10--job-de-utilitário-db2-com-jcl)
-- [Parte 11 – JOBs com Condições e Saídas Diversas](#parte-11--jobs-com-condições-e-saídas-diversas)
-- [Parte 12 – JOB com Várias Etapas, Utilizando INCLUDE, PROC e OUTPUT](#parte-12--job-com-várias-etapas-utilizando-include-proc-e-output)
+- [Parte 1 – Introdução ao JCL](#parte-1---introducao-ao-jcl)
+- [Parte 2 – Estrutura de um Job JCL](#parte-2---estrutura-de-um-job-jcl)
+- [Parte 3 - Execução de Programas COBOL com DB2 (via IKJEFT01)](#parte-3---execucao-de-programas-cobol-com-db2-via-ikjeft01)
+- [Parte 4 - Execução de Utilitários DB2 no JCL (RUNSTATS, REORG, COPY, etc.)](#parte-4---execucao-de-utilitarios-db2-no-jcl-runstats-reorg-copy-etc)
+- [Parte 5 - Controle de Execução: Condições, Encadeamento e Orquestração de Steps](#parte-5---controle-de-execucao-condicoes-encadeamento-e-orquestracao-de-steps)
+- [Parte 6 - Arquivos e Datasets no z/OS](#parte-6---arquivos-e-datasets-no-zos)
+- [Parte 7 - COND, Códigos de Retorno (RC) e Controle de Execução Condicional](#parte-7---cond-codigos-de-retorno-rc-e-controle-de-execucao-condicional)
+- [Parte 8 - IF/THEN/ELSE/ENDIF – Controle Condicional Estruturado no JCL com foco em DB2](#parte-8---ifthenelseifendif--controle-condicional-estruturado-no-jcl-com-foco-em-db2)
+- [Parte 9 - Parâmetros de Execução no JCL (EXEC & JOB) – Uso em DB2](#parte-9---parametros-de-execucao-no-jcl-exec--job--uso-em-db2)
+- [Parte 10 - Controle de Dados – DD Statements aplicados ao DB2](#parte-10---controle-de-dados--dd-statements-aplicados-ao-db2)
+- [Parte 11 - Uso de Variáveis e Parâmetros Simbólicos no JCL](#parte-11---uso-de-variaveis-e-parametros-simbolicos-no-jcl)
+- [Parte 12 - Uso de Condicionais no JCL (IF / THEN / ELSE / ENDIF)](#parte-12---uso-de-condicionais-no-jcl-if--then--else--endif)
+
 
 ---
 
