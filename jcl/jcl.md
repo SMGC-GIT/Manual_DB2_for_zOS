@@ -711,7 +711,7 @@ Cada programa ou utilitário retorna um **RC (return code)**. O JCL avalia este 
 
 ---
 
-# 🗂️ JCL - Parte 6 (Refinada e Detalhada): Arquivos e Datasets no z/OS
+# 🗂️ JCL - Parte 6: Arquivos e Datasets no z/OS
 
 O uso correto de **arquivos (datasets)** no JCL é essencial para garantir que os programas executem com sucesso, sem erros de alocação, acesso, lock ou falta de espaço. Esta seção explora **em profundidade** como utilizar datasets no JCL, desde o básico até exemplos mais completos.
 
