@@ -1293,5 +1293,147 @@ Dominar essa estrutura permite construir JCLs mais inteligentes, seguros e fáce
 
 ---
 
+# 🧩 JCL - Parte 9: Parâmetros de Execução no JCL (EXEC & JOB) – Uso em DB2
+
+Os parâmetros de execução permitem controlar **como, quando e onde** um job será processado no ambiente z/OS. Entender cada um deles é essencial para garantir a correta **execução de programas COBOL/DB2** e **utilitários como RUNSTATS, REORG, DSNTIAUL, etc**.
+
+Nesta seção, vamos detalhar os principais parâmetros usados nas instruções `JOB` e `EXEC`, sempre com exemplos aplicados ao contexto do DB2.
+
+---
+
+## 🧷 1. Parâmetros na Instrução `JOB`
+
+### 🎯 Objetivo: Controlar o comportamento geral do job, como identificação, saída, limites de tempo e recursos.
+
+### ✔️ Sintaxe:
+
+```jcl
+//MEUJOB JOB (1234),'JOSE DBA',
+//  CLASS=A,MSGCLASS=X,MSGLEVEL=(1,1),
+//  TIME=1440,REGION=0M,NOTIFY=&SYSUID
+```
+
+---
+
+### 📌 Parâmetros comuns:
+
+| Parâmetro | Função | Detalhe |
+|----------|--------|---------|
+| `CLASS=` | Prioridade de execução no sistema | A = produção, T = teste, B = batch leve (pode variar por site) |
+| `MSGCLASS=` | Destino da saída do job (JES output) | Ex: X (arquivo em spool), A (impressora) |
+| `MSGLEVEL=` | Controle do que será listado no JESYSMSG | `(1,1)` exibe todas mensagens, incl. datasets alocados |
+| `NOTIFY=` | Notifica o TSO do usuário após término do job | Com `&SYSUID`, notifica quem submeteu |
+| `TIME=` | Limita o tempo máximo de execução do job | `TIME=1440` = máximo permitido (24h) |
+| `REGION=` | Quantidade de memória (RAM) alocada | `REGION=0M` = máximo permitido |
+
+> 💡 Recomenda-se usar `TIME=1440` e `REGION=0M` para evitar interrupções em jobs DB2 pesados (REORG, LOAD, etc.)
+
+---
+
+### ✅ Exemplo real:
+
+```jcl
+//DB2UTL JOB (ACCT),'RUNSTATS PROD',
+//  CLASS=A,MSGCLASS=X,MSGLEVEL=(1,1),
+//  TIME=1440,REGION=0M,NOTIFY=&SYSUID
+```
+
+> 🔎 Executa um job de RUNSTATS em ambiente de produção com prioridade e uso total de recursos.
+
+---
+
+## 🧷 2. Parâmetros na Instrução `EXEC`
+
+### 🎯 Objetivo: Controlar a execução de cada step individual, especialmente programas DB2 ou utilitários.
+
+### ✔️ Sintaxe:
+
+```jcl
+//STEP1 EXEC PGM=IKJEFT01,REGION=0M,TIME=1440
+```
+
+---
+
+### 📌 Parâmetros úteis:
+
+| Parâmetro | Função | Detalhe |
+|----------|--------|---------|
+| `PGM=` | Nome do programa a ser executado | Ex: `IKJEFT01` (TSO DB2), `DSNUTILB`, `DSNTIAUL` |
+| `PARM=` | Parâmetros passados ao programa | Ex: `PARM='DB01,REORG'` |
+| `TIME=` | Tempo máximo do step | Recomendado: `1440` ou omitido |
+| `REGION=` | Memória dedicada ao step | `REGION=0M` para máximo |
+| `COND=` | Evita execução se condição anterior for satisfeita | Substituído por `IF/THEN` no padrão moderno |
+| `TYPRUN=` | Tipo de execução | `HOLD`, `SCAN` ou `COPY` (veja abaixo) |
+
+---
+
+## 🧮 3. TYPRUN= – Executando com opções especiais
+
+| Valor | Descrição | Uso Prático |
+|-------|-----------|-------------|
+| `SCAN` | Verifica erros de sintaxe, não executa | Útil em validação antes de enviar job crítico |
+| `HOLD` | Mantém job aguardando liberação no spool | Ideal para revisão manual pré-execução |
+| `COPY` | Faz cópia do job para análise | Pouco comum |
+
+```jcl
+//STEP1 EXEC PGM=DSNUTILB,TYPRUN=SCAN
+```
+
+> 🔍 Simula execução do utilitário para detectar problemas no JCL sem rodar de fato.
+
+---
+
+## 🧪 4. Exemplo completo de JOB com EXEC para programa DB2
+
+```jcl
+//MEUJOB JOB (9999),'COBOL DB2 RUN',
+//  CLASS=T,MSGCLASS=X,MSGLEVEL=(1,1),
+//  TIME=1440,REGION=0M,NOTIFY=&SYSUID
+//*
+//STEP1 EXEC PGM=IKJEFT01,REGION=0M,TIME=1440
+//STEPLIB  DD DSN=DB2.PROD.LOADLIB,DISP=SHR
+//SYSTSIN  DD *
+DSN SYSTEM(DBP1)
+RUN PROGRAM(MYPROG) PLAN(MYPLAN) -
+  LIB('COBOL.LOADLIB')
+END
+/*
+//SYSPRINT DD SYSOUT=*
+//SYSTSPRT DD SYSOUT=*
+//SYSUDUMP DD SYSOUT=*
+```
+
+> ✅ Programa `MYPROG` compilado em COBOL com acesso a DB2 (plano `MYPLAN`), usando IKJEFT01.
+
+---
+
+## 🧩 5. Recomendações práticas para DB2
+
+| Situação | Parâmetros recomendados |
+|----------|-------------------------|
+| Jobs com REORG ou LOAD | `REGION=0M`, `TIME=1440`, `CLASS=A` |
+| Jobs de teste COBOL+DB2 | `CLASS=T`, `MSGCLASS=X`, `TIME=1440` |
+| Jobs em produção noturna | `TYPRUN=HOLD`, revisão antes da liberação |
+| Análise antes da execução | `TYPRUN=SCAN`, valida sintaxe sem rodar |
+
+---
+
+## 🛠️ 6. Boas práticas com parâmetros de execução
+
+- Use sempre `REGION=0M` para jobs DB2 – evita abends por falta de memória.
+- Evite `TIME=0` (tempo ilimitado) – use `TIME=1440` para controle seguro.
+- Centralize parâmetros comuns no cabeçalho `JOB` para evitar repetição nos `EXEC`.
+- Utilize `MSGLEVEL=(1,1)` para rastrear datasets e execuções no JESYSMSG.
+- Evite `COND=` se possível – prefira `IF/THEN/ELSE`.
+
+---
+
+## 📚 Referências
+
+- 🔗 [IBM z/OS JCL User’s Guide](https://www.ibm.com/docs/en/zos/3.1.0?topic=guide-job-control-language-reference)
+- 🔗 [IBM DB2 for z/OS Utility Guide](https://www.ibm.com/docs/en/db2-for-zos/12?topic=utilities-db2-utility-guide-reference)
+- 🔗 [JCL Parameters Quick Reference (IBM Redbooks)](https://www.redbooks.ibm.com)
+
+---
 
 
