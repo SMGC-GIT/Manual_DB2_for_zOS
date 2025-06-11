@@ -41,7 +41,7 @@ As explicações aqui foram elaboradas com **nível crescente de complexidade**,
 
 ---
 
-## 🧩 Seção: JCL Básico - Parte 1
+### Parte 1 – Introdução ao JCL
 
 ## 📂 1. Estrutura Básica de um Job JCL
 
