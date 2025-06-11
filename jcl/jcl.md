@@ -1436,4 +1436,199 @@ END
 
 ---
 
+# 🧩 JCL - Parte 10: Controle de Dados – DD Statements aplicados ao DB2
+
+As instruções `DD` (Data Definition) são fundamentais para o funcionamento dos steps JCL, pois definem **onde o programa encontra dados de entrada, onde grava saídas, quais bibliotecas usar, arquivos temporários, tabelas DB2, e muito mais**.
+
+No contexto do DB2, o uso correto de DD Statements garante a execução adequada de **programas COBOL com SQL embutido**, **utilitários como RUNSTATS, LOAD, REORG, DSNTIAUL, DSNUTILB**, além de permitir diagnósticos eficientes com `SYSPRINT`, `SYSOUT`, `SYSUDUMP`, entre outros.
+
+---
+
+## 🎯 1. Estrutura básica de uma DD Statement
+
+```jcl
+//NOMEDD   DD  PARÂMETROS
+```
+
+Exemplos comuns de parâmetros:
+- `DSN=`: nome do dataset
+- `DISP=`: status de alocação (NEW, SHR, OLD, MOD)
+- `SPACE=`: espaço necessário (TRACKS, CYLINDERS)
+- `UNIT=`: tipo de dispositivo (SYSDA, 3390)
+- `SYSOUT=*`: direciona a saída para spool (impresso)
+
+---
+
+## 📂 2. DD Statements mais usados em jobs DB2
+
+Abaixo, detalhamos os principais DDs usados em programas COBOL/DB2 e utilitários DB2.
+
+---
+
+### 🔹 `STEPLIB`
+
+Aponta para a biblioteca de carga que contém os módulos executáveis do DB2.
+
+```jcl
+//STEPLIB DD DSN=DB2.V13.RUNLIB.LOAD,DISP=SHR
+```
+
+> ⚠️ Essencial para execução de `IKJEFT01`, `DSNUTILB` e outros programas relacionados ao DB2.
+
+---
+
+### 🔹 `SYSTSIN`
+
+Entrada de comandos TSO para steps com `PGM=IKJEFT01`. Nele definimos comandos como `DSN`, `RUN`, `END`, usados para rodar programas COBOL com SQL embutido.
+
+```jcl
+//SYSTSIN DD *
+  DSN SYSTEM(DBP1)
+  RUN PROGRAM(MYPROG) PLAN(MYPLAN) -
+    LIB('USR.LOADLIB')
+  END
+```
+
+---
+
+### 🔹 `SYSTSPRT`
+
+Saída da execução do TSO (resultado de comandos, mensagens do DB2, status de retorno).
+
+```jcl
+//SYSTSPRT DD SYSOUT=*
+```
+
+---
+
+### 🔹 `SYSIN`
+
+Entrada de dados ou parâmetros para utilitários DB2 (LOAD, REORG, RUNSTATS, etc).
+
+```jcl
+//SYSIN DD *
+  LOAD DATA INDDN(SYSREC) LOG NO REPLACE
+    INTO TABLE DBCLIENTE.CLIENTE
+    (ID POSITION(1:5),
+     NOME POSITION(6:35),
+     UF POSITION(36:37))
+```
+
+---
+
+### 🔹 `SYSPRINT`
+
+Gera relatórios e mensagens da execução dos utilitários.
+
+```jcl
+//SYSPRINT DD SYSOUT=*
+```
+
+---
+
+### 🔹 `SYSREC`
+
+Dataset com os dados a serem carregados (utilizado no LOAD).
+
+```jcl
+//SYSREC DD DSN=USR.CLIENTES.INPUT,DISP=SHR
+```
+
+---
+
+### 🔹 `SYSUT1`, `SYSUT2`, `SORTIN`, `SORTOUT`
+
+Arquivos temporários ou intermediários, comumente usados por SORT, REORG, UNLOAD.
+
+```jcl
+//SYSUT1   DD UNIT=SYSDA,SPACE=(CYL,(10,5))
+//SORTOUT  DD DSN=TEMP.OUTPUT.SORTED,DISP=(NEW,CATLG,DELETE),
+//            UNIT=SYSDA,SPACE=(CYL,(10,5))
+```
+
+---
+
+### 🔹 `SYSERR`, `SYSOUT`, `SYSUDUMP`, `SYSABEND`
+
+Mensagens de erro, dumps de abend, logs de execução.
+
+```jcl
+//SYSERR   DD SYSOUT=*
+//SYSOUT   DD SYSOUT=*
+//SYSUDUMP DD SYSOUT=*
+//SYSABEND DD SYSOUT=*
+```
+
+---
+
+### 🔹 Outros DDs específicos
+
+| DDNAME     | Utilidade                                         |
+|------------|---------------------------------------------------|
+| `DSNTRACE` | Geração de rastreamento do DB2 para diagnóstico   |
+| `SYSDUMP`  | Geração de dumps para abends                      |
+| `SYSABOUT` | Saída alternativa de utilitários                  |
+| `DSNTRACE` | Diagnóstico profundo de execuções com erro        |
+
+---
+
+## 🧪 3. Exemplo completo com RUNSTATS
+
+```jcl
+//RUNSTATS JOB (ACCT),'RUNSTATS EXEMPLO',
+//  CLASS=A,MSGCLASS=X,NOTIFY=&SYSUID
+//*
+//STEP1 EXEC PGM=DSNUTILB,PARM='DBP1'
+//STEPLIB  DD DSN=DB2.V13.RUNLIB.LOAD,DISP=SHR
+//SYSPRINT DD SYSOUT=*
+//SYSUDUMP DD SYSOUT=*
+//SYSIN    DD *
+  RUNSTATS TABLESPACE DBCLIENTE.TSCLIENTE
+    TABLE(ALL) INDEX(ALL)
+/*
+```
+
+---
+
+## 🧪 4. Exemplo completo com programa COBOL + DB2 (IKJEFT01)
+
+```jcl
+//EXECDB2 JOB (ACCT),'EXECUTAR PROG DB2',
+//  CLASS=A,MSGCLASS=X,NOTIFY=&SYSUID
+//*
+//STEP01 EXEC PGM=IKJEFT01,DYNAMNBR=20
+//STEPLIB  DD DSN=USR.LOADLIB,DISP=SHR
+//         DD DSN=DB2.V13.RUNLIB.LOAD,DISP=SHR
+//SYSTSIN  DD *
+  DSN SYSTEM(DBP1)
+  RUN PROGRAM(MYPROG) PLAN(MYPLAN) -
+    LIB('USR.LOADLIB')
+  END
+/*
+//SYSTSPRT DD SYSOUT=*
+//SYSUDUMP DD SYSOUT=*
+//SYSPRINT DD SYSOUT=*
+```
+
+---
+
+## 📌 5. Dicas práticas para uso de DDs em ambientes DB2
+
+| Boas práticas | Motivo |
+|---------------|--------|
+| Nomear DDs conforme convenções do DB2 | Facilita entendimento e suporte |
+| Direcionar saídas para `SYSOUT=*` sempre que possível | Visualização rápida no spool |
+| Evitar espaço em excesso com `SPACE=(CYL,(10,5),RLSE)` | Liberação automática de espaço |
+| Testar jobs com `TYPRUN=SCAN` antes da execução real | Verificação de sintaxe sem execução |
+| Utilizar `DISP=(NEW,CATLG,DELETE)` para arquivos temporários | Boa gestão de datasets no catálogo |
+
+---
+
+## 📚 Referências
+
+- [IBM z/OS JCL User Guide](https://www.ibm.com/docs/en/zos/3.1.0?topic=guide-job-control-language-reference)
+- [IBM DB2 for z/OS Utility Guide](https://www.ibm.com/docs/en/db2-for-zos/12?topic=utilities-db2-utility-guide-reference)
+- [DFSORT Application Programming Guide](https://www.ibm.com/docs/en/zos/3.1.0?topic=guide-dfsort-application-programming)
+
+---
 
