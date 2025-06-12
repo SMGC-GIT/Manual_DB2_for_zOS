@@ -311,7 +311,7 @@ DCB=(RECFM=FB,LRECL=80,BLKSIZE=800)
 
 ---
 
-### Parte 3 - Execucao de Programas COBOL com DB2 (via IKJEFT01)
+### Parte 3 - Execucao de Programas COBOL com DB2 - via IKJEFT01
 
 ---
 
@@ -435,7 +435,7 @@ O IKJEFT01 é um programa **do ambiente TSO (Time Sharing Option)** que permite 
 
 ---
 
-### Parte 4 - Execucao de Utilitarios DB2 no JCL (RUNSTATS, REORG, COPY, etc.)
+### Parte 4 - Execucao de Utilitarios DB2 no JCL - RUNSTATS, REORG, COPY, etc
 
 ---
 
@@ -602,7 +602,7 @@ Verifica se os dados de uma tabela respeitam regras de integridade referencial.
 
 ---
 
-### Parte 5 - Controle de Execucao: Condicoes, Encadeamento e Orquestracao de Steps
+### Parte 5 - Controle de Execucao - Condicoes, Encadeamento e Orquestracao de Steps
 
 ---
 
@@ -749,7 +749,9 @@ Cada programa ou utilitário retorna um **RC (return code)**. O JCL avalia este 
 
 ---
 
-### Parte 6 - Arquivos e Datasets no z/OS
+### Parte 6 - Arquivos e Datasets no zOS
+
+---
 
 O uso correto de **arquivos (datasets)** no JCL é essencial para garantir que os programas executem com sucesso, sem erros de alocação, acesso, lock ou falta de espaço. Esta seção explora **em profundidade** como utilizar datasets no JCL, desde o básico até exemplos mais completos.
 
@@ -889,7 +891,7 @@ DCB=(RECFM=FB,LRECL=80,BLKSIZE=800,DSORG=PS)
 
 ---
 
-### 🧩 7. Organização de arquivos por convenção
+### Parte 7 - COND, Codigos de Retorno RC e Controle de Execucao Condicional
 
 Use nomes padronizados para facilitar rastreio, segurança e gerenciamento.
 
@@ -941,7 +943,9 @@ O acesso a datasets pode ser controlado via **RACF (Resource Access Control Faci
 
 ---
 
-### Parte 7 - COND, Codigos de Retorno (RC) e Controle de Execucao Condicional
+### Parte 7 - COND, Codigos de Retorno RC e Controle de Execucao Condicional
+
+---
 
 Controlar a execução condicional de steps com base em **códigos de retorno (Return Code, RC)** é uma das práticas mais poderosas e críticas no JCL. Permite a construção de fluxos inteligentes, evitando a execução de steps desnecessários, controlando dependências e prevenindo reprocessamentos indevidos.
 
@@ -1145,7 +1149,9 @@ Dominar o uso de `COND` e dos códigos de retorno no JCL é essencial para o con
 
 ---
 
-### Parte 8 - IF/THEN/ELSE/ENDIF – Controle Condicional Estruturado no JCL com foco em DB2
+### Parte 8 - IF-THEN-ELSE-ENDIF – Controle Condicional Estruturado no JCL com foco em DB2
+
+---
 
 O uso de `IF/THEN/ELSE/ENDIF` no JCL traz clareza e controle estrutural avançado à execução condicional de steps. Essa abordagem moderna é preferida em ambientes corporativos, especialmente quando lidamos com **programas COBOL com DB2** ou **utilitários de manutenção de objetos do banco de dados**.
 
@@ -1331,7 +1337,9 @@ Dominar essa estrutura permite construir JCLs mais inteligentes, seguros e fáce
 
 ---
 
-### Parte 9 - Parametros de Execucao no JCL (EXEC & JOB) – Uso em DB2
+### Parte 9 - Parametros de Execucao no JCL - EXEC e JOB - Uso em DB2
+
+---
 
 Os parâmetros de execução permitem controlar **como, quando e onde** um job será processado no ambiente z/OS. Entender cada um deles é essencial para garantir a correta **execução de programas COBOL/DB2** e **utilitários como RUNSTATS, REORG, DSNTIAUL, etc**.
 
@@ -1672,6 +1680,8 @@ Mensagens de erro, dumps de abend, logs de execução.
 
 ### Parte 11 - Uso de Variaveis e Parametros Simbolicos no JCL
 
+---
+
 ## 🧠 O que são parâmetros simbólicos?
 
 Parâmetros simbólicos são **variáveis substituíveis** no JCL, definidos e resolvidos no momento da submissão do job. Eles proporcionam **flexibilidade, reutilização e padronização** de jobs, permitindo a passagem de valores como datas, nomes de datasets, identificadores de ambiente e muito mais.
@@ -1856,7 +1866,9 @@ O uso adequado de variáveis e parâmetros simbólicos no JCL é **essencial par
 
 ---
 
-### Parte 12 - Uso de Condicionais no JCL (IF / THEN / ELSE / ENDIF)
+### Parte 12 - Uso de Condicionais no JCL - IF-THEN-ELSE-ENDIF
+
+---
 
 ## 📘 Objetivo
 
