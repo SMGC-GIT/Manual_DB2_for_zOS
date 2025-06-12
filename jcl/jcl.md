@@ -44,6 +44,8 @@ As explicações aqui foram elaboradas com **nível crescente de complexidade**,
 
 ### Parte 1 – Introducao ao JCL
 
+---
+
 ## 📂 1. Estrutura Básica de um Job JCL
 
 ```jcl
@@ -163,6 +165,8 @@ REORG TABLESPACE DB01.TS01 LOG YES SHRLEVEL CHANGE
 ---
 
 ### Parte 2 – Estrutura de um Job JCL
+
+---
 
 ## 📘 Tópicos Abordados:
 1. Como funciona o fluxo de execução de um JOB
