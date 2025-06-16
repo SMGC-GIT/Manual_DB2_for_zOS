@@ -164,7 +164,7 @@ REORG TABLESPACE DB01.TS01 LOG YES SHRLEVEL CHANGE
 
 ---
 
-### Parte 2 – Estrutura de um Job JCL
+### Parte 2 - Estrutura de um Job JCL
 
 ---
 
@@ -943,7 +943,7 @@ O acesso a datasets pode ser controlado via **RACF (Resource Access Control Faci
 
 ---
 
-### Parte 7 - COND, Codigos de Retorno RC e Controle de Execucao Condicional
+### Parte 7 - COND, Codigos de Retorno - RC - e Controle de Execucao Condicional
 
 ---
 
@@ -1337,7 +1337,7 @@ Dominar essa estrutura permite construir JCLs mais inteligentes, seguros e fáce
 
 ---
 
-### Parte 9 - Parametros de Execucao no JCL - EXEC e JOB - Uso em DB2
+### Parte 9 - Parametros de Execucao no JCL - EXEC-e-JOB - Uso em DB2
 
 ---
 
@@ -1483,6 +1483,8 @@ END
 ---
 
 ### Parte 10 - Controle de Dados – DD Statements aplicados ao DB2
+
+---
 
 As instruções `DD` (Data Definition) são fundamentais para o funcionamento dos steps JCL, pois definem **onde o programa encontra dados de entrada, onde grava saídas, quais bibliotecas usar, arquivos temporários, tabelas DB2, e muito mais**.
 
