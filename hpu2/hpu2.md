@@ -11,11 +11,11 @@
 - [7️⃣ Dicas de Performance e Boas Práticas](#7️⃣-dicas-de-performance-e-boas-práticas)
 - [8️⃣ Erros Comuns e Soluções](#8️⃣-erros-comuns-e-soluções)
 - [9️⃣ Referências Oficiais IBM](#9️⃣-referências-oficiais-ibm)
-- [🔧 10.1 Parâmetros Gerais do HPU](#🔧-101-parâmetros-gerais-do-hpu)
-- [🧾 10.1.1 Detalhamento dos Parâmetros](#🧾-1011-detalhamento-dos-parâmetros)
-- [🔍 10.2 Restrições e Recursos no SELECT](#🔍-102-restrições-e-recursos-no-select)
-- [📚 10.3 Referência IBM](#📚-103-referência-ibm)
-
+- [1️⃣1️⃣ Parâmetros Gerais do HPU](#1️⃣1️⃣-parâmetros-gerais-do-hpu)
+- [1️⃣2️⃣ Detalhamento dos Parâmetros](#1️⃣2️⃣-detalhamento-dos-parâmetros)
+- [1️⃣3️⃣ Restrições e Recursos no SELECT](#1️⃣3️⃣-restrições-e-recursos-no-select)
+- [1️⃣4️⃣ Referência IBM](#1️⃣4️⃣-referência-ibm)
+  
 ---
 
 ## 1️⃣ O que é o HPU
@@ -153,7 +153,7 @@
 
 ---
 
-### 🔧 10.1 Parâmetros Gerais do HPU
+### 1️⃣1️⃣ Parâmetros Gerais do HPU
 
 | Parâmetro       | Descrição |
 |-----------------|-----------|
@@ -170,7 +170,7 @@
 
 ---
 
-### 🧾 10.1.1 Detalhamento dos Parâmetros
+### 1️⃣2️⃣ Detalhamento dos Parâmetros
 
 #### 🔹 `DB2(DB2A)`
 Indica o nome do subsistema DB2 no qual o HPU deve se conectar. Obrigatório.
@@ -251,7 +251,7 @@ INCLUDE HEADER
 
 ---
 
-### 🔍 10.2 Restrições e Recursos no SELECT
+### 1️⃣3️⃣ Restrições e Recursos no SELECT
 
 O HPU suporta apenas um subconjunto da linguagem SQL.
 
@@ -278,7 +278,7 @@ O HPU suporta apenas um subconjunto da linguagem SQL.
 
 ---
 
-### 📚 10.3 Referência IBM
+### 1️⃣4️⃣ Referência IBM
 
 - 🔗 [IBM HPU SYSIN Syntax](https://www.ibm.com/docs/en/db2-hpu/5.1?topic=commands-sysin-control-statements)
 - 🔗 [IBM HPU SQL Support](https://www.ibm.com/docs/en/db2-hpu/5.1?topic=statements-sql-control)
