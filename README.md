@@ -23,6 +23,7 @@ Este repositório é um guia técnico e prático para profissionais que atuam co
 | [📁 Comandos](mandos/comandos.md) | Comandos DB2 para visualizar situação de tabelas |
 | [📁 JCL](jcl/jcl.md) | JCL ( JOB CONTROL LANGUAGE ) |
 | [📁 HPU – High Performance Unload](hpu/hpu.md) | Descarregamento rápido de dados com HPU, exemplos e tuning |
+| [📁 HPU2 – High Performance Unload](hpu2/hpu2.md) | Informações Gerais HPU |
 | [📁 Lista de IA's](ia/ia-para-dba.md) | Lista de IA's para consultas pelos DBA's | 
 
 
