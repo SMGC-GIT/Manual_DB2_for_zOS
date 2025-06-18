@@ -17,6 +17,7 @@ Este repositório é um guia técnico e prático para profissionais que atuam co
 | [📁 Tuning e Performance](desempenho/tunning-consultas.md) | Diagnóstico e otimização de queries |
 | [📁 Performance](performance/performance.md) | Visão Crítica: O que torna uma query eficiente no DB2 for z/OS? |
 | [📁 Utilitários DB2](utilitarios/utilities.md) | Comandos como REORG, CHECK, COPY, LOAD etc. |
+| [📁 LOAD](load/load.md) | Processos de LOAD |
 | [📁 Backup e Recuperação](backup-recuperacao/backup-recovery.md) | Estratégias de segurança e restore |
 | [📁 Syscopy](syscopy/syscopy.md) | Detalhes do catálogo  - seção especial |
 | [📁 Queries SQL](sql-avancado/sql-exemplos.md) | Consultas avançadas aplicáveis ao dia a dia |
