@@ -320,6 +320,10 @@ O HPU suporta apenas um subconjunto da linguagem SQL.
 
 ### 1️⃣6️⃣ Consistência DB2 LOCK e QUIESCE
 
+A consistência dos dados durante o processo de *unload* com o IBM HPU depende diretamente da combinação dos parâmetros `DB2`, `LOCK` e `QUIESCE`. Esses parâmetros definem o **nível de concorrência**, **tipo de acesso** e **garantia de integridade transacional** durante a extração de dados.
+
+Abaixo está uma tabela seguida de explicações detalhadas sobre cada combinação possível e seus impactos.
+
 | Combinação                      | Resultado |
 |----------------------------------|-----------|
 | DB2 NO + LOCK NO                 | Máximo desempenho, risco de inconsistência |
@@ -329,3 +333,86 @@ O HPU suporta apenas um subconjunto da linguagem SQL.
 | DB2 FORCE + QUIESCE/LOCK YES     | Total segurança, possivelmente offline |
 
 ---
+
+#### 🔍 Tabela Resumo
+
+| DB2       | LOCK   | QUIESCE | Garantia de Consistência | Desempenho | Observações Técnicas |
+|-----------|--------|---------|---------------------------|------------|-----------------------|
+| NO        | NO     | -       | ❌ Nenhuma                | 🔋 Máxima   | Sem uso de catálogo DB2, sem locks. Risco de dados inconsistentes se houver alterações simultâneas. |
+| NO        | YES    | -       | ⚠️ Parcial (I/O Level)    | 🔋 Alta     | Lock é feito em nível de leitura física. Pode evitar alterações simultâneas no disco, mas sem consistência lógica transacional. |
+| YES       | NO     | NO      | ⚠️ Mínima (SQL Snapshot)  | ⚖️ Média    | Usa SQL via DB2 sem lock nem quiesce. Pode haver inconsistências se os dados forem alterados após a geração do plano. |
+| YES       | YES    | NO      | ✅ Boa (Transação DB2)    | ⚖️ Média    | Lock via SQL. Garante consistência lógica transacional para as páginas acessadas, sem quiesce. |
+| YES       | -      | YES     | ✅ Alta (Quiesce ativo)   | ⚖️ Baixa    | Interrompe momentaneamente updates/inserts. Ideal para dados críticos. |
+| YES       | -      | FORCE   | ✅ Alta (STOP/START)      | ⚠️ Baixa    | Se QUIESCE falhar, executa STOP/START. Pode impactar disponibilidade. |
+| YES       | -      | TRY     | ⚠️ Parcial (Melhor esforço) | ⚖️ Média | Tenta QUIESCE. Se falhar, prossegue conforme LOCK. Sem erro fatal. |
+| FORCE     | YES    | FORCE   | ✅🔒 Máxima (Offline)     | ❗ Muito Baixa | Garante integridade total via parada da instância ou TS. Altamente intrusivo, só recomendado em janelas de manutenção. |
+
+---
+
+#### 📘 Explicações Detalhadas
+
+##### 🔸 DB2(NO)
+- O HPU opera em modo **nativo**, sem chamar o DB2.
+- Acesso direto ao VSAM (dataset físico).
+- Alta performance, mas nenhuma verificação de integridade relacional é feita.
+- Pode capturar dados em meio a transações abertas → risco de "dirty reads".
+
+##### 🔸 DB2(YES)
+- O HPU utiliza **acesso lógico via SQL** e consulta o catálogo do DB2.
+- O acesso é semelhante ao de uma aplicação tradicional (por exemplo, uma query via SPUFI).
+- Permite aplicação de **locks lógicos** e uso de QUIESCE.
+
+##### 🔸 DB2(FORCE)
+- Obriga o uso do DB2, mesmo que o unload direto seja possível.
+- Ideal para situações onde consistência é prioritária.
+
+---
+
+##### 🔸 LOCK(NO)
+- Nenhuma tentativa de aplicar lock é feita.
+- O unload pode ocorrer em paralelo com atualizações (inserts, deletes, updates).
+
+##### 🔸 LOCK(YES)
+- O HPU tenta aplicar locks em nível de página ou objeto.
+- Se DB2=NO, o lock é tentado no nível de sistema de arquivos (I/O).
+- Se DB2=YES ou FORCE, os locks são aplicados via comandos SQL (mais confiáveis).
+
+---
+
+##### 🔸 QUIESCE(NO)
+- Não há tentativa de pausar a atividade do objeto/tablespace.
+- Risco de inconsistência caso os dados sejam alterados durante o unload.
+
+##### 🔸 QUIESCE(YES)
+- O HPU executa o comando `QUIESCE` para garantir que o objeto esteja em estado consistente.
+- Interrompe temporariamente transações abertas ou impede novos acessos.
+- Mais seguro para unloads críticos.
+
+##### 🔸 QUIESCE(FORCE)
+- Caso QUIESCE falhe, o HPU executa `STOP DATABASE` e `START DATABASE` no objeto alvo.
+- Pode indisponibilizar temporariamente a base para outras aplicações.
+- Requer autoridade SYSADM e planejamento de janela.
+
+##### 🔸 QUIESCE(TRY)
+- Tenta o QUIESCE. Se falhar, o comportamento depende do parâmetro LOCK.
+  - LOCK=NO → prossegue com warning.
+  - LOCK=YES → pode gerar erro ou fallback para locks leves.
+
+---
+
+### ✅ Boas Práticas
+
+- **Para consistência transacional sem downtime**, use `DB2(YES)` + `LOCK(YES)`.
+- **Para extrações críticas**, use `DB2(YES)` + `QUIESCE(YES)` ou `FORCE`.
+- **Evite `DB2(NO) LOCK(NO)` em bases com alta concorrência**.
+- Sempre valide se os objetos estão ativos antes de usar `QUIESCE(FORCE)`.
+
+---
+
+### 🔗 Referência IBM
+
+- [HPU - Parâmetros DB2, LOCK e QUIESCE](https://www.ibm.com/docs/en/dhpufz/5.1.0?topic=commands-sysin-control-statements)
+- [QUIESCE DB2 Command](https://www.ibm.com/docs/en/db2-for-zos/13?topic=commands-quiesce)
+- [STOP/START DB2 Command](https://www.ibm.com/docs/en/db2-for-zos/13?topic=commands-stop-database)
+
+
