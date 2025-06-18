@@ -15,6 +15,9 @@
 - [1️⃣2️⃣ Detalhamento dos Parâmetros](#1️⃣2️⃣-detalhamento-dos-parâmetros)
 - [1️⃣3️⃣ Restrições e Recursos no SELECT](#1️⃣3️⃣-restrições-e-recursos-no-select)
 - [1️⃣4️⃣ Referência IBM](#1️⃣4️⃣-referência-ibm)
+- [1️⃣5️⃣ Exemplo completo de JCL com parâmetros](#1️⃣5️⃣-exemplo-completo-de-jcl-com-parâmetros)
+- [1️⃣6️⃣ Consistência DB2 LOCK e QUIESCE](#1️⃣6️⃣-consistência-db2-lock-e-quiesce)
+
   
 ---
 
@@ -282,3 +285,47 @@ O HPU suporta apenas um subconjunto da linguagem SQL.
 
 - 🔗 [IBM HPU SYSIN Syntax](https://www.ibm.com/docs/en/db2-hpu/5.1?topic=commands-sysin-control-statements)
 - 🔗 [IBM HPU SQL Support](https://www.ibm.com/docs/en/db2-hpu/5.1?topic=statements-sql-control)
+
+---
+
+### 1️⃣5️⃣ Exemplo completo de JCL com parâmetros
+
+```jcl
+//HPUJOB  JOB ...
+//STEP01  EXEC PGM=IBMHPU,PARM='DB2A'
+//STEPLIB DD DSN=IBM.HPU.LOADLIB,DISP=SHR
+//SYSPRINT DD SYSOUT=*
+//SYSUDUMP DD SYSOUT=*
+//OUTDD   DD DSN=USR.UNLOAD.CLIENTES.CSV,DISP=(NEW,CATLG,DELETE),
+//          SPACE=(CYL,(20,5)),UNIT=SYSDA
+//SYSIN   DD *
+ UNLOAD
+   FROM TABLESPACE DB2DB01.CLIENTES
+   TO OUTDDN(OUTDD)
+   FORMAT CSV
+   DELIMITER ','
+   NULL INDICATOR 'NULL'
+   INCLUDE HEADER
+   DB2 FORCE
+   LOCK YES
+   QUIESCE FORCE
+   COPYDDN LAST_IC
+   INDEXSCAN
+   ORDER BY ID_CLIENTE
+   MAXRC 8
+/*
+```
+
+---
+
+### 1️⃣6️⃣ Consistência DB2 LOCK e QUIESCE
+
+| Combinação                      | Resultado |
+|----------------------------------|-----------|
+| DB2 NO + LOCK NO                 | Máximo desempenho, risco de inconsistência |
+| DB2 NO + LOCK YES                | Lock local só em I/O físico |
+| DB2 YES + LOCK YES               | Garantia de consistência via LOCK |
+| DB2 YES + QUIESCE YES            | Consistência forte com QUIESCE |
+| DB2 FORCE + QUIESCE/LOCK YES     | Total segurança, possivelmente offline |
+
+---
