@@ -14,16 +14,16 @@
 
 ---
 
-# 🚀 Análise de Performance Pós-LOAD no DB2 for z/OS
+# Análise de Performance Pós-LOAD no DB2 for z/OS
 
-## 📚 Índice
+## Índice
 
-- [🔧 1. Métricas Cruciais para Avaliar o LOAD](#🔧-1-métricas-cruciais-para-avaliar-o-load)
-- [🛠️ 2. Ferramentas Recomendadas pela IBM](#🛠️-2-ferramentas-recomendadas-pela-ibm)
-- [📈 3. Leitura e Interpretação de Bufferpool Metrics](#📈-3-leitura-e-interpretação-de-bufferpool-metrics)
-- [⚠️ 4. Indicadores de Gargalo](#⚠️-4-indicadores-de-gargalo)
-- [🔍 5. Ações de Tuning Recomendadas](#🔍-5-ações-de-tuning-recomendadas)
-- [📚 6. Referências IBM](#📚-6-referências-ibm)
+- [1. Métricas Cruciais para Avaliar o LOAD](#1-métricas-cruciais-para-avaliar-o-load)
+- [2. Ferramentas Recomendadas pela IBM](#2-ferramentas-recomendadas-pela-ibm)
+- [3. Leitura e Interpretação de Bufferpool Metrics](#3-leitura-e-interpretação-de-bufferpool-metrics)
+- [4. Indicadores de Gargalo](#4-indicadores-de-gargalo)
+- [5. Ações de Tuning Recomendadas](#5-ações-de-tuning-recomendadas)
+- [6. Referências IBM](#6-referências-ibm)
 
 
 ---
@@ -173,81 +173,135 @@ Não use para updates marginais — prefira `UPDATE`, `INSERT` ou `MERGE`.
 
 ---
 
-### 🔧 1. Métricas Cruciais para Avaliar o LOAD
 
-Após a execução de um LOAD, é essencial monitorar esses indicadores para garantir eficiência e detectar possíveis problemas:
+## 1. Métricas Cruciais para Avaliar o LOAD
 
-- **Buffer Pool Hit Ratio**  
-  Fórmula:  
+Após um LOAD de dados, recomenda-se avaliar o ambiente para garantir performance e consistência. As principais métricas incluem:
+
+### Buffer Pool Hit Ratio
+
+- **Fórmula**:  
+  `(GETPAGES - PAGE-READS) / GETPAGES`
+- **Valor ideal**:  
+  - **Dados**: ≥ 85%  
+  - **Índices**: ≥ 95%
+- **Significado**: Alta taxa de acerto indica que as páginas são encontradas no buffer pool, minimizando I/O físico.
+- **Ação de tuning**: Aumentar o tamanho do buffer pool (`NPAGES`) ou ajustar parâmetros de pré-leitura (`VPSEQT`, `VDWQT`).
+
+---
+
+### ReRead Ratio
+
+- **Fórmula**:  
+  `Re-reads / Distinct GetPages`
+- **Valor ideal**: < 5%
+- **Significado**: Indica se páginas estão sendo relidas frequentemente sem necessidade, consumindo recursos.
+- **Ação de tuning**: Redimensionar buffer pool ou revisar padrões de acesso.
+
+---
+
+### GETPAGE Requests vs Physical I/O Reads
+
+- **Observação**: Se o número de `GETPAGE` está alto, mas a taxa de acertos é baixa, o buffer pool pode estar mal configurado.
+- **Ação**: Aumentar `NPAGES`, analisar padrão de acesso (random/sequencial), ajustar `PGSTEAL`.
+
+---
+
+### Sort Overflow
+
+- **Problema comum após LOAD**: Se a carga gera necessidade de ordenação (ex: LOAD com SORTKEYS), overflow pode ocorrer.
+- **Ação**: Aumentar SORTPOOL, utilizar espaço de trabalho em disco (`SORTWKnn`), usar `PARALLEL LOAD`.
+
+---
+
+### Log Write Time
+
+- **Importante** se `LOG YES` foi usado.
+- **Ação**: Verificar contention no log, avaliar tamanho de buffers de log (`OUTBUFF`), considerar usar `LOG NO` se possível.
+
+---
+
+### LOCK Wait Time
+
+- Comuns quando se usa `SHRLEVEL CHANGE` em tabelas ativamente acessadas.
+- **Ação**: Executar em janelas de menor carga, usar isolamento `UR` em leituras concorrentes.
+
+---
+
+## 2. Ferramentas Recomendadas pela IBM
+
+Ferramentas oficiais para análise detalhada:
+
+| Ferramenta                      | Finalidade |
+|----------------------------------|------------|
+| IBM OMEGAMON for DB2             | Monitoramento em tempo real de buffer pools, locks, I/O |
+| OMPE (Performance Expert)        | Análise histórica e geração de relatórios de performance |
+| DB2 Data Studio / Visual Explain | Diagnóstico de planos de acesso e tuning de queries |
+| DB2 Statistics Trace             | Coleta de estatísticas detalhadas para análise técnica |
+| IFCID (Instrumentation Facility)| Eventos específicos pós-LOAD, usados com traces |
+
+---
+
+## 3. Leitura e Interpretação de Bufferpool Metrics
+
+| Métrica                          | Interpretação                                 | Ação recomendada |
+|----------------------------------|-----------------------------------------------|------------------|
+| Bufferpool Hit Ratio < 85%      | I/O físico elevado                            | Aumentar `NPAGES`, rever `VPSEQT` |
+| ReRead Ratio > 5%               | Reutilização ineficiente                      | Otimizar acesso ou ajustar buffer |
+| Physical Reads por transação > 10 | I/O excessivo                                | Ajustar pré-leitura, PGSTEAL |
+| Sort Overflow alto              | Área de sort insuficiente                    | Aumentar SORTPOOL, usar SORTWKnn |
+| Log Write Time alto             | Contenção de log                              | Aumentar `OUTBUFF`, avaliar `LOG NO` |
+| Lock Wait Time elevado          | Conflito de concorrência                     | Rodar fora do horário crítico, usar `SHRLEVEL REFERENCE` |
+
+---
+
+## 4. Indicadores de Gargalo
+
+- **Buffer Pool Hit Ratio** baixo logo após o LOAD.
+- **Sort overflow frequente** durante cargas com ordenação.
+- **Aumento súbito de Log Write Time** em operações LOG YES.
+- **Deadlocks ou timeouts** após LOAD com SHRLEVEL CHANGE.
+- **CPU spikes** em cargas com paralelismo (PARALLEL).
+
+---
+
+## 5. Ações de Tuning Recomendadas
+
+### Bufferpools
+
+- Aumentar `NPAGES` usando:
+  ```sql
+  -ALTER BUFFERPOOL BP0 VPSIZE 5000
   ```
-  (GETPAGES – PAGES-READ) / GETPAGES
-  ```  
-  Ideal: ≥ 85% para dados, ≥ 95% para índices :contentReference[oaicite:1]{index=1}
+- Ativar `PGFIX(YES)` se adequado para fixar páginas em memória.
 
-- **ReReads / Distinct GetPage**  
-  Alta proporção indica necessidade de aumentar tamanhos do bufferpool :contentReference[oaicite:2]{index=2}
+### Estatísticas
 
-- **GETPAGE Requests vs I/O Reads**  
-  Avalia se o buffer pool está atendendo eficientemente o workload :contentReference[oaicite:3]{index=3}
+- Execute `RUNSTATS` após LOAD se `INLINE STATISTICS` não foi especificado:
+  ```sql
+  RUNSTATS TABLESPACE DB1.TS1 TABLE(ALL) INDEX(ALL)
+  ```
 
-- **Sort Time / Commodities per Transaction**  
-  LOAD pesado pode gerar overflow de sort; monitore via estatísticas DB2 :contentReference[oaicite:4]{index=4}
+### Índices
 
-- **Log Write Time / LOCK Wait Time**  
-  Indicadores de contenção/transação lenta após LOAD :contentReference[oaicite:5]{index=5}
+- Considere reconstrução de índices (com REBUILD INDEX) se a performance de acesso piorar após carga.
 
----
+### Concorrência
 
-### 🛠️ 2. Ferramentas Recomendadas pela IBM
+- Evitar `SHRLEVEL CHANGE` em tabelas muito acessadas.
+- Usar `SHRLEVEL REFERENCE` quando possível para evitar locks exclusivos.
 
-Ferramentas eficazes para análise pós-LOAD:
+### Logging
 
-- **IBM Tivoli OMEGAMON XE for DB2 (Performance Expert)**: monitora bufferpools, I/O, locks e estatísticas de LOAD/UNLOAD :contentReference[oaicite:6]{index=6}  
-- **OMPE (Omegamon Performance Expert)**: fornece alertas proativos e recomendações com base em thresholds e padrões :contentReference[oaicite:7]{index=7}  
-- **DB2 PM, Visual Explain, Data Studio**: EXPLAIN, performance tuning e análise de planos de acesso :contentReference[oaicite:8]{index=8}
+- Use `LOG NO` para cargas temporárias ou ambientes não críticos.
+- Verifique uso de espaço de log após operações massivas.
 
 ---
 
-### 📈 3. Leitura e Interpretação de Bufferpool Metrics
+## 6. Referências IBM
 
-Foque nesses parâmetros ao analisar o comportamento do sistema:
-
-| Métrica                          | O que indica                                     | Ação recomendada                    |
-|----------------------------------|--------------------------------------------------|-------------------------------------|
-| Bufpool Hit Ratio < ideal       | Necessidade de aumentar ou redistribuir pages   | ALTER BUFFERPOOL                    |
-| Elevated ReRead % (>10%)       | Re-leitura desnecessária de páginas             | Revisar alocação e thresholds       |
-| High physical reads per txn     | I/O excessivo                                    | Ajustar pré-fetch e buffers         |
-| High sort overflow              | Falta de área de sort                            | Aumentar SORTWORK ou usar PARALLEL  |
-| LOCK Wait > normal              | Contenção por locks pós-LOAD                     | Avaliar índices ou ISOLATION LEVEL |
-
----
-
-### ⚠️ 4. Indicadores de Gargalo
-
-- **Buffer Pool**: hit ratio caindo durante ou pós-LOAD  
-- **Sort Overflow**: contagens excessivas  
-- **Log Writes demorados**: em situações de IOC ON ou LOG NO  
-- **Lock Waits/DCL Locks**: após cargas com SHRLEVEL CHANGE  
-- **CPU Spike**: em operações PARALLEL ou REORG subsequentes
-
----
-
-### 🔍 5. Ações de Tuning Recomendadas
-
-✅ Aumentar `NPAGES` via `ALTER BUFFERPOOL` com `AUTOSIZE` e thresholds ideais :contentReference[oaicite:9]{index=9}  
-✅ Ajustar `VPSEQT`, `VDWQT`, `PGSTEAL`, `PGFIX` segundo o workload :contentReference[oaicite:10]{index=10}  
-✅ Isolar tablespaces de índices e dados em bufferpools distintos com diferentes padrões (random vs seq) :contentReference[oaicite:11]{index=11}  
-✅ Executar `RUNSTATS` pós-LOAD se `INLINE STATISTICS` não foi usado  
-✅ Monitorar locks com OMEGAMON e ajustar índices ou isolamento  
-✅ Refazer `EXPLAIN` e analisar planos sob carga semelhante
-
----
-
-### 📚 6. Referências IBM
-
-- [Buffer Pool Hit Ratio e Tuning](https://www.ibm.com/docs/en/db2-for-zos/13?topic=tuning-buffer-pools) :contentReference[oaicite:12]{index=12}  
-- [IBM OMEGAMON XE for DB2 Performance](https://en.wikipedia.org/wiki/IBM_OMEGAMON) :contentReference[oaicite:13]{index=13}  
-- [DB2 Performance Metrics e Monitoramento](https://www.ibm.com/docs/en/db2-for-zos/13?topic=monitoring-performance) :contentReference[oaicite:14]{index=14}  
-- [Buffer Pool Memory Guidelines](https://www.ibm.com/docs/en/db2-for-zos/13?topic=bufferpool-memory-guidelines) :contentReference[oaicite:15]{index=15}
-
----
+- [DB2 for z/OS Performance Monitoring](https://www.ibm.com/docs/en/db2-for-zos/13?topic=monitoring-performance)
+- [Tuning Buffer Pools](https://www.ibm.com/docs/en/db2-for-zos/13?topic=tuning-buffer-pools)
+- [Using IBM OMEGAMON XE for DB2 Performance](https://www.ibm.com/docs/en/om-db2-pe/5.5.0)
+- [LOAD Utility Documentation](https://www.ibm.com/docs/en/db2-for-zos/13?topic=utilities-load-utility)
+- [Runstats Utility](https://www.ibm.com/docs/en/db2-for-zos/13?topic=utilities-runstats-utility)
