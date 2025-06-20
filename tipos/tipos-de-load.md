@@ -15,6 +15,9 @@
 - [🔹 Templates Prontos de JCL](#-templates-prontos-de-jcl)
 - [🔹 Casos de Uso por Ambiente](#-casos-de-uso-por-ambiente)
 - [🔹 Planilha Técnica de Decisão](#-planilha-técnica-de-decisão)
+- [🔹 Checklist de Execução Segura](#-checklist-de-execução-segura)
+- [🔹 Estados Pós-LOAD e Integridade](#-estados-pós-load-e-integridade)
+- [🔹 Fluxo de Decisão para Tipo de LOAD](#-fluxo-de-decisão-para-tipo-de-load)
 - [🔹 Referências IBM](#-referências-ibm)
 
 ---
@@ -254,9 +257,66 @@ Permite somente leituras durante o LOAD. Ideal para ambientes críticos.
 
 ---
 
+## 🔹 Checklist de Execução Segura
+
+| ✅ Item                                            | Detalhes                                                                 |
+|---------------------------------------------------|--------------------------------------------------------------------------|
+| Backup realizado antes do LOAD                    | Use COPY ou BACKUP SYSTEM                                                |
+| Tipo de carga definido                            | Avalie `REPLACE`, `RESUME`, `SHRLEVEL`                                   |
+| Restrições e triggers validadas                   | Valide regras de integridade antes da carga                              |
+| Verificação de espaço em tablespace               | Utilize `DSN1COPY`, `DISPLAY DB` ou `RUNSTATS`                           |
+| Índices existentes salvos ou marcados             | Verifique necessidade de `REBUILD INDEX` após LOAD                       |
+| Tabela em estado CHECK PENDING?                   | Utilize `DISPLAY DATABASE` antes e depois do LOAD                        |
+| Estatísticas atualizadas após carga               | Usar `INLINE STATISTICS` ou agendar `RUNSTATS`                           |
+| LOG necessário?                                   | `LOG YES` se dados forem críticos ou não reprocessáveis                 |
+| Captura de rejeições configurada?                 | Configure `DISCARDDN` e `DISCARDMAX`                                     |
+| Job monitorado em tempo real                      | Utilize SDSF, Syslog, JES2                                               |
+
+---
+
+## 🔹 Estados Pós-LOAD e Integridade
+
+Após a execução de um `LOAD`, o objeto pode ficar em diferentes estados dependendo das opções usadas:
+
+| Estado DB2                | Significado                                                   | Causa Comum                                      |
+|---------------------------|---------------------------------------------------------------|--------------------------------------------------|
+| `CHECK PENDING`           | Integridade não verificada após o LOAD                        | `ENFORCE NO`, falta de verificação de constraints |
+| `COPY PENDING`            | Objeto precisa de backup antes de uso                         | `LOG NO` usado e sem COPY posterior               |
+| `READ ONLY`               | Apenas leitura permitida após problemas com LOG ou LOAD       | LOG corrompido ou falha no utilitário            |
+| `REORGANIZATION PENDING`  | Reorganização necessária                                      | Inserções desalinhadas, compressão afetada       |
+
+> ⚠️ Use `DISPLAY DATABASE(...) SPACENAM(...) USE` para verificar estados.
+
+---
+
+## 🔹 Fluxo de Decisão para Tipo de LOAD
+
+```plaintext
+          ┌─────────────────────────────┐
+          │  Precisa apagar os dados?  │
+          └────────────┬───────────────┘
+                       │Sim
+                       ▼
+              ┌───────────────────┐
+              │ LOAD REPLACE      │
+              └───────────────────┘
+                       │
+                       ▼
+          ┌──────────────────────────────┐
+          │ Tolerância a indisponibilidade? │
+          └────────────┬───────────────────┘
+                       │ Alta       │ Baixa
+                       ▼            ▼
+               SHRLEVEL NONE   SHRLEVEL REFERENCE
+
+(continuação para casos de RESUME...)
+```
+
+---
+
 ## 🔹 Referências IBM
 
 - 📘 [LOAD Utility - IBM Docs](https://www.ibm.com/docs/en/db2-for-zos/13?topic=utilities-load-utility)  
 - 📘 [LOAD Considerations](https://www.ibm.com/docs/en/db2-for-zos/13?topic=utilities-load-utility-considerations)  
 - 📘 [Db2 for z/OS Utility Reference](https://www.ibm.com/docs/en/db2-for-zos/13?topic=utilities-utility-statements)  
-
+- 📘 [DISPLAY Commands](https://www.ibm.com/docs/en/db2-for-zos/13?topic=commands-display-database)
