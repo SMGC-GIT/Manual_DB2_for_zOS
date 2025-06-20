@@ -28,6 +28,23 @@
 
 ---
 
+# 📦 UTILITÁRIO LOAD – Manual Avançado de Uso e Análise
+
+---
+
+## Índice
+
+- [1. O que é o LOAD e por que usá-lo](#1-o-que-é-o-load-e-por-que-usá-lo)
+- [2. Tipos de LOAD e Aplicabilidade](#2-tipos-de-load-e-aplicabilidade)
+- [3. Dicas Estratégicas de DBA para Uso do LOAD](#3-dicas-estratégicas-de-dba-para-uso-do-load)
+- [4. Erros Comuns e Tratamento no LOAD](#4-erros-comuns-e-tratamento-no-load)
+- [5. Checklist Pós-LOAD (em formato de planilha)](#5-checklist-pós-load-em-formato-de-planilha)
+- [6. Painel Visual de Performance Pós-LOAD](#6-painel-visual-de-performance-pós-load)
+- [7. Análise Técnica e Tuning Pós-LOAD](#7-análise-técnica-e-tuning-pós-load)
+- [8. Referências IBM](#8-referências-ibm)
+
+---
+
 ### 🔍 Quando usar o LOAD
 
 O **LOAD** é indicado para:
@@ -172,7 +189,7 @@ Não use para updates marginais — prefira `UPDATE`, `INSERT` ou `MERGE`.
 
 
 ---
-
+---
 
 ## 1. Métricas Cruciais para Avaliar o LOAD
 
@@ -305,3 +322,112 @@ Ferramentas oficiais para análise detalhada:
 - [Using IBM OMEGAMON XE for DB2 Performance](https://www.ibm.com/docs/en/om-db2-pe/5.5.0)
 - [LOAD Utility Documentation](https://www.ibm.com/docs/en/db2-for-zos/13?topic=utilities-load-utility)
 - [Runstats Utility](https://www.ibm.com/docs/en/db2-for-zos/13?topic=utilities-runstats-utility)
+
+---
+---
+
+## 1. O que é o LOAD e por que usá-lo
+
+O utilitário `LOAD` é utilizado para **carregar grandes volumes de dados** em tabelas do DB2 for z/OS com alta performance, sendo ideal para cargas batch, migrações, inicializações de ambiente ou populações massivas de dados.
+
+### Benefícios:
+
+- Alta velocidade em comparação com INSERTs isolados
+- Opções de paralelismo e uso de recursos otimizados
+- Possibilidade de carregar dados sem logs (`LOG NO`)
+- Suporte a formatos variados de entrada
+
+---
+
+## 2. Tipos de LOAD e Aplicabilidade
+
+| Tipo de LOAD             | Característica Principal                               | Quando Usar                            |
+|--------------------------|----------------------------------------------------------|----------------------------------------|
+| LOAD REPLACE             | Substitui todos os dados da tabela                      | Reset completo da tabela               |
+| LOAD RESUME YES          | Acrescenta os dados sem apagar os existentes            | Cargas incrementais                    |
+| LOAD SHRLEVEL NONE       | Exclusividade total – ninguém acessa durante o LOAD     | Performance máxima, janela exclusiva  |
+| LOAD SHRLEVEL CHANGE     | Permite acesso durante o LOAD (com locks apropriados)   | Ambientes com alta disponibilidade     |
+| LOAD WITH SHRLEVEL REFERENCE | Leitura permitida, sem impacto de update ou insert | Cargas controladas com acesso mínimo  |
+
+---
+
+## 3. Dicas Estratégicas de DBA para Uso do LOAD
+
+- **Use LOG NO** se os dados puderem ser recarregados e não precisam ser registrados para recovery.
+- **Sempre execute RUNSTATS após o LOAD**, a menos que use `INLINE STATISTICS`.
+- **Evite LOAD em tabelas com triggers ativas**: isso pode impactar a integridade e performance.
+- **Atualize os índices após LOAD** com `BUILD INDEX` ou execute `REBUILD INDEX` se necessário.
+- **Evite subqueries e funções complexas no SELECT para LOAD via SYSIN** – mantenha simples.
+
+---
+
+## 4. Erros Comuns e Tratamento no LOAD
+
+| Código / Mensagem            | Causa Provável                                      | Solução Recomendada                                |
+|-----------------------------|-----------------------------------------------------|----------------------------------------------------|
+| `DSNU030I`                  | Inconsistência entre estrutura da tabela e dados    | Verificar layout e delimitadores                   |
+| `DSNU054I`                  | Falha em alocação de dataset                        | Revisar JCL e permissões de datasets               |
+| `DSNU142I` - Invalid Row    | Dados incompatíveis com tipo da coluna              | Validar encoding, formato e tamanho de campos      |
+| `RC=04 com Warning`         | Truncamento ou warnings                             | Validar conteúdo de colunas                        |
+| Abend S04E / S04C           | Falhas internas de memória/log                     | Validar bufferpools e revisar parâmetros           |
+
+---
+
+## 5. Checklist Pós-LOAD (em formato de planilha)
+
+| Item Avaliado                         | Status Esperado                         | Ação Recomendável                         |
+|--------------------------------------|-----------------------------------------|-------------------------------------------|
+| Estatísticas atualizadas (`RUNSTATS`) | Executado após LOAD                     | Rodar RUNSTATS ou usar INLINE STATISTICS  |
+| Índices válidos                      | Sim                                     | `REBUILD INDEX` se necessário             |
+| Tabelas acessíveis                   | Sim                                     | Verificar se não estão em `RESTRICT`      |
+| Lock Wait alto após LOAD             | Não                                     | Revisar `SHRLEVEL` utilizado              |
+| Log utilizado em excesso             | Avaliar se `LOG YES` foi necessário     | Considerar `LOG NO` se aplicável          |
+| Bufferpool com hit ratio alto        | Sim (≥ 85%)                             | Ajustar `NPAGES` ou `VPSEQT`              |
+| Verificação de erros no SYSPRINT     | Sem mensagens de erro                   | Corrigir e reexecutar se necessário       |
+
+---
+
+## 6. Painel Visual de Performance Pós-LOAD
+
+| Métrica                    | Valor Ideal         | Onde Analisar               | Ação de Tuning                              |
+|---------------------------|---------------------|-----------------------------|---------------------------------------------|
+| Bufferpool Hit Ratio      | ≥ 85% (dados)        | OMEGAMON, IFCID 199         | Aumentar `NPAGES`                           |
+| Sort Overflow             | 0% ou mínimo         | IFCID 221, SYSPRINT         | Aumentar `SORTPOOL` ou usar `SORTWKnn`     |
+| Log Write Time            | < 10ms médio         | Stats trace, IFCID 225      | Avaliar `OUTBUFF`, log contention           |
+| Lock Wait Time            | Tendência próxima de zero | OMEGAMON, MONITOR1      | Melhorar `SHRLEVEL`, escalonamento de jobs  |
+| Pages Read Physically     | Reduzido             | GETPAGE/READ ratio          | Ajustar leitura sequencial/pre-fetch       |
+
+---
+
+## 7. Análise Técnica e Tuning Pós-LOAD
+
+### Buffer Pool Tuning
+```sql
+-- Exemplo de aumento de bufferpool
+-ALTER BUFFERPOOL BP1 VPSIZE 10000 PGSTEAL(LRU);
+```
+
+### Estatísticas
+```sql
+-- Recomenda-se sempre após LOAD
+RUNSTATS TABLESPACE DB1.TS1 TABLE(ALL) INDEX(ALL);
+```
+
+### Rebuild Index
+```sql
+REBUILD INDEX(DB1.IDX_CLIENTES);
+```
+
+### Logging
+- Use `LOG NO` se os dados forem reconstruíveis.
+- Ajuste `OUTBUFF` para otimizar tempo de gravação.
+
+---
+
+## 8. Referências IBM
+
+- [LOAD Utility - IBM Docs](https://www.ibm.com/docs/en/db2-for-zos/13?topic=utilities-load-utility)
+- [RUNSTATS Utility](https://www.ibm.com/docs/en/db2-for-zos/13?topic=utilities-runstats-utility)
+- [Buffer Pool Management](https://www.ibm.com/docs/en/db2-for-zos/13?topic=monitoring-buffer-pool)
+- [OMEGAMON Performance Guide](https://www.ibm.com/docs/en/om-db2-pe/5.5.0)
+
