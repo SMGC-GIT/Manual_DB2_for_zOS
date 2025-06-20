@@ -14,6 +14,7 @@
 - [🔹 Erros Frequentes e Soluções](#-erros-frequentes-e-soluções)
 - [🔹 Templates Prontos de JCL](#-templates-prontos-de-jcl)
 - [🔹 Casos de Uso por Ambiente](#-casos-de-uso-por-ambiente)
+- [🔹 Planilha Técnica de Decisão](#-planilha-técnica-de-decisão)
 - [🔹 Referências IBM](#-referências-ibm)
 
 ---
@@ -232,18 +233,24 @@ Permite somente leituras durante o LOAD. Ideal para ambientes críticos.
 
 ## 🔹 Casos de Uso por Ambiente
 
-### 🧪 DEV
-- Use `REPLACE` para limpar e recarregar tabelas durante testes.
-- `LOG NO` sempre que possível.
+| Ambiente | Estratégia Recomendada                      | Observações |
+|----------|---------------------------------------------|-------------|
+| DEV      | REPLACE com LOG NO                          | Reprocessável, ideal para testes |
+| QA       | RESUME YES + DISCARD + INLINE STATISTICS    | Validação de dados e performance |
+| PROD     | SHRLEVEL REFERENCE com LOG YES              | Alta disponibilidade e segurança |
 
-### 🔍 QA
-- Use `RESUME YES` com `DISCARDDN` para validar massa de dados.
-- Ative `INLINE STATISTICS` para ambientes semelhantes à produção.
+---
 
-### 🚨 PROD
-- Use `SHRLEVEL REFERENCE` ou `CHANGE` conforme criticidade.
-- Sempre monitore tempo e lock escalations.
-- Preferencialmente, execute fora do horário de pico.
+## 🔹 Planilha Técnica de Decisão
+
+| Critério                       | Baixo Volume | Médio Volume | Alto Volume |
+|-------------------------------|--------------|---------------|-------------|
+| Disponibilidade necessária    | REPLACE      | SHRLEVEL CHANGE | SHRLEVEL REFERENCE |
+| Dados reprocessáveis?         | LOG NO       | LOG NO        | LOG NO      |
+| Dados críticos e únicos?      | LOG YES      | DISCARD/LOG   | DISCARD/LOG |
+| Tabela com triggers/constraints | Verificar dependências antes do LOAD |
+| Índices existentes?           | INLINE STATISTICS ou REBUILD INDEX após carga |
+| Janela de manutenção          | SHRLEVEL NONE preferido se permitido downtime |
 
 ---
 
@@ -252,3 +259,4 @@ Permite somente leituras durante o LOAD. Ideal para ambientes críticos.
 - 📘 [LOAD Utility - IBM Docs](https://www.ibm.com/docs/en/db2-for-zos/13?topic=utilities-load-utility)  
 - 📘 [LOAD Considerations](https://www.ibm.com/docs/en/db2-for-zos/13?topic=utilities-load-utility-considerations)  
 - 📘 [Db2 for z/OS Utility Reference](https://www.ibm.com/docs/en/db2-for-zos/13?topic=utilities-utility-statements)  
+
