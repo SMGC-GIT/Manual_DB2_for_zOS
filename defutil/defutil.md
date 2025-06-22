@@ -1,48 +1,169 @@
-# 🛠️ DEFUTIL - Utility Definition (DB2 for z/OS)
-
-O `DEFUTIL` (DEFINE UTILITY) é um recurso poderoso do DB2 for z/OS utilizado para registrar manualmente entradas na tabela de catálogo `SYSIBM.SYSUTIL` ou para corrigir e controlar situações relacionadas a jobs de utilitários interrompidos ou inconsistentes.
-
-Essa funcionalidade é essencial para gerenciar o estado e execução dos utilitários DB2, principalmente em cenários de falha ou quando é necessário reativar ou limpar uma entrada de utilitário que ficou pendente.
+# Utilitário DEFUTIL - DB2 for z/OS
 
 ---
 
-## 📚 Índice
+## Índice
 
-- [🔹 1. O que é o DEFUTIL](#1-o-que-é-o-defutil)
-- [🔹 2. Quando Utilizar o DEFUTIL](#2-quando-utilizar-o-defutil)
-- [🔹 3. Sintaxe Geral do DEFUTIL](#3-sintaxe-geral-do-defutil)
-- [🔹 4. Parâmetros do DEFUTIL](#4-parâmetros-do-defutil)
-- [🔹 5. Exemplos Práticos](#5-exemplos-práticos)
-- [🔹 6. Tratamento de Falhas de Utilitários com DEFUTIL](#6-tratamento-de-falhas-de-utilitários-com-defutil)
-- [🔹 7. JCL de Execução do DEFUTIL](#7-jcl-de-execução-do-defutil)
-- [🔹 8. Cuidados e Riscos na Utilização](#8-cuidados-e-riscos-na-utilização)
-- [🔹 9. Referências Oficiais IBM](#9-referências-oficiais-ibm)
-
----
-
-## 🔹 1. O que é o DEFUTIL
-
-O `DEFUTIL` é um *service aid* do DB2 for z/OS que permite inserir ou modificar manualmente registros da tabela `SYSUTIL`, normalmente manipulada automaticamente pelo DB2 durante execução de utilitários como `LOAD`, `REORG`, `RUNSTATS`, etc.
+- [1. O que é o utilitário DEFUTIL](#1-o-que-é-o-utilitário-defutil)
+- [2. Quando usar o DEFUTIL](#2-quando-usar-o-defutil)
+- [3. Como funciona o DEFUTIL](#3-como-funciona-o-defutil)
+- [4. Sintaxe e parâmetros](#4-sintaxe-e-parâmetros)
+- [5. Exemplo de JCL](#5-exemplo-de-jcl)
+- [6. Exemplos práticos de uso](#6-exemplos-práticos-de-uso)
+- [7. Cuidados e riscos ao utilizar](#7-cuidados-e-riscos-ao-utilizar)
+- [8. Consultas na SYSUTIL para diagnóstico](#8-consultas-na-sysutil-para-diagnóstico)
+- [9. Referências oficiais IBM](#9-referências-oficiais-ibm)
 
 ---
 
-## 🔹 2. Quando Utilizar o DEFUTIL
+## 1. O que é o utilitário DEFUTIL
 
-- Quando um utilitário DB2 falha e deixa registros “travando” sua reexecução.
-- Para reativar ou limpar registros obsoletos da `SYSUTIL`.
-- Para diagnosticar e simular execuções de utilitários em ambiente controlado.
-- Em ambientes de teste ou homologação para fins de simulação ou investigação.
+O `DEFUTIL` (Define Utility) é um utilitário administrativo interno do DB2 for z/OS que permite gerenciar manualmente as entradas da tabela `SYSIBM.SYSUTIL`.
+
+Essa tabela controla as execuções ativas dos utilitários DB2, como `REORG`, `COPY`, `LOAD`, entre outros. O DEFUTIL é útil para atualizar ou remover registros que podem bloquear futuras execuções desses utilitários.
 
 ---
 
-## 🔹 3. Sintaxe Geral do DEFUTIL
+## 2. Quando usar o DEFUTIL
 
-A execução do DEFUTIL se dá por meio de parâmetros fornecidos via SYSIN em um JCL utilizando o módulo DSNUTILB.
+O uso do DEFUTIL é indicado em situações como:
+
+- A execução de um utilitário falhou e deixou entradas "presas" na `SYSUTIL`, bloqueando reexecuções;
+- A necessidade de forçar o status de uma `UTILID` para "STOPPED", liberando o recurso;
+- Situações de teste, onde se deseja simular uma execução ativa (status "STARTED");
+- Correção administrativa de inconsistências no catálogo após falhas no job.
+
+---
+
+## 3. Como funciona o DEFUTIL
+
+O DEFUTIL atualiza diretamente a tabela `SYSIBM.SYSUTIL`, manipulando os metadados que representam a execução ativa de utilitários.
+
+### Estrutura da SYSUTIL
+
+| Coluna           | Descrição                                     |
+|------------------|-----------------------------------------------|
+| UTILID           | Nome lógico da execução do utilitário         |
+| UTDBID           | ID do database envolvido                      |
+| UTPSID           | ID do tablespace (Page Set ID)                |
+| UTPROC           | Tipo de utilitário (REORG, LOAD, COPY, etc.)  |
+| UTSTATUS         | Status da execução: STARTED ou STOPPED        |
+
+---
+
+## 4. Sintaxe e parâmetros
 
 ```plaintext
-DEFUTIL  
-  UTILID(utilitário_nome)
-  DBID(database_id)
-  PSID(tablespace_id)
-  UTPROC(nome_da_rotina_utilitário)
-  STATUS(status_do_utilitário)
+DEFUTIL
+  UTILID(nome-da-utilid)
+  DBID(id-do-database)
+  PSID(id-do-page-set)
+  UTPROC(tipo-de-utilitario)
+  STATUS(STARTED | STOPPED)
+```
+
+### Explicação dos parâmetros
+
+| Parâmetro | Requerido | Descrição |
+|-----------|-----------|-----------|
+| UTILID    | Sim       | Identificador único da execução do utilitário |
+| DBID      | Opcional  | Database ID (caso aplicável) |
+| PSID      | Opcional  | Page Set ID (identifica o TS ou IX) |
+| UTPROC    | Sim       | Tipo do utilitário: REORG, COPY, LOAD, etc. |
+| STATUS    | Sim       | Define o estado: `STARTED` ou `STOPPED` |
+
+> ⚠️ Recomenda-se que o par `DBID` e `PSID` sejam utilizados quando disponíveis, para garantir precisão na operação.
+
+---
+
+## 5. Exemplo de JCL
+
+```jcl
+//DEFUTIL  JOB (ACCT),'DEFUTIL JOB',CLASS=A,MSGCLASS=X
+//STEP01   EXEC PGM=DSNUTILB,PARM='DB2P,DEFUTIL'
+//STEPLIB  DD DSN=DSNEXIT,DISP=SHR
+//         DD DSN=DSNLOAD,DISP=SHR
+//SYSPRINT DD SYSOUT=*
+//SYSIN    DD *
+  DEFUTIL
+    UTILID(REORG_CLIENTES_001)
+    DBID(0091)
+    PSID(0022)
+    UTPROC(REORG)
+    STATUS(STOPPED)
+/*
+```
+
+---
+
+## 6. Exemplos práticos de uso
+
+### 6.1 Parar execução "presa"
+
+```plaintext
+DEFUTIL
+  UTILID(LOAD_CLIENTES)
+  STATUS(STOPPED)
+```
+
+### 6.2 Simular execução ativa
+
+```plaintext
+DEFUTIL
+  UTILID(FAKE_REORG_TESTE)
+  DBID(0099)
+  PSID(0010)
+  UTPROC(REORG)
+  STATUS(STARTED)
+```
+
+### 6.3 Corrigir utilitário interrompido
+
+```plaintext
+DEFUTIL
+  UTILID(COPY_DIA01)
+  DBID(0001)
+  PSID(0005)
+  UTPROC(COPY)
+  STATUS(STOPPED)
+```
+
+---
+
+## 7. Cuidados e riscos ao utilizar
+
+- Use **apenas com autorização e conhecimento técnico**;
+- Verifique antes a tabela `SYSIBM.SYSUTIL` com `SELECT` para não sobrescrever entradas válidas;
+- O uso incorreto pode causar falhas em futuros utilitários ou travamentos;
+- Não utilize em ambientes produtivos sem análise prévia de impacto.
+
+---
+
+## 8. Consultas na SYSUTIL para diagnóstico
+
+### Verificar todas as utilid pendentes:
+
+```sql
+SELECT UTILID, UTSTATUS, UTDBID, UTPSID, UTPROC
+FROM SYSIBM.SYSUTIL
+WHERE UTSTATUS <> 'STOPPED';
+```
+
+### Diagnóstico de conflitos
+
+```sql
+SELECT *
+FROM SYSIBM.SYSUTIL
+WHERE UTILID = 'NOME_DA_UTILID';
+```
+
+> 💡 Dica: A falta de `STOPPED` impede a execução subsequente de utilitários com o mesmo `UTILID`.
+
+---
+
+## 9. Referências oficiais IBM
+
+- [DEFUTIL Utility - IBM v13](https://www.ibm.com/docs/en/db2-for-zos/13?topic=utilities-defutil-utility)
+- [SYSIBM.SYSUTIL - DB2 Catalog Table](https://www.ibm.com/docs/en/db2-for-zos/13?topic=tables-sysutil)
+
+---
