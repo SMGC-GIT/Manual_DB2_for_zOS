@@ -17,6 +17,7 @@ Este repositório é um guia técnico e prático para profissionais que atuam co
 | [📁 Tuning e Performance](desempenho/tunning-consultas.md) | Diagnóstico e otimização de queries |
 | [📁 Performance](performance/performance.md) | Visão Crítica: O que torna uma query eficiente no DB2 for z/OS? |
 | [📁 Utilitários DB2](utilitarios/utilities.md) | Comandos como REORG, CHECK, COPY, LOAD etc. |
+| [📁 DEFUTIL](defutil/defutil.md) | DEFUTIL - Utility Definition |
 | [📁 LOAD](load/load.md) | Processos de LOAD |
 | [📁 Tipos de LOAD](tipos/tipos-de-load.md) | Os tipos de LOAD |
 | [📁 Backup e Recuperação](backup-recuperacao/backup-recovery.md) | Estratégias de segurança e restore |
