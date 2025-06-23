@@ -14,6 +14,7 @@ Este repositório é um guia técnico e prático para profissionais que atuam co
 | [📁 Tablespaces](tablespaces/tablespaces.md) | Organização física dos dados e segmentação |
 | [📁 Tables](tables/tables.md) | Organização dentro do tablespace |
 | [📁 Estatísticas e Otimizador](estatisticas/estatisticas.md) | Uso de RUNSTATS, estatísticas e tuning do otimizador |
+| [📁 Escopo Inicial de Performance](escopo-inicial_performance/escopo-inicial-performance.md) | ESCOPO INICIAL – Diagnóstico Performance de Query ambiente produtivo |
 | [📁 Tuning e Performance](desempenho/tunning-consultas.md) | Diagnóstico e otimização de queries |
 | [📁 Performance](performance/performance.md) | Visão Crítica: O que torna uma query eficiente no DB2 for z/OS? |
 | [📁 Utilitários DB2](utilitarios/utilities.md) | Comandos como REORG, CHECK, COPY, LOAD etc. |
