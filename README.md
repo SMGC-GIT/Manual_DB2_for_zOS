@@ -17,6 +17,7 @@ Este repositório é um guia técnico e prático para profissionais que atuam co
 | [📁 Escopo Inicial de Performance](escopo-inicial_performance/escopo-inicial-performance.md) | ESCOPO INICIAL – Diagnóstico Performance de Query ambiente produtivo |
 | [📁 Diagnóstico com base em RUNSTATS](runstats/runstats.md) | Diagnóstico com foco em RUNSTATS |
 | [📁 Diagnóstico com base em Indices](indices/indices.md) | Diagnóstico com foco em Indices |
+| [📁 Diagnóstico com base em Access Path](access-path/access-path.md) | Diagnóstico com foco em Access Path |
 | [📁 Tuning e Performance](desempenho/tunning-consultas.md) | Diagnóstico e otimização de queries |
 | [📁 Performance](performance/performance.md) | Visão Crítica: O que torna uma query eficiente no DB2 for z/OS? |
 | [📁 Utilitários DB2](utilitarios/utilities.md) | Comandos como REORG, CHECK, COPY, LOAD etc. |
