@@ -1,7 +1,5 @@
 # 📘 Diagnóstico com Foco em Access Path (EXPLAIN)
 
-> **Seção do Manual**: `04.03.3 – Diagnóstico com foco em Access Path`
-
 ---
 
 ## 📑 Índice
