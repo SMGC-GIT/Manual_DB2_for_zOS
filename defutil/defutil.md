@@ -2,7 +2,7 @@
 
 ---
 
-## Índice
+## 📚 Índice
 
 - [1. O que é o utilitário DEFUTIL](#1-o-que-é-o-utilitário-defutil)
 - [2. Quando usar o DEFUTIL](#2-quando-usar-o-defutil)
@@ -12,42 +12,43 @@
 - [6. Exemplos práticos de uso](#6-exemplos-práticos-de-uso)
 - [7. Cuidados e riscos ao utilizar](#7-cuidados-e-riscos-ao-utilizar)
 - [8. Consultas na SYSUTIL para diagnóstico](#8-consultas-na-sysutil-para-diagnóstico)
-- [9. Referências oficiais IBM](#9-referências-oficiais-ibm)
+- [9. Campos adicionais da SYSUTIL (controle interno)](#9-campos-adicionais-da-sysutil-controle-interno)
+- [10. Relação com DISPLAY, MODIFY e UTILID](#10-relação-com-display-modify-e-utilid)
+- [11. Referências oficiais IBM](#11-referências-oficiais-ibm)
 
 ---
 
 ## 1. O que é o utilitário DEFUTIL
 
-O `DEFUTIL` (Define Utility) é um utilitário administrativo interno do DB2 for z/OS que permite gerenciar manualmente as entradas da tabela `SYSIBM.SYSUTIL`.
-
-Essa tabela controla as execuções ativas dos utilitários DB2, como `REORG`, `COPY`, `LOAD`, entre outros. O DEFUTIL é útil para atualizar ou remover registros que podem bloquear futuras execuções desses utilitários.
+O `DEFUTIL` (Define Utility) é um utilitário administrativo interno do DB2 for z/OS que permite criar, alterar ou encerrar manualmente entradas na tabela `SYSIBM.SYSUTIL`, responsável por controlar execuções ativas de utilitários como `REORG`, `COPY`, `LOAD`, entre outros.
 
 ---
 
 ## 2. Quando usar o DEFUTIL
 
-O uso do DEFUTIL é indicado em situações como:
-
-- A execução de um utilitário falhou e deixou entradas "presas" na `SYSUTIL`, bloqueando reexecuções;
-- A necessidade de forçar o status de uma `UTILID` para "STOPPED", liberando o recurso;
-- Situações de teste, onde se deseja simular uma execução ativa (status "STARTED");
-- Correção administrativa de inconsistências no catálogo após falhas no job.
+- **Execução de utilitário falhou** e a entrada permaneceu como "ativa"
+- **Bloqueio de novos jobs** com mesmo `UTILID`
+- **Ambiente de testes** que simula jobs ativos
+- **Correções administrativas** pós-falha
 
 ---
 
 ## 3. Como funciona o DEFUTIL
 
-O DEFUTIL atualiza diretamente a tabela `SYSIBM.SYSUTIL`, manipulando os metadados que representam a execução ativa de utilitários.
+O DEFUTIL **altera diretamente** a tabela `SYSIBM.SYSUTIL`, usando parâmetros como `UTILID`, `UTPROC` e `STATUS` para atualizar o estado de execução de um utilitário.
 
-### Estrutura da SYSUTIL
+### Exemplo de estrutura de execução:
 
-| Coluna           | Descrição                                     |
-|------------------|-----------------------------------------------|
-| UTILID           | Nome lógico da execução do utilitário         |
-| UTDBID           | ID do database envolvido                      |
-| UTPSID           | ID do tablespace (Page Set ID)                |
-| UTPROC           | Tipo de utilitário (REORG, LOAD, COPY, etc.)  |
-| UTSTATUS         | Status da execução: STARTED ou STOPPED        |
+| Coluna     | Descrição                                     |
+|------------|-----------------------------------------------|
+| UTILID     | Nome da execução do utilitário                |
+| UTSTATUS   | STARTED / STOPPED                             |
+| UTPROC     | Tipo do utilitário (REORG, COPY, etc.)        |
+| UTDBID     | Database ID                                   |
+| UTPSID     | Page Set ID (TS ou IX)                        |
+| UTSTRT     | Timestamp de início                           |
+| UTSTOP     | Timestamp de parada (se STOPPED)              |
+| UTUTIME    | Tempo total de execução (em microssegundos)   |
 
 ---
 
@@ -62,17 +63,15 @@ DEFUTIL
   STATUS(STARTED | STOPPED)
 ```
 
-### Explicação dos parâmetros
+### Descrição dos parâmetros
 
-| Parâmetro | Requerido | Descrição |
-|-----------|-----------|-----------|
-| UTILID    | Sim       | Identificador único da execução do utilitário |
-| DBID      | Opcional  | Database ID (caso aplicável) |
-| PSID      | Opcional  | Page Set ID (identifica o TS ou IX) |
-| UTPROC    | Sim       | Tipo do utilitário: REORG, COPY, LOAD, etc. |
-| STATUS    | Sim       | Define o estado: `STARTED` ou `STOPPED` |
-
-> ⚠️ Recomenda-se que o par `DBID` e `PSID` sejam utilizados quando disponíveis, para garantir precisão na operação.
+| Parâmetro | Obrigatório | Descrição |
+|-----------|-------------|-----------|
+| UTILID    | ✅           | Nome lógico da execução |
+| DBID      | ⚠️ Opcional | ID do banco de dados (quando aplicável) |
+| PSID      | ⚠️ Opcional | Page Set ID (TS ou IX) |
+| UTPROC    | ✅           | Tipo: REORG, COPY, LOAD, etc. |
+| STATUS    | ✅           | STARTED ou STOPPED |
 
 ---
 
@@ -98,7 +97,7 @@ DEFUTIL
 
 ## 6. Exemplos práticos de uso
 
-### 6.1 Parar execução "presa"
+### Parar execução presa
 
 ```plaintext
 DEFUTIL
@@ -106,7 +105,7 @@ DEFUTIL
   STATUS(STOPPED)
 ```
 
-### 6.2 Simular execução ativa
+### Simular execução ativa
 
 ```plaintext
 DEFUTIL
@@ -117,53 +116,76 @@ DEFUTIL
   STATUS(STARTED)
 ```
 
-### 6.3 Corrigir utilitário interrompido
-
-```plaintext
-DEFUTIL
-  UTILID(COPY_DIA01)
-  DBID(0001)
-  PSID(0005)
-  UTPROC(COPY)
-  STATUS(STOPPED)
-```
-
 ---
 
 ## 7. Cuidados e riscos ao utilizar
 
-- Use **apenas com autorização e conhecimento técnico**;
-- Verifique antes a tabela `SYSIBM.SYSUTIL` com `SELECT` para não sobrescrever entradas válidas;
-- O uso incorreto pode causar falhas em futuros utilitários ou travamentos;
-- Não utilize em ambientes produtivos sem análise prévia de impacto.
+- **Evite uso sem diagnóstico prévio** da `SYSUTIL`
+- **Risco de sobrescrever registros válidos**
+- **Pode travar futuros utilitários se mal configurado**
+- **Ambientes produtivos requerem extrema cautela**
 
 ---
 
 ## 8. Consultas na SYSUTIL para diagnóstico
 
-### Verificar todas as utilid pendentes:
-
 ```sql
-SELECT UTILID, UTSTATUS, UTDBID, UTPSID, UTPROC
+-- Exibir utilitários ativos
+SELECT UTILID, UTSTATUS, UTPROC, UTSTRT
+FROM SYSIBM.SYSUTIL
+WHERE UTSTATUS = 'STARTED';
+
+-- Verificar execuções pendentes
+SELECT *
 FROM SYSIBM.SYSUTIL
 WHERE UTSTATUS <> 'STOPPED';
 ```
 
-### Diagnóstico de conflitos
+---
 
-```sql
-SELECT *
-FROM SYSIBM.SYSUTIL
-WHERE UTILID = 'NOME_DA_UTILID';
+## 9. Campos adicionais da SYSUTIL (controle interno)
+
+| Campo     | Descrição                                     |
+|-----------|-----------------------------------------------|
+| UTSTRT    | Timestamp de início                           |
+| UTSTOP    | Timestamp de parada                           |
+| UTPROC    | Nome do utilitário                            |
+| UTUTIME   | Duração (em microssegundos)                   |
+| UTPROCID  | ID do processo responsável                    |
+| UTLASTS   | Última atualização da entrada                 |
+
+> ⚠️ **Esses campos não podem ser modificados diretamente. Use DEFUTIL com cautela para STATUS apenas.**
+
+---
+
+## 10. Relação com DISPLAY, MODIFY e UTILID
+
+| Comando           | Função                                                |
+|-------------------|--------------------------------------------------------|
+| `DISPLAY UTILITY` | Exibe utilitários em execução com detalhes técnicos    |
+| `MODIFY UTILITY`  | Força parada de utilitário preso                       |
+| `DEFUTIL`         | Altera status lógico de uma execução (manual)          |
+
+### Exemplo `DISPLAY UTILITY`
+
+```plaintext
+-DIS UTIL(*)
 ```
 
-> 💡 Dica: A falta de `STOPPED` impede a execução subsequente de utilitários com o mesmo `UTILID`.
+### Exemplo `MODIFY UTILITY`
+
+```plaintext
+-MODIFY UTILITY (UTILID(REORG_CLIENTES_001)) TERM
+```
 
 ---
 
-## 9. Referências oficiais IBM
+## 11. Referências oficiais IBM
 
 - [DEFUTIL Utility - IBM v13](https://www.ibm.com/docs/en/db2-for-zos/13?topic=utilities-defutil-utility)
-- [SYSIBM.SYSUTIL - DB2 Catalog Table](https://www.ibm.com/docs/en/db2-for-zos/13?topic=tables-sysutil)
+- [SYSUTIL - IBM Catalog Table](https://www.ibm.com/docs/en/db2-for-zos/13?topic=tables-sysutils-table)
+- [MODIFY UTILITY - IBM Command](https://www.ibm.com/docs/en/db2-for-zos/13?topic=commands-modify-utility)
+- [DISPLAY UTILITY - IBM Command](https://www.ibm.com/docs/en/db2-for-zos/13?topic=commands-display-utility)
 
 ---
+
