@@ -163,3 +163,54 @@ REBIND PACKAGE(CONTROLE.ROTINAXX) EXPLAIN(YES) APREUSE(WARN)
 ---
 
 ## 📌 Exemplo de RUNSTATS Ideal
+
+Este comando simula uma coleta de estatísticas adequada para casos em que há:
+- Filtros com colunas isoladas e combinadas;
+- Presença de colunas fora dos índices;
+- Distribuição desigual dos dados;
+- Necessidade de decisão baseada em valores mais frequentes.
+
+```sql
+RUNSTATS TABLESPACE DBX.TSX 
+  TABLE(ALL) 
+  INDEX(ALL) 
+  KEYCARD 
+  FREQVAL NUMCOLS 1 
+  FREQVAL NUMCOLS 2 ON COLUMNS(COL1, COL2) 
+  HISTOGRAM ON COLUMNS(COL1, COL2)
+  REPORT YES
+```
+
+### Explicação de cada item:
+
+- `TABLESPACE DBX.TSX`: define a tablespace de destino da coleta;
+- `TABLE(ALL)`: coleta estatísticas para todas as tabelas do espaço;
+- `INDEX(ALL)`: inclui todos os índices das tabelas;
+- `KEYCARD`: atualiza a contagem de chaves distintas dos índices;
+- `FREQVAL NUMCOLS 1`: coleta os valores mais frequentes de colunas individuais (útil para filtros simples);
+- `FREQVAL NUMCOLS 2 ON COLUMNS(COL1, COL2)`: coleta frequência combinada de valores em pares de colunas (essencial para filtros múltiplos);
+- `HISTOGRAM ON COLUMNS(COL1, COL2)`: coleta dados de distribuição para identificar valores dominantes e outliers;
+- `REPORT YES`: gera um relatório detalhado para revisão das estatísticas geradas.
+
+---
+
+### ⚠️ Dicas importantes:
+
+- Evite usar apenas `RUNSTATS TABLE(ALL) INDEX(ALL)` sem nenhuma personalização: isso não fornece informações suficientes para o otimizador tomar decisões precisas.
+- Sempre **faça REBIND após o RUNSTATS**, com `EXPLAIN(YES)`, para garantir que o novo plano seja gerado com base nas estatísticas atualizadas.
+- Analise o **novo plano de acesso** com base no `EXPLAIN`, antes de considerar reescrita da query ou criação de novos índices.
+- Use `REPORT YES` para comparar a **cardinalidade estimada vs real** e verificar se a coleta foi suficiente.
+
+---
+
+📎 **Referência complementar**:  
+- [IBM Docs – RUNSTATS Utility (Db2 13 for z/OS)](https://www.ibm.com/docs/en/db2-for-zos/13?topic=utilities-runstats-utility)
+- [IBM Redbook – Db2 13 Performance Topics](https://www.redbooks.ibm.com/abstracts/sg248551.html)
+
+---
+
+🔚 **Conclusão da Seção**:  
+Compreender e aplicar corretamente o `RUNSTATS` é essencial para garantir a eficiência das queries em ambientes críticos. Uma coleta mal feita pode comprometer todo o plano de acesso. Esta seção deve ser sempre revisitada antes de partir para alterações estruturais no banco ou reescrita de lógica SQL.
+
+---
+
