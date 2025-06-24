@@ -17,6 +17,7 @@
 - [🧪 9. Exemplo Prático](#9-exemplo-prático)
 - [📘 10. Glossário Técnico](#10-glossário-técnico)
 - [🔗 11. Fontes Oficiais IBM](#11-fontes-oficiais-ibm)
+- [🛠️ 12. Consultas SQL Úteis para Gestão de Packages](#12-consultas-sql-úteis-para-gestão-de-packages)
 
 ---
 
@@ -212,4 +213,58 @@ REBIND PACKAGE('PKGTRANSACOES') MEMBER('PG001')
 
 ---
 
+## 🛠️ 12. Consultas SQL Úteis para Gestão de Packages
+
+### 🔎 12.1. Pacotes utilizados recentemente
+
+```sql
+SELECT COLLID, NAME, VERSION, LASTUSED
+FROM SYSIBM.SYSPACKAGE
+WHERE LASTUSED IS NOT NULL
+ORDER BY LASTUSED DESC;
+```
+
+### 💤 12.2. Pacotes não utilizados nos últimos 90 dias
+
+```sql
+SELECT COLLID, NAME, VERSION, LASTUSED
+FROM SYSIBM.SYSPACKAGE
+WHERE LASTUSED < CURRENT DATE - 90 DAYS;
+```
+
+### 🚫 12.3. Pacotes com status inválido
+
+```sql
+SELECT COLLID, NAME, VALID
+FROM SYSIBM.SYSPACKAGE
+WHERE VALID = 'N';
+```
+
+### 🧵 12.4. Listar programas associados a um plano (PKLIST)
+
+```sql
+SELECT *
+FROM SYSIBM.SYSPLANDEP
+WHERE BNAME = 'NOME_DO_PLAN';
+```
+
+### 🔗 12.5. Ver dependências de um package
+
+```sql
+SELECT * 
+FROM SYSIBM.SYSPACKDEP
+WHERE COLLID = 'COLECAO' AND NAME = 'PROGRAMA';
+```
+
+### 🔐 12.6. Ver permissões concedidas em packages
+
+```sql
+SELECT *
+FROM SYSIBM.SYSPACKAUTH
+WHERE COLLID = 'COLECAO';
+```
+
+---
+
 > Este guia está preparado para uso em treinamentos, operações de produção, ou auditoria de qualidade em ambientes DB2 for z/OS. Pode ser expandido com temas como: análise de EXPLAIN, automação de REBIND, gestão de versionamento de packages e mais.
+
