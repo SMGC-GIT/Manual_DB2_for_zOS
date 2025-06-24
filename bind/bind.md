@@ -22,6 +22,8 @@
 - [16. Análise de Performance com EXPLAIN e PLAN_TABLE](#16-análise-de-performance-com-explain-e-plan_table)
 - [17. Estratégias de Controle com VERSION](#17-estratégias-de-controle-com-version)
 - [18. Erros Comuns Relacionados ao BIND](#18-erros-comuns-relacionados-ao-bind)
+- [19. Checklist de Diagnóstico de Pacotes Inválidos](#19-checklist-de-diagnóstico-de-pacotes-inválidos)
+- [20. Playbook de REBIND Emergencial](#20-playbook-de-rebind-emergencial)
 
 ---
 
@@ -467,129 +469,213 @@ FREE PACKAGE(COLECAO.PROGRAMA) VERSION(V001);
 
 ## 18. Erros Comuns Relacionados ao BIND
 
-Abaixo estão os erros mais recorrentes em ambientes corporativos relacionados a BIND e REBIND, com causas e ações recomendadas.
+Abaixo estão os erros mais recorrentes relacionados ao ciclo de vida dos packages. Cada um inclui a mensagem, causa técnica, explicação aprofundada e uma ou mais soluções eficazes.
 
-### 18.1. -805: Package not found
+---
+
+### 18.1. **-805: Package not found**
 
 **Mensagem:**
 ```
-DSNT408I SQLCODE = -805, 
+DSNT408I SQLCODE = -805 
 THE PACKAGE 'COLLID.PROGRAMA.VERSION' WAS NOT FOUND
 ```
 
-**Causas:**
-- O `PACKAGE` não foi `BINDado`
-- A `COLLECTION` está incorreta
-- `VERSION` não especificada corretamente
+**Causa:**
+- O programa executável está chamando um `PACKAGE` que não existe no catálogo `SYSPACKAGE`.
+- Isso ocorre normalmente após deploy de uma nova versão sem executar o BIND correspondente.
+- Também pode ocorrer se o plano (`PLAN`) estiver com `PKLIST` incorreta.
 
-**Solução:**
-- Verifique a existência do package:
-```sql
-SELECT * FROM SYSIBM.SYSPACKAGE 
-WHERE NAME = 'PROGRAMA';
-```
-- Faça o BIND ou REBIND com os parâmetros corretos
-- Verifique se o plano está usando a `PKLIST` correta
+**Explicação Técnica:**
+Durante a execução, o DB2 tenta localizar o package referenciado no precompilado via `COLLID.PROGRAMA.VERSION`. Se não encontrar, a execução falha. Esse erro costuma aparecer em ambientes de produção logo após um deploy incompleto.
 
----
-
-### 18.2. -818: Timestamp mismatch
-
-**Mensagem:**
-```
-THE PRECOMPILER GENERATED TIMESTAMP x IN THE LOAD MODULE DOES NOT MATCH THE BIND TIMESTAMP y IN THE DBRM
-```
-
-**Causas:**
-- A carga do programa (LOAD) está fora de sincronia com o DBRM
-- Foi recompilado sem REBIND
-
-**Solução:**
-- Recompile e rebinde novamente:
-```sql
-BIND PACKAGE(...) MEMBER(...) ...
-```
-- Garante que a versão do programa esteja sincronizada com o DBRM correto
+**Soluções:**
+1. Verifique se o package foi bindado:
+   ```sql
+   SELECT * FROM SYSIBM.SYSPACKAGE 
+   WHERE NAME = 'PROGRAMA' AND COLLID = 'COLLID';
+   ```
+2. Caso não exista, gere novamente o DBRM e execute:
+   ```sql
+   BIND PACKAGE(COLLID) MEMBER(PROGRAMA) VERSION(...) ...
+   ```
+3. Verifique se o plano (`PLAN`) inclui o `PKLIST` correto.
 
 ---
 
-### 18.3. -922: Authorization Failure
+### 18.2. **-818: Timestamp mismatch**
 
 **Mensagem:**
 ```
-DSNT408I SQLCODE = -922, 
+THE PRECOMPILER GENERATED TIMESTAMP x IN THE LOAD MODULE 
+DOES NOT MATCH THE BIND TIMESTAMP y IN THE DBRM
+```
+
+**Causa:**
+- O load module (.LOAD) e o package referenciam timestamps diferentes.
+- Isso ocorre quando se recompila o programa mas não se faz REBIND.
+
+**Explicação Técnica:**
+O DB2 associa um timestamp único a cada compilação (DBRM) e compara com o do load. Se houver divergência, o runtime entende que o programa e o plano de acesso estão inconsistentes.
+
+**Soluções:**
+- Recompile o programa e rebinde imediatamente.
+- Em pipelines de deploy, nunca separar compilação e BIND.
+
+---
+
+### 18.3. **-922: Authorization Failure**
+
+**Mensagem:**
+```
+DSNT408I SQLCODE = -922 
 AUTHORIZATION FAILURE: error-type ERROR
 ```
 
-**Causas:**
-- Usuário executor não tem permissão
-- O OWNER definido no BIND não possui GRANT EXECUTE
+**Causa:**
+- O usuário que executa o programa não possui `EXECUTE` no package.
+- O OWNER do BIND pode não ter GRANT adequado.
 
-**Solução:**
-- Verifique permissões com:
-```sql
-SELECT * FROM SYSIBM.SYSPACKAUTH WHERE NAME = 'USUARIO';
-```
-- Conceda GRANT adequado:
+**Explicação Técnica:**
+O controle de acesso no DB2 está vinculado à execução do package. Se o usuário final não estiver autorizado via `SYSPACKAUTH`, a execução falha.
+
+**Soluções:**
 ```sql
 GRANT EXECUTE ON PACKAGE COLLID.PROGRAMA TO USER USUARIO;
 ```
+Ou conceda via ROLE ou grupo autorizado.
 
 ---
 
-### 18.4. -530: Referential Integrity Violation (após alteração de tabela)
-
-**Mensagem:**
-```
-THE INSERT OR UPDATE VALUE OF FOREIGN KEY IS INVALID
-```
-
-**Causas:**
-- Alteração na estrutura de tabelas com FK que afeta pacotes
-
-**Solução:**
-- Executar `REBIND` dos packages afetados após mudanças de DDL
-- Avaliar a ordem de carregamento de dados
-
----
-
-### 18.5. DSNT201I - Package was invalidated
+### 18.4. **DSNT201I - Package was invalidated**
 
 **Mensagem:**
 ```
 DSNT201I - PACKAGE 'COLLID.PROG' WAS INVALIDATED BY DDL CHANGE
 ```
 
-**Causas:**
-- ALTER TABLE, DROP INDEX, etc. invalida dependências
+**Causa:**
+- Alterações de estrutura (DDL) nas tabelas referenciadas pelo package.
 
-**Solução:**
-- Executar REBIND imediatamente após alterações de estrutura
+**Explicação Técnica:**
+O catálogo detecta que o plano de acesso está desatualizado e invalida o package automaticamente para garantir consistência.
+
+**Soluções:**
+- Executar REBIND imediatamente após ALTER TABLE, DROP INDEX, etc.
+- Use:
+```sql
+REBIND PACKAGE(COLLID) MEMBER(PROGRAMA) ...
+```
 
 ---
 
-### 18.6. BIND/REBIND falha por falta de RUNSTATS
+### 18.5. **-530: Constraint Violation após alteração de estrutura**
+
+**Mensagem:**
+```
+FOREIGN KEY VIOLATION DURING INSERT OR UPDATE
+```
+
+**Causa:**
+- Mudanças em constraints que afetam pacotes que manipulam essas tabelas.
+- Pode haver impacto no plano de acesso.
+
+**Soluções:**
+- Verifique se o programa está respeitando a nova constraint.
+- REBIND do pacote envolvido pode ser necessário.
+
+---
+
+### 18.6. **Falha de REBIND por falta de estatísticas**
 
 **Sintoma:**
-- Plano de acesso inesperado ou erro no BIND
-- EXPLAIN mostra TABLE CARD = -1
+- Plano de acesso inesperado, uso excessivo de TABLE SCAN, join ineficiente
+- `PLAN_TABLE` mostra CARD = -1
+
+**Explicação Técnica:**
+O otimizador depende de estatísticas atualizadas para gerar o melhor plano de acesso. Sem elas, assume defaults ineficientes.
 
 **Solução:**
-- Executar:
 ```sql
 RUNSTATS TABLESPACE DB.TS TABLE(ALL) INDEX(ALL)
+REBIND PACKAGE(COLLID.PROGRAMA) EXPLAIN(YES)
 ```
-- Em seguida, REBIND com `EXPLAIN(YES)`
 
 ---
 
-> 💡 **Dica geral**: Consulte a coluna `VALID` da `SYSPACKAGE`. Se estiver `N`, o package está inválido. Um `REBIND` pode resolver.
+## 19. Checklist de Diagnóstico de Pacotes Inválidos
 
-```sql
-SELECT COLLID, NAME, VALID, LASTUSED 
-FROM SYSIBM.SYSPACKAGE 
-WHERE VALID = 'N';
-```
+1. 🔎 Consultar pacotes inválidos:
+   ```sql
+   SELECT COLLID, NAME, VALID 
+   FROM SYSIBM.SYSPACKAGE WHERE VALID = 'N';
+   ```
+
+2. 📅 Avaliar data de último uso:
+   ```sql
+   SELECT COLLID, NAME, LASTUSED 
+   FROM SYSIBM.SYSPACKAGE 
+   WHERE VALID = 'N';
+   ```
+
+3. 🔁 Verificar dependências:
+   ```sql
+   SELECT * FROM SYSIBM.SYSPACKDEP 
+   WHERE COLLID = 'COLLID' AND NAME = 'PROGRAMA';
+   ```
+
+4. 🔐 Verificar permissões:
+   ```sql
+   SELECT * FROM SYSIBM.SYSPACKAUTH 
+   WHERE COLLID = 'COLLID';
+   ```
+
+5. 📄 Validar acesso na PLAN_TABLE após EXPLAIN.
+
+---
+
+## 20. Playbook de REBIND Emergencial
+
+### 🧠 Cenário:
+Após deploy, usuários reportam falha ao executar um programa. Logs indicam erro `-805`, `-818` ou `DSNT201I`.
+
+### 🧰 Ações Imediatas:
+
+1. **Verifique se o package está presente**
+   ```sql
+   SELECT * FROM SYSIBM.SYSPACKAGE WHERE NAME = 'PROGRAMA';
+   ```
+
+2. **Valide se está marcado como inválido**
+   ```sql
+   SELECT VALID FROM SYSIBM.SYSPACKAGE 
+   WHERE NAME = 'PROGRAMA' AND VALID = 'N';
+   ```
+
+3. **Efetue REBIND com EXPLAIN**
+   ```sql
+   REBIND PACKAGE(COLLID) MEMBER(PROGRAMA) 
+   EXPLAIN(YES) VALIDATE(BIND);
+   ```
+
+4. **Se ainda falhar, recompile e rebinde**
+   - Compile o fonte COBOL/PL1/Assembler
+   - Gere novo DBRM
+   - Execute BIND PACKAGE
+
+5. **Verifique e conceda permissão de execução**
+   ```sql
+   GRANT EXECUTE ON PACKAGE COLLID.PROGRAMA TO USER USUARIO;
+   ```
+
+6. **Consulte o histórico com COPYID se necessário**
+   ```sql
+   REBIND PACKAGE(COLLID.PROGRAMA) COPY(BKP001);
+   ```
+
+---
+
+> 💡 Dica: Padronize a criação de `COPY PACKAGE` após cada BIND/REBIND crítico para permitir rollback imediato em produção.
 
 ---
 
