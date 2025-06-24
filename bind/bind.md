@@ -24,7 +24,7 @@
 
 ---
 
-## 📌 1. Visão Geral
+## 1. Visão Geral
 
 O **comando BIND** transforma instruções SQL compiladas (armazenadas em **DBRMs**) em **packages** ou **plans** executáveis pelo DB2. Ele define como e sob quais condições essas instruções serão executadas.
 
@@ -36,7 +36,7 @@ Além disso, o BIND:
 
 ---
 
-## 🧱 2. Estrutura do BIND
+## 2. Estrutura do BIND
 
 ### Objetos envolvidos:
 
@@ -49,7 +49,7 @@ Além disso, o BIND:
 
 ---
 
-## 📎 3. Sintaxe do BIND
+## 3. Sintaxe do BIND
 
 ### ✅ BIND PACKAGE
 
@@ -77,7 +77,7 @@ BIND PLAN(MYPLAN)
 
 ---
 
-## 🔍 4. Parâmetros Explicados
+## 4. Parâmetros Explicados
 
 | Parâmetro       | Descrição                                                                                                                                   |
 |------------------|----------------------------------------------------------------------------------------------------------------------------------------------|
@@ -92,7 +92,7 @@ BIND PLAN(MYPLAN)
 
 ---
 
-## 📈 5. Quando Atualizar o BIND
+## 5. Quando Atualizar o BIND
 
 Atualizar um BIND é necessário quando há **mudanças estruturais** ou **estratégicas** que afetam a execução do SQL. Exemplos:
 
@@ -118,7 +118,7 @@ Se o BIND não for atualizado:
 
 ---
 
-## 🔁 6. REBIND: Atualizando sem Recompilar
+## 6. REBIND: Atualizando sem Recompilar
 
 O comando `REBIND PACKAGE` permite **recompilar o plano de acesso** de um package existente, sem alterar o código-fonte nem recompilar o DBRM.
 
@@ -141,7 +141,7 @@ REBIND PACKAGE('COLECAO') MEMBER('PROGRAMA')
 
 ---
 
-## 📊 7. Boas Práticas em Ambientes Críticos
+## 7. Boas Práticas em Ambientes Críticos
 
 - **Padronizar QUALIFIER e OWNER** por sistema, ambiente e aplicação
 - Sempre utilizar `EXPLAIN(YES)` para monitorar e auditar estratégias de acesso
@@ -153,7 +153,7 @@ REBIND PACKAGE('COLECAO') MEMBER('PROGRAMA')
 
 ---
 
-## 📚 8. Tabelas do Catálogo Relacionadas
+## 8. Tabelas do Catálogo Relacionadas
 
 | Tabela                    | Descrição                                                             |
 |---------------------------|----------------------------------------------------------------------|
@@ -165,7 +165,7 @@ REBIND PACKAGE('COLECAO') MEMBER('PROGRAMA')
 
 ---
 
-## 🧪 9. Exemplo Prático
+## 9. Exemplo Prático
 
 ### 📂 Situação:
 
@@ -188,7 +188,7 @@ REBIND PACKAGE('PKGTRANSACOES') MEMBER('PG001')
 
 ---
 
-## 📘 10. Glossário Técnico
+## 10. Glossário Técnico
 
 | Termo           | Definição |
 |------------------|----------|
@@ -210,7 +210,7 @@ REBIND PACKAGE('PKGTRANSACOES') MEMBER('PG001')
 
 ---
 
-## 🔗 11. Fontes Oficiais IBM
+## 11. Fontes Oficiais IBM
 
 - 📖 [BIND PACKAGE - IBM](https://www.ibm.com/docs/en/db2-for-zos/13?topic=commands-bind-package)
 - 📖 [REBIND PACKAGE - IBM](https://www.ibm.com/docs/en/db2-for-zos/13?topic=commands-rebind-package)
@@ -219,7 +219,7 @@ REBIND PACKAGE('PKGTRANSACOES') MEMBER('PG001')
 
 ---
 
-## 🛠️ 12. Consultas SQL Úteis para Gestão de Packages
+## 12. Consultas SQL Úteis para Gestão de Packages
 
 ### 🔎 12.1. Pacotes utilizados recentemente
 
@@ -272,7 +272,7 @@ WHERE COLLID = 'COLECAO';
 
 ---
 
-## 🤖 13. Script Automatizado para REBIND em Lote
+## 13. Script Automatizado para REBIND em Lote
 
 Automatizar o REBIND para pacotes antigos ou afetados por mudanças de RUNSTATS ou DDL pode ser crucial para performance e estabilidade. Abaixo, um exemplo de **script gerador de REBINDs dinâmicos**, baseado na tabela `SYSPACKAGE`.
 
@@ -342,99 +342,6 @@ WHERE COLLID LIKE 'APP01%'
 ---
 
 > Este processo é recomendado para ambientes onde o volume de pacotes torna inviável o REBIND manual. Avaliações periódicas com base em `LASTUSED`, `VALID`, e `RUNSTATS` devem fazer parte da governança de packages no DB2.
-
----
-
-# 📘 Guia Completo: BIND no DB2 for z/OS
-
-> Elaborado para atuação sênior em ambientes corporativos de missão crítica, com base na documentação oficial da IBM.
-
----
-
-## 📑 Índice
-
-- [1. Visão Geral](#1-visão-geral)
-- [2. Estrutura do BIND](#2-estrutura-do-bind)
-- [3. Sintaxe do BIND](#3-sintaxe-do-bind)
-- [4. Parâmetros Explicados](#4-parâmetros-explicados)
-- [5. Quando Atualizar o BIND](#5-quando-atualizar-o-bind)
-- [6. REBIND: Atualizando sem Recompilar](#6-rebind-atualizando-sem-recompilar)
-- [7. Boas Práticas em Ambientes Críticos](#7-boas-práticas-em-ambientes-críticos)
-- [8. Tabelas do Catálogo Relacionadas](#8-tabelas-do-catálogo-relacionadas)
-- [9. Exemplo Prático](#9-exemplo-prático)
-- [10. Glossário Técnico](#10-glossário-técnico)
-- [11. Fontes Oficiais IBM](#11-fontes-oficiais-ibm)
-- [12. Consultas SQL Úteis para Gestão de Packages](#12-consultas-sql-úteis-para-gestão-de-packages)
-- [13. Script Automatizado para REBIND em Lote](#13-script-automatizado-para-rebind-em-lote)
-- [14. COPY PACKAGE e Estratégias de Fallback](#14-copy-package-e-estratégias-de-fallback)
-- [15. FREE PACKAGE e Limpeza de Pacotes Obsoletos](#15-free-package-e-limpeza-de-pacotes-obsoletos)
-- [16. Análise de Performance com EXPLAIN e PLAN_TABLE](#16-análise-de-performance-com-explain-e-plan_table)
-- [17. Estratégias de Controle com VERSION](#17-estratégias-de-controle-com-version)
-
----
-
-## 1. Visão Geral
-*(... conteúdo anterior preservado ...)*
-
----
-
-## 2. Estrutura do BIND
-*(... conteúdo anterior preservado ...)*
-
----
-
-## 3. Sintaxe do BIND
-*(... conteúdo anterior preservado ...)*
-
----
-
-## 4. Parâmetros Explicados
-*(... conteúdo anterior preservado ...)*
-
----
-
-## 5. Quando Atualizar o BIND
-*(... conteúdo anterior preservado ...)*
-
----
-
-## 6. REBIND: Atualizando sem Recompilar
-*(... conteúdo anterior preservado ...)*
-
----
-
-## 7. Boas Práticas em Ambientes Críticos
-*(... conteúdo anterior preservado ...)*
-
----
-
-## 8. Tabelas do Catálogo Relacionadas
-*(... conteúdo anterior preservado ...)*
-
----
-
-## 9. Exemplo Prático
-*(... conteúdo anterior preservado ...)*
-
----
-
-## 10. Glossário Técnico
-*(... conteúdo anterior preservado ...)*
-
----
-
-## 11. Fontes Oficiais IBM
-*(... conteúdo anterior preservado ...)*
-
----
-
-## 12. Consultas SQL Úteis para Gestão de Packages
-*(... conteúdo anterior preservado ...)*
-
----
-
-## 13. Script Automatizado para REBIND em Lote
-*(... conteúdo anterior preservado ...)*
 
 ---
 
