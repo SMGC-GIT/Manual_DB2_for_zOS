@@ -6,19 +6,19 @@
 
 ## 📑 Índice
 
-- [📌 1. Visão Geral](#1-visão-geral)
-- [🧱 2. Estrutura do BIND](#2-estrutura-do-bind)
-- [📎 3. Sintaxe do BIND](#3-sintaxe-do-bind)
-- [🔍 4. Parâmetros Explicados](#4-parâmetros-explicados)
-- [📈 5. Quando Atualizar o BIND](#5-quando-atualizar-o-bind)
-- [🔁 6. REBIND: Atualizando sem Recompilar](#6-rebind-atualizando-sem-recompilar)
-- [📊 7. Boas Práticas em Ambientes Críticos](#7-boas-práticas-em-ambientes-críticos)
-- [📚 8. Tabelas do Catálogo Relacionadas](#8-tabelas-do-catálogo-relacionadas)
-- [🧪 9. Exemplo Prático](#9-exemplo-prático)
-- [📘 10. Glossário Técnico](#10-glossário-técnico)
-- [🔗 11. Fontes Oficiais IBM](#11-fontes-oficiais-ibm)
-- [🛠️ 12. Consultas SQL Úteis para Gestão de Packages](#12-consultas-sql-úteis-para-gestão-de-packages)
-- [🤖 13. Script Automatizado para REBIND em Lote](#13-script-automatizado-para-rebind-em-lote)
+- [1. Visão Geral](#1-visão-geral)
+- [2. Estrutura do BIND](#2-estrutura-do-bind)
+- [3. Sintaxe do BIND](#3-sintaxe-do-bind)
+- [4. Parâmetros Explicados](#4-parâmetros-explicados)
+- [5. Quando Atualizar o BIND](#5-quando-atualizar-o-bind)
+- [6. REBIND: Atualizando sem Recompilar](#6-rebind-atualizando-sem-recompilar)
+- [7. Boas Práticas em Ambientes Críticos](#7-boas-práticas-em-ambientes-críticos)
+- [8. Tabelas do Catálogo Relacionadas](#8-tabelas-do-catálogo-relacionadas)
+- [9. Exemplo Prático](#9-exemplo-prático)
+- [10. Glossário Técnico](#10-glossário-técnico)
+- [11. Fontes Oficiais IBM](#11-fontes-oficiais-ibm)
+- [12. Consultas SQL Úteis para Gestão de Packages](#12-consultas-sql-úteis-para-gestão-de-packages)
+- [13. Script Automatizado para REBIND em Lote](#13-script-automatizado-para-rebind-em-lote)
 
 ---
 
