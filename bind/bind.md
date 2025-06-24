@@ -4,8 +4,6 @@
 
 ---
 
-## 📑 Índice
-
 - [1. Visão Geral](#1-visão-geral)
 - [2. Estrutura do BIND](#2-estrutura-do-bind)
 - [3. Sintaxe do BIND](#3-sintaxe-do-bind)
@@ -19,6 +17,10 @@
 - [11. Fontes Oficiais IBM](#11-fontes-oficiais-ibm)
 - [12. Consultas SQL Úteis para Gestão de Packages](#12-consultas-sql-úteis-para-gestão-de-packages)
 - [13. Script Automatizado para REBIND em Lote](#13-script-automatizado-para-rebind-em-lote)
+- [14. COPY PACKAGE e Estratégias de Fallback](#14-copy-package-e-estratégias-de-fallback)
+- [15. FREE PACKAGE e Limpeza de Pacotes Obsoletos](#15-free-package-e-limpeza-de-pacotes-obsoletos)
+- [16. Análise de Performance com EXPLAIN e PLAN_TABLE](#16-análise-de-performance-com-explain-e-plan_table)
+- [17. Estratégias de Controle com VERSION](#17-estratégias-de-controle-com-version)
 
 ---
 
@@ -340,6 +342,218 @@ WHERE COLLID LIKE 'APP01%'
 ---
 
 > Este processo é recomendado para ambientes onde o volume de pacotes torna inviável o REBIND manual. Avaliações periódicas com base em `LASTUSED`, `VALID`, e `RUNSTATS` devem fazer parte da governança de packages no DB2.
+
+---
+
+# 📘 Guia Completo: BIND no DB2 for z/OS
+
+> Elaborado para atuação sênior em ambientes corporativos de missão crítica, com base na documentação oficial da IBM.
+
+---
+
+## 📑 Índice
+
+- [1. Visão Geral](#1-visão-geral)
+- [2. Estrutura do BIND](#2-estrutura-do-bind)
+- [3. Sintaxe do BIND](#3-sintaxe-do-bind)
+- [4. Parâmetros Explicados](#4-parâmetros-explicados)
+- [5. Quando Atualizar o BIND](#5-quando-atualizar-o-bind)
+- [6. REBIND: Atualizando sem Recompilar](#6-rebind-atualizando-sem-recompilar)
+- [7. Boas Práticas em Ambientes Críticos](#7-boas-práticas-em-ambientes-críticos)
+- [8. Tabelas do Catálogo Relacionadas](#8-tabelas-do-catálogo-relacionadas)
+- [9. Exemplo Prático](#9-exemplo-prático)
+- [10. Glossário Técnico](#10-glossário-técnico)
+- [11. Fontes Oficiais IBM](#11-fontes-oficiais-ibm)
+- [12. Consultas SQL Úteis para Gestão de Packages](#12-consultas-sql-úteis-para-gestão-de-packages)
+- [13. Script Automatizado para REBIND em Lote](#13-script-automatizado-para-rebind-em-lote)
+- [14. COPY PACKAGE e Estratégias de Fallback](#14-copy-package-e-estratégias-de-fallback)
+- [15. FREE PACKAGE e Limpeza de Pacotes Obsoletos](#15-free-package-e-limpeza-de-pacotes-obsoletos)
+- [16. Análise de Performance com EXPLAIN e PLAN_TABLE](#16-análise-de-performance-com-explain-e-plan_table)
+- [17. Estratégias de Controle com VERSION](#17-estratégias-de-controle-com-version)
+
+---
+
+## 1. Visão Geral
+*(... conteúdo anterior preservado ...)*
+
+---
+
+## 2. Estrutura do BIND
+*(... conteúdo anterior preservado ...)*
+
+---
+
+## 3. Sintaxe do BIND
+*(... conteúdo anterior preservado ...)*
+
+---
+
+## 4. Parâmetros Explicados
+*(... conteúdo anterior preservado ...)*
+
+---
+
+## 5. Quando Atualizar o BIND
+*(... conteúdo anterior preservado ...)*
+
+---
+
+## 6. REBIND: Atualizando sem Recompilar
+*(... conteúdo anterior preservado ...)*
+
+---
+
+## 7. Boas Práticas em Ambientes Críticos
+*(... conteúdo anterior preservado ...)*
+
+---
+
+## 8. Tabelas do Catálogo Relacionadas
+*(... conteúdo anterior preservado ...)*
+
+---
+
+## 9. Exemplo Prático
+*(... conteúdo anterior preservado ...)*
+
+---
+
+## 10. Glossário Técnico
+*(... conteúdo anterior preservado ...)*
+
+---
+
+## 11. Fontes Oficiais IBM
+*(... conteúdo anterior preservado ...)*
+
+---
+
+## 12. Consultas SQL Úteis para Gestão de Packages
+*(... conteúdo anterior preservado ...)*
+
+---
+
+## 13. Script Automatizado para REBIND em Lote
+*(... conteúdo anterior preservado ...)*
+
+---
+
+## 14. COPY PACKAGE e Estratégias de Fallback
+
+O comando `COPY PACKAGE` permite **criar uma cópia de segurança de um package** em sua forma binária. Isso é extremamente útil antes de realizar `REBIND`, especialmente em produção, para permitir **rollback seguro** em caso de degradação de performance.
+
+### 14.1. Sintaxe do COPY PACKAGE
+
+```sql
+COPY PACKAGE(COLECAO.PROGRAMA) 
+  COPYID('BKP001');
+```
+
+- `COPYID` define uma versão identificável da cópia.
+- Pode-se manter múltiplas cópias por package.
+
+### 14.2. Restaurando com REBIND COPY
+
+```sql
+REBIND PACKAGE(COLECAO.PROGRAMA) 
+  COPY(BKP001);
+```
+
+> 🔐 **Recomenda-se executar `COPY PACKAGE` antes de qualquer REBIND em produção.** Assim, é possível voltar ao plano anterior sem nova compilação.
+
+---
+
+## 15. FREE PACKAGE e Limpeza de Pacotes Obsoletos
+
+Pacotes que não são mais utilizados devem ser removidos para liberar recursos e manter o catálogo limpo.
+
+### 15.1. Verificando pacotes antigos
+
+```sql
+SELECT COLLID, NAME, LASTUSED
+FROM SYSIBM.SYSPACKAGE
+WHERE LASTUSED < CURRENT DATE - 180 DAYS;
+```
+
+### 15.2. FREE PACKAGE
+
+```sql
+FREE PACKAGE(COLECAO.PROGRAMA);
+```
+
+> ⚠️ Se o pacote estiver em uso por algum plan, a exclusão pode falhar.
+
+### 15.3. Limpeza completa
+
+```sql
+FREE PACKAGE(COLECAO.PROGRAMA)
+  PLAN(PLANO) ACTION(REMOVE);
+```
+
+---
+
+## 16. Análise de Performance com EXPLAIN e PLAN_TABLE
+
+O parâmetro `EXPLAIN(YES)` gera informações sobre o plano de acesso que o DB2 usará para executar o SQL, armazenadas na `PLAN_TABLE`.
+
+### 16.1. Gerando dados com BIND/REBIND
+
+```sql
+REBIND PACKAGE(COLECAO.PROGRAMA) 
+  EXPLAIN(YES);
+```
+
+### 16.2. Consulta básica na PLAN_TABLE
+
+```sql
+SELECT QUERYNO, METHOD, TABNO, ACCESSNAME, MATCHCOLS, PREFETCH
+FROM PLAN_TABLE
+WHERE QUERYNO = 1;
+```
+
+### 16.3. Campos importantes
+
+- `ACCESSNAME`: nome do índice utilizado
+- `MATCHCOLS`: colunas usadas como match
+- `METHOD`: tipo de join
+- `PREFETCH`: técnica de pré-busca de páginas
+
+> 🔎 Use essas informações para detectar scans, joins ineficientes e ausência de índice.
+
+---
+
+## 17. Estratégias de Controle com VERSION
+
+O uso de `VERSION` no `BIND PACKAGE` permite manter **múltiplas versões de um mesmo programa**, úteis em:
+
+- Homologação vs. Produção
+- Blue/Green Deployment
+- Retenção de histórico para fallback
+
+### 17.1. Criando versão nomeada
+
+```sql
+BIND PACKAGE(COLECAO) MEMBER(PROGRAMA)
+  VERSION(V001)
+  ISOLATION(CS)
+  EXPLAIN(YES);
+```
+
+### 17.2. Rebind de uma versão específica
+
+```sql
+REBIND PACKAGE(COLECAO) MEMBER(PROGRAMA) VERSION(V001)
+  EXPLAIN(YES);
+```
+
+### 17.3. Remoção de versões antigas
+
+```sql
+FREE PACKAGE(COLECAO.PROGRAMA) VERSION(V001);
+```
+
+> 🧩 Combine `VERSION` com `COPY PACKAGE` para implementar uma estratégia robusta de fallback por versão.
+
 
 ---
 
