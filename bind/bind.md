@@ -565,13 +565,40 @@ Isso rebinda automaticamente todos os pacotes marcados como `VALID = 'N'`.
 
 ## 7. Boas Práticas em Ambientes Críticos
 
-- **Padronizar QUALIFIER e OWNER** por sistema, ambiente e aplicação
-- Sempre utilizar `EXPLAIN(YES)` para monitorar e auditar estratégias de acesso
-- Usar `RELEASE(DEALLOCATE)` em programas reutilizáveis ou threads CICS
-- Controlar permissões de `REBIND` via perfis e roles DB2 (ex: DBADM, BINDADD)
-- Criar políticas de versionamento com `COLLECTION` por release
-- Validar com `VALIDATE(BIND)` em ambientes de homologação e produção
-- Analisar pacotes antigos com `SYSPACKAGE.LASTUSED` e considerar free ou cleanup
+### 🎯 Objetivo:
+Estabelecer diretrizes técnicas para uso seguro, eficiente e sustentável do BIND em ambientes de alta criticidade, como sistemas bancários, governamentais ou operacionais de missão crítica.
+
+---
+
+### ✅ Boas práticas recomendadas
+
+| Prática | Justificativa Técnica |
+|--------|------------------------|
+| **Padronizar `QUALIFIER` e `OWNER` por sistema, ambiente e aplicação** | Garante uniformidade na resolução de nomes SQL e facilita a administração de permissões e troubleshooting por escopo lógico. |
+| **Sempre utilizar `EXPLAIN(YES)`** | Permite auditoria, análise de performance e rastreio de mudanças de plano de execução. Essencial após REBIND ou RUNSTATS. |
+| **Usar `RELEASE(DEALLOCATE)` em programas com threads persistentes (ex: CICS)** | Melhora performance ao manter recursos alocados entre transações. Requer cautela com consumo de locks e buffers. |
+| **Controlar permissões de `BIND`/`REBIND` via perfis (`ROLES`) e autoridade DB2 (`DBADM`, `BINDADD`)** | Reduz risco de operações críticas indevidas. Use RBAC para delegar responsabilidades com segurança. |
+| **Criar políticas de versionamento usando `COLLECTION` por release ou ambiente (`COL_APP01_REL04`)** | Facilita rollback, coexistência de versões e deploy seguro em produção. Também auxilia auditorias e controle de ciclo de vida. |
+| **Usar `VALIDATE(BIND)` em ambientes de homologação e produção** | Garante integridade no momento do bind. Evita falhas em runtime por permissões faltantes ou objetos inexistentes. |
+| **Monitorar `SYSPACKAGE.LASTUSED` e aplicar política de limpeza (`FREE PACKAGE`)** | Reduz carga no catálogo e melhora organização. Ideal para remover pacotes obsoletos após longos períodos de inatividade. |
+
+---
+
+### 🔐 Reforço de boas práticas de segurança e gestão
+
+- 📌 **Evite `VALIDATE(RUN)` em produção**: pode mascarar erros de permissão ou dependências quebradas, só detectáveis em runtime.
+- 📌 **Automatize auditoria de pacotes antigos**:
+  ```sql
+  SELECT COLLID, NAME, LASTUSED 
+  FROM SYSIBM.SYSPACKAGE 
+  WHERE LASTUSED < CURRENT DATE - 180 DAYS;
+  ```
+- 📌 **Mantenha histórico de binds críticos via `COPY PACKAGE`** com `COPYID` descritivo (ex: `RELEASE_2024Q1`).
+
+---
+
+> 🎓 Boas práticas não são apenas recomendações — são políticas que reduzem incidentes, facilitam diagnósticos e melhoram a governança do ciclo de vida dos pacotes em ambientes críticos.
+
 
 ---
 
