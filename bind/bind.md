@@ -653,23 +653,59 @@ Listar e explicar as principais tabelas do catálogo (`SYSIBM`, `SYSIBM.SYS*`) r
 ## 9. Exemplo Prático
 
 ### 📂 Situação:
+Durante uma iniciativa de otimização, foi realizado um **`ALTER INDEX`** sobre a tabela `TRANSACOES_FINANCEIRAS`, seguido da execução de `RUNSTATS` para atualizar as estatísticas do otimizador.
 
-Foi realizada uma alteração de índices e atualizadas as estatísticas da tabela `TRANSACOES_FINANCEIRAS`.
+O programa `PG001`, responsável pela execução de relatórios financeiros, utiliza o package `PKGTRANSACOES`, que está desatualizado em relação à nova estrutura e distribuição de dados.
 
-### ✅ Ação:
+---
+
+### ✅ Ação Executada
 
 ```sql
-REBIND PACKAGE('PKGTRANSACOES') MEMBER('PG001')
-  EXPLAIN(YES)
-  VALIDATE(BIND)
-  APPLCOMPAT(V12R1M510)
+REBIND PACKAGE('PKGTRANSACOES') 
+       MEMBER('PG001')
+       EXPLAIN(YES)
+       VALIDATE(BIND)
+       APPLCOMPAT(V12R1M510);
 ```
 
-### 🎯 Resultado:
+#### 🔍 Explicação dos parâmetros:
+- `REBIND PACKAGE`: Solicita nova compilação do plano de acesso sem recompilar o programa-fonte.
+- `'PKGTRANSACOES'`: Nome da collection do package.
+- `MEMBER('PG001')`: Nome do programa-fonte (DBRM associado).
+- `EXPLAIN(YES)`: Gera informações na `PLAN_TABLE` para análise do plano.
+- `VALIDATE(BIND)`: Garante que todas as permissões e objetos estejam válidos no momento do bind.
+- `APPLCOMPAT(V12R1M510)`: Garante uso de funções e sintaxe compatíveis com DB2 12 Mod 510.
 
-- Novo plano de acesso otimizado
-- SQLs ajustadas à nova estrutura e estatísticas
-- Análise de performance disponível na `PLAN_TABLE`
+---
+
+### 🎯 Resultado Esperado
+
+- 📈 **Novo plano de acesso** mais eficiente, considerando os índices e estatísticas atuais.
+- ✅ **Evita SQLCODEs como -805 e -818**, que ocorrem quando o plano está desatualizado ou inválido.
+- 🔍 **Dados do plano disponíveis em `PLAN_TABLE`**, possibilitando análise detalhada via ferramentas como Data Studio, Visual Explain ou queries manuais.
+- ⛔ Eliminação de risco de regressão de performance causado por plano antigo e subótimo.
+
+---
+
+### 📌 Boas práticas após o REBIND
+
+1. **Revisar o plano gerado na `PLAN_TABLE`**:
+   ```sql
+   SELECT * FROM PLAN_TABLE WHERE QUERYNO = ...;
+   ```
+
+2. **Executar testes de regressão com monitoramento de tempo de resposta**:
+   Compare com tempos anteriores para validar ganho ou estabilidade.
+
+3. **Auditar o uso do package**:
+   ```sql
+   SELECT LASTUSED FROM SYSIBM.SYSPACKAGE WHERE NAME = 'PG001';
+   ```
+
+---
+
+> 🎓 Mesmo ações simples como um `REBIND` podem trazer ganhos expressivos de performance se realizadas no momento certo e com os parâmetros corretos. O DBA deve dominar a leitura da PLAN_TABLE e as causas que tornam o REBIND necessário.
 
 ---
 
