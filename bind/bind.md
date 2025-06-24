@@ -123,24 +123,98 @@ Se o BIND não for atualizado:
 
 ## 6. REBIND: Atualizando sem Recompilar
 
-O comando `REBIND PACKAGE` permite **recompilar o plano de acesso** de um package existente, sem alterar o código-fonte nem recompilar o DBRM.
+### 🎯 Objetivo:
+Permitir a atualização do plano de acesso de um package existente **sem recompilar o programa** e **sem gerar um novo DBRM**.  
+O comando `REBIND PACKAGE` força o otimizador do DB2 a regenerar o plano de execução baseado na **versão atual das estatísticas** e **estrutura dos objetos envolvidos (tabelas, índices, views, etc)**.
 
-### ✅ Sintaxe
+---
+
+### ✅ Quando usar o REBIND?
+
+Use o `REBIND PACKAGE` nos seguintes cenários:
+
+| Situação                                                                 | Motivo técnico                                                                 |
+|--------------------------------------------------------------------------|--------------------------------------------------------------------------------|
+| 📊 Após execução de `RUNSTATS`                                          | Para refletir as estatísticas atualizadas no plano de acesso                   |
+| 🏗️ Após `CREATE/DROP/ALTER INDEX` ou mudança de colunas                 | Para forçar o otimizador a reavaliar o uso de índices                          |
+| ⚙️ Após instalação de `PTFs` ou atualizações de manutenção no DB2       | Algumas PTFs afetam diretamente o otimizador ou o interpretador de SQL        |
+| ⏱️ Para resolver desempenho degradado (e.g. aumento de GETPAGES)        | Um novo plano pode reduzir custo de acesso                                     |
+| 🔁 Para recuperar pacotes inválidos (`VALID = 'N'` no catálogo)         | Pacotes inválidos **só voltam a ser válidos via REBIND**                       |
+| 🧪 Ao mudar a política de compatibilidade via `APPLCOMPAT`              | Para aplicar nova versão de regras SQL, funções e comportamento do otimizador |
+
+---
+
+### 📘 Sintaxe recomendada
 
 ```sql
-REBIND PACKAGE('COLECAO') MEMBER('PROGRAMA')
-  EXPLAIN(YES)
-  APPLCOMPAT(V12R1M510)
-  VALIDATE(BIND)
+REBIND PACKAGE('COLECAO') 
+    MEMBER('PROGRAMA') 
+    EXPLAIN(YES) 
+    VALIDATE(BIND) 
+    APPLCOMPAT(V12R1M510)
 ```
 
-### 📍 Quando usar:
+---
 
-- Após atualização de estatísticas (RUNSTATS)
-- Após mudanças de estrutura (índices, colunas)
-- Para forçar reavaliação da estratégia do otimizador
-- Após instalação de manutenção (PTFs)
-- Ao adotar nova política de compatibilidade (`APPLCOMPAT`)
+### 🧩 Explicação de cada parâmetro
+
+| Parâmetro            | Finalidade                                                                 |
+|----------------------|---------------------------------------------------------------------------|
+| `PACKAGE('COLECAO')` | Indica a **collection** onde o pacote foi originalmente bindado           |
+| `MEMBER('PROGRAMA')` | Nome do programa/fonte utilizado no bind                                  |
+| `EXPLAIN(YES)`       | Gera informações de plano de acesso na `PLAN_TABLE`                       |
+| `VALIDATE(BIND)`     | Valida todas as dependências no momento do REBIND (evita surpresa em runtime) |
+| `APPLCOMPAT(V12R1M510)` | Define nível de compatibilidade SQL a ser utilizado (ex: novas funções, regras de casting) |
+
+> 💡 Dica: você pode incluir `REOPT(ALWAYS)` no REBIND para otimização dinâmica baseada em parâmetros reais de entrada em tempo de execução.
+
+---
+
+### 🔎 Exemplo prático com foco em performance
+
+```sql
+REBIND PACKAGE('FATURAMENTO') 
+    MEMBER('CALCULO_MENSAL') 
+    EXPLAIN(YES) 
+    VALIDATE(BIND) 
+    APPLCOMPAT(V12R1M510) 
+    REOPT(ALWAYS)
+```
+
+Neste exemplo:
+- O pacote do programa `CALCULO_MENSAL` será reavaliado com base nos índices e estatísticas mais recentes.
+- O plano será gravado na `PLAN_TABLE`.
+- A estratégia de acesso poderá mudar de TABLE SCAN para INDEX MATCHING, reduzindo o custo total da query.
+
+---
+
+### ⚠️ Cuidados importantes
+
+- **Não use REBIND cegamente em produção**: avalie o impacto via `EXPLAIN`.
+- **Sempre salve uma versão anterior com `COPY PACKAGE`**, antes de rebinder:
+  ```sql
+  COPY PACKAGE(FATURAMENTO.CALCULO_MENSAL) COPYID('ANTES_REBIND');
+  ```
+- O REBIND pode gerar plano mais lento se estatísticas estiverem desatualizadas. Garanta que `RUNSTATS` foi executado antes.
+- O REBIND é inofensivo para o código do programa — ele **não altera o executável**.
+
+---
+
+### 🔄 Alternativa: `REBIND TRIGGER PACKAGE` (a partir de V12R1M509)
+
+Se você quiser rebinder todos os pacotes que foram invalidados por uma mudança de estrutura, pode usar:
+
+```sql
+REBIND TRIGGER PACKAGE;
+```
+
+Isso rebinda automaticamente todos os pacotes marcados como `VALID = 'N'`.
+
+---
+
+> ✅ Use o REBIND como uma ferramenta de controle fino de performance e estabilidade. Ele é uma das armas mais poderosas de um DBA experiente.
+
+
 
 ---
 
