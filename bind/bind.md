@@ -102,6 +102,9 @@ Atualizar um BIND é necessário quando há **mudanças estruturais** ou **estra
 - Alterações em **autorizações** de objetos referenciados
 - Atualização de **versão do DB2** (`APPLCOMPAT`)
 - Correções ou melhorias em parâmetros como `ISOLATION`, `RELEASE`, etc.
+- Alterações em tabelas, índices, views ou triggers
+- Modificação de permissões
+- Mudanças no plano de execução por performance
 
 ### 🛠️ Importância:
 
