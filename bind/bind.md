@@ -604,13 +604,49 @@ Estabelecer diretrizes técnicas para uso seguro, eficiente e sustentável do BI
 
 ## 8. Tabelas do Catálogo Relacionadas
 
-| Tabela                    | Descrição                                                             |
-|---------------------------|----------------------------------------------------------------------|
-| `SYSIBM.SYSPACKAGE`       | Metadados do package (flags, data do bind, isolation, etc.)          |
-| `SYSIBM.SYSPACKDEP`       | Dependências do package (tabelas, views, aliases, funções)           |
-| `SYSIBM.SYSPACKAUTH`      | Autorizações concedidas para execução, bind, etc.                    |
-| `SYSIBM.SYSPACKSTMT`      | Instruções SQL individuais compiladas no package                     |
-| `SYSIBM.SYSPACKCOPY`      | Histórico de versões anteriores mantidas com `COPY` para fallback    |
+### 🎯 Objetivo:
+Listar e explicar as principais tabelas do catálogo (`SYSIBM`, `SYSIBM.SYS*`) relacionadas ao gerenciamento de BIND, REBIND, pacotes (`PACKAGES`) e planos (`PLANS`). Estas tabelas são essenciais para auditoria, troubleshooting, versionamento e automação da administração.
+
+---
+
+### 📋 Tabelas principais relacionadas a BIND e PACKAGES
+
+| Tabela                     | Finalidade Técnica                                                                 |
+|----------------------------|------------------------------------------------------------------------------------|
+| **SYSIBM.SYSPACKAGE**      | Metadados dos packages: nome, collection, OWNER, BINDTS, ISOLATION, RELEASE, VALID, LASTUSED. É a tabela principal. |
+| **SYSIBM.SYSPACKDEP**      | Dependências dos packages (tabelas, views, aliases, functions). Crucial para identificar o impacto de alterações estruturais. |
+| **SYSIBM.SYSPACKAUTH**     | Registra quem tem autorização para executar (`EXECUTE`) ou rebinder (`BIND`) os packages. |
+| **SYSIBM.SYSPACKSTMT**     | Detalha cada SQL compilado no package. Traz tipo de statement, número da instrução, flags de otimização. Útil para tuning. |
+| **SYSIBM.SYSPACKCOPY**     | Armazena cópias (`COPY PACKAGE`) feitas com `COPYID`. Essencial para fallback e rollback de versões de pacote. |
+| **SYSIBM.SYSPLAN**         | Armazena planos (`PLANs`) com referências a packages e configurações globais de execução. |
+| **SYSIBM.SYSPACKLIST**     | Lista de packages associados a cada plano (`PKLIST`). Permite rastrear a composição de um PLAN. |
+| **SYSIBM.SYSPACKAGE_HIST** | *(opcional, se habilitado)* — Histórico de alterações no SYSPACKAGE, em ambientes com trilha de auditoria avançada. |
+| **SYSIBM.SYSPACKERR**      | Informações sobre erros de bind ou rebinder que foram capturados durante processos automatizados. |
+| **SYSIBM.SYSDBRM**         | *(legado)* — Tabela usada em BINDs baseados em DBRM direto, ainda pode existir em sistemas antigos. |
+
+---
+
+### 🧠 Dicas práticas
+
+- 🧪 Use `SYSPACKDEP` após alterações em tabelas para identificar todos os pacotes impactados que exigem `REBIND`.
+- 📅 `LASTUSED` em `SYSPACKAGE` é **crucial** para detectar pacotes não utilizados há meses — úteis para limpeza.
+- 🔐 Use `SYSPACKAUTH` para revisar permissões delegadas de REBIND, evitando exposição indevida.
+- 🔍 `SYSPACKSTMT` é excelente para mapear SQLs críticos e identificar padrões problemáticos (ex: uso excessivo de tabelas temporárias, subqueries, etc).
+- ♻️ `SYSPACKCOPY` viabiliza rollback com `COPYID` nomeado e seguro:
+  ```sql
+  COPY PACKAGE(MINHA_COL.PROG_X) COPYID('BEFORE_REBIND');
+  ```
+
+---
+
+### ⚠️ Observações importantes
+
+- Em ambientes com **controle de mudanças rígido**, monitore alterações no catálogo com triggers ou ferramentas de auditoria (quando suportado).
+- Verifique se há **limpeza automatizada de pacotes obsoletos** — se não houver, crie rotinas baseadas em `LASTUSED`.
+
+---
+
+> 🎓 O catálogo do DB2 é a fonte de verdade do ambiente. Conhecê-lo profundamente empodera o DBA para diagnósticos rápidos, automações inteligentes e administração segura dos objetos de execução.
 
 ---
 
