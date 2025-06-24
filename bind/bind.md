@@ -21,6 +21,7 @@
 - [15. FREE PACKAGE e Limpeza de Pacotes Obsoletos](#15-free-package-e-limpeza-de-pacotes-obsoletos)
 - [16. Análise de Performance com EXPLAIN e PLAN_TABLE](#16-análise-de-performance-com-explain-e-plan_table)
 - [17. Estratégias de Controle com VERSION](#17-estratégias-de-controle-com-version)
+- [18. Erros Comuns Relacionados ao BIND](#18-erros-comuns-relacionados-ao-bind)
 
 ---
 
@@ -461,6 +462,138 @@ FREE PACKAGE(COLECAO.PROGRAMA) VERSION(V001);
 
 > 🧩 Combine `VERSION` com `COPY PACKAGE` para implementar uma estratégia robusta de fallback por versão.
 
+
+---
+
+## 18. Erros Comuns Relacionados ao BIND
+
+Abaixo estão os erros mais recorrentes em ambientes corporativos relacionados a BIND e REBIND, com causas e ações recomendadas.
+
+### 18.1. -805: Package not found
+
+**Mensagem:**
+```
+DSNT408I SQLCODE = -805, 
+THE PACKAGE 'COLLID.PROGRAMA.VERSION' WAS NOT FOUND
+```
+
+**Causas:**
+- O `PACKAGE` não foi `BINDado`
+- A `COLLECTION` está incorreta
+- `VERSION` não especificada corretamente
+
+**Solução:**
+- Verifique a existência do package:
+```sql
+SELECT * FROM SYSIBM.SYSPACKAGE 
+WHERE NAME = 'PROGRAMA';
+```
+- Faça o BIND ou REBIND com os parâmetros corretos
+- Verifique se o plano está usando a `PKLIST` correta
+
+---
+
+### 18.2. -818: Timestamp mismatch
+
+**Mensagem:**
+```
+THE PRECOMPILER GENERATED TIMESTAMP x IN THE LOAD MODULE DOES NOT MATCH THE BIND TIMESTAMP y IN THE DBRM
+```
+
+**Causas:**
+- A carga do programa (LOAD) está fora de sincronia com o DBRM
+- Foi recompilado sem REBIND
+
+**Solução:**
+- Recompile e rebinde novamente:
+```sql
+BIND PACKAGE(...) MEMBER(...) ...
+```
+- Garante que a versão do programa esteja sincronizada com o DBRM correto
+
+---
+
+### 18.3. -922: Authorization Failure
+
+**Mensagem:**
+```
+DSNT408I SQLCODE = -922, 
+AUTHORIZATION FAILURE: error-type ERROR
+```
+
+**Causas:**
+- Usuário executor não tem permissão
+- O OWNER definido no BIND não possui GRANT EXECUTE
+
+**Solução:**
+- Verifique permissões com:
+```sql
+SELECT * FROM SYSIBM.SYSPACKAUTH WHERE NAME = 'USUARIO';
+```
+- Conceda GRANT adequado:
+```sql
+GRANT EXECUTE ON PACKAGE COLLID.PROGRAMA TO USER USUARIO;
+```
+
+---
+
+### 18.4. -530: Referential Integrity Violation (após alteração de tabela)
+
+**Mensagem:**
+```
+THE INSERT OR UPDATE VALUE OF FOREIGN KEY IS INVALID
+```
+
+**Causas:**
+- Alteração na estrutura de tabelas com FK que afeta pacotes
+
+**Solução:**
+- Executar `REBIND` dos packages afetados após mudanças de DDL
+- Avaliar a ordem de carregamento de dados
+
+---
+
+### 18.5. DSNT201I - Package was invalidated
+
+**Mensagem:**
+```
+DSNT201I - PACKAGE 'COLLID.PROG' WAS INVALIDATED BY DDL CHANGE
+```
+
+**Causas:**
+- ALTER TABLE, DROP INDEX, etc. invalida dependências
+
+**Solução:**
+- Executar REBIND imediatamente após alterações de estrutura
+
+---
+
+### 18.6. BIND/REBIND falha por falta de RUNSTATS
+
+**Sintoma:**
+- Plano de acesso inesperado ou erro no BIND
+- EXPLAIN mostra TABLE CARD = -1
+
+**Solução:**
+- Executar:
+```sql
+RUNSTATS TABLESPACE DB.TS TABLE(ALL) INDEX(ALL)
+```
+- Em seguida, REBIND com `EXPLAIN(YES)`
+
+---
+
+> 💡 **Dica geral**: Consulte a coluna `VALID` da `SYSPACKAGE`. Se estiver `N`, o package está inválido. Um `REBIND` pode resolver.
+
+```sql
+SELECT COLLID, NAME, VALID, LASTUSED 
+FROM SYSIBM.SYSPACKAGE 
+WHERE VALID = 'N';
+```
+
+---
+
+> ✅ Esta seção pode ser expandida com SQLCODEs adicionais sob demanda e correlacionada com logs de falha em produção, como `DSNT376I`, `DSNT500I`, entre outros.
 
 ---
 
