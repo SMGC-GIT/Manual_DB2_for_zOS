@@ -18,6 +18,7 @@
 - [📘 10. Glossário Técnico](#10-glossário-técnico)
 - [🔗 11. Fontes Oficiais IBM](#11-fontes-oficiais-ibm)
 - [🛠️ 12. Consultas SQL Úteis para Gestão de Packages](#12-consultas-sql-úteis-para-gestão-de-packages)
+- [🤖 13. Script Automatizado para REBIND em Lote](#13-script-automatizado-para-rebind-em-lote)
 
 ---
 
@@ -263,6 +264,79 @@ SELECT *
 FROM SYSIBM.SYSPACKAUTH
 WHERE COLLID = 'COLECAO';
 ```
+
+---
+
+## 🤖 13. Script Automatizado para REBIND em Lote
+
+Automatizar o REBIND para pacotes antigos ou afetados por mudanças de RUNSTATS ou DDL pode ser crucial para performance e estabilidade. Abaixo, um exemplo de **script gerador de REBINDs dinâmicos**, baseado na tabela `SYSPACKAGE`.
+
+### 🎯 Objetivo:
+
+Gerar dinamicamente comandos `REBIND PACKAGE` apenas para pacotes válidos e com `LASTUSED` recente.
+
+---
+
+### 📋 13.1. Query SQL para gerar comandos REBIND
+
+```sql
+SELECT 
+  'REBIND PACKAGE(''' || COLLID || ''') MEMBER(''' || NAME || ''') ' ||
+  'APPLCOMPAT(V12R1M510) EXPLAIN(YES) VALIDATE(BIND);' AS REBIND_CMD
+FROM SYSIBM.SYSPACKAGE
+WHERE VALID = 'Y'
+  AND LASTUSED >= CURRENT DATE - 90 DAYS
+ORDER BY COLLID, NAME;
+```
+
+> 💡 **Dica:** Execute a query em um ambiente controlado (test/homolog) e avalie os REBINDs gerados antes de aplicar em produção.
+
+---
+
+### ⚠️ 13.2. Adaptação para REBIND em lote via JCL (Exemplo)
+
+```jcl
+//REBINDPK JOB (ACCT),'REBIND PACKAGES',
+//         CLASS=A,MSGCLASS=X,NOTIFY=&SYSUID
+//STEP1    EXEC PGM=IKJEFT01,DYNAMNBR=50
+//SYSTSPRT DD  SYSOUT=*
+//SYSPRINT DD  SYSOUT=*
+//SYSIN    DD  *
+REBIND PACKAGE(COL1) MEMBER(PGMA) APPLCOMPAT(V12R1M510)
+EXPLAIN(YES) VALIDATE(BIND);
+REBIND PACKAGE(COL2) MEMBER(PGMB) APPLCOMPAT(V12R1M510)
+EXPLAIN(YES) VALIDATE(BIND);
+/*
+//SYSTSIN  DD  *
+DSN SYSTEM(DB2X)
+/*
+```
+
+---
+
+### ✅ 13.3. Filtrar pacotes de uma aplicação específica
+
+```sql
+SELECT 
+  'REBIND PACKAGE(''' || COLLID || ''') MEMBER(''' || NAME || ''') ' ||
+  'APPLCOMPAT(V12R1M510) EXPLAIN(YES);' AS REBIND_CMD
+FROM SYSIBM.SYSPACKAGE
+WHERE COLLID LIKE 'APP01%'
+  AND VALID = 'Y';
+```
+
+---
+
+### 📌 Considerações:
+
+- A execução em massa deve ser monitorada, com logs ativados.
+- Pacotes com dependências inválidas podem falhar no REBIND.
+- Mantenha um `BACKUP` com `COPY PACKAGE` ou `DISPLAY` antes de REBIND.
+- Ideal executar em janela de manutenção com suporte online.
+
+---
+
+> Este processo é recomendado para ambientes onde o volume de pacotes torna inviável o REBIND manual. Avaliações periódicas com base em `LASTUSED`, `VALID`, e `RUNSTATS` devem fazer parte da governança de packages no DB2.
 
 ---
 
