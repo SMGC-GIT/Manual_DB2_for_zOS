@@ -605,73 +605,247 @@ REBIND PACKAGE(COLLID.PROGRAMA) EXPLAIN(YES)
 
 ## 19. Checklist de Diagnóstico de Pacotes Inválidos
 
-1. 🔎 Consultar pacotes inválidos:
-   ```sql
-   SELECT COLLID, NAME, VALID 
-   FROM SYSIBM.SYSPACKAGE WHERE VALID = 'N';
-   ```
+### 🎯 Objetivo:
+Identificar e tratar pacotes inválidos no catálogo `SYSIBM.SYSPACKAGE`, que estão impedindo a execução correta de programas no DB2. Pacotes inválidos ocorrem geralmente após alterações de tabelas, recompile sem REBIND, deploy incorreto, problemas de permissão ou estatísticas desatualizadas.
 
-2. 📅 Avaliar data de último uso:
-   ```sql
-   SELECT COLLID, NAME, LASTUSED 
-   FROM SYSIBM.SYSPACKAGE 
-   WHERE VALID = 'N';
-   ```
+---
 
-3. 🔁 Verificar dependências:
-   ```sql
-   SELECT * FROM SYSIBM.SYSPACKDEP 
-   WHERE COLLID = 'COLLID' AND NAME = 'PROGRAMA';
-   ```
+### ✅ Etapas de Diagnóstico
 
-4. 🔐 Verificar permissões:
-   ```sql
-   SELECT * FROM SYSIBM.SYSPACKAUTH 
-   WHERE COLLID = 'COLLID';
-   ```
+---
 
-5. 📄 Validar acesso na PLAN_TABLE após EXPLAIN.
+#### 🔹 **Passo 1 – Listar pacotes inválidos**
+
+```sql
+SELECT COLLID, NAME, VERSION, VALID 
+FROM SYSIBM.SYSPACKAGE 
+WHERE VALID = 'N';
+```
+
+**O que estou fazendo aqui?**  
+Você está localizando todos os packages que estão **marcados como inválidos (VALID = 'N')**, ou seja, que precisam obrigatoriamente de um REBIND para funcionar.
+
+---
+
+#### 🔹 **Passo 2 – Verificar se o pacote ainda é utilizado**
+
+```sql
+SELECT COLLID, NAME, LASTUSED 
+FROM SYSIBM.SYSPACKAGE 
+WHERE VALID = 'N';
+```
+
+**Por quê isso importa?**  
+Se `LASTUSED` estiver muito antiga (ex: mais de 180 dias), o pacote pode ser considerado **obsoleto** e removido com `FREE PACKAGE`. Caso contrário, é um forte indício de que há impacto real em produção e é necessário atuar com urgência.
+
+---
+
+#### 🔹 **Passo 3 – Analisar dependências do pacote**
+
+```sql
+SELECT * 
+FROM SYSIBM.SYSPACKDEP 
+WHERE COLLID = 'COLLID' AND NAME = 'PROGRAMA';
+```
+
+**Por que isso é importante?**  
+Mostra quais objetos o pacote depende (tabelas, índices, views). Se algum deles foi alterado (ex: `ALTER TABLE`), o pacote pode ter sido invalidado automaticamente e precisa de `REBIND`.
+
+---
+
+#### 🔹 **Passo 4 – Validar permissões associadas**
+
+```sql
+SELECT * 
+FROM SYSIBM.SYSPACKAUTH 
+WHERE COLLID = 'COLLID' AND NAME = 'PROGRAMA';
+```
+
+**Motivo:**  
+Verifica se o usuário que está executando o programa tem `EXECUTE` no package. Erros como `-922` podem ocorrer por ausência de autorização, mesmo que o pacote esteja válido.
+
+---
+
+#### 🔹 **Passo 5 – Confirmar plano de acesso (EXPLAIN)**
+
+Após o REBIND, execute:
+```sql
+EXPLAIN PACKAGE(COLLID.PROGRAMA)
+```
+ou rebind com EXPLAIN:
+
+```sql
+REBIND PACKAGE(COLLID) MEMBER(PROGRAMA) 
+EXPLAIN(YES);
+```
+
+E analise:
+```sql
+SELECT QUERYNO, METHOD, MATCHCOLS, PREFETCH 
+FROM PLAN_TABLE 
+WHERE COLLID = 'COLLID';
+```
+
+**Para quê serve isso?**  
+Garante que o plano de acesso está otimizado e reflete as estatísticas mais recentes. Pode revelar uso de TABLE SCAN indesejado, joins ruins, ausência de índices, etc.
+
+---
+
+### 🧩 Conclusão
+
+Este checklist permite:
+
+- Localizar pacotes inválidos
+- Priorizar REBIND conforme uso real
+- Entender por que o pacote foi invalidado
+- Garantir que permissões e dependências estejam corretas
+- Verificar se o novo plano gerado após REBIND é eficiente
+
+> 💡 **Dica extra**: Automatize esse checklist via stored procedure, REXX ou script em JCL para rodar em ambientes grandes regularmente.
+
 
 ---
 
 ## 20. Playbook de REBIND Emergencial
 
-### 🧠 Cenário:
-Após deploy, usuários reportam falha ao executar um programa. Logs indicam erro `-805`, `-818` ou `DSNT201I`.
+### 🎯 Objetivo:
+Orientar o DBA no tratamento rápido e seguro de falhas de execução de programas causadas por packages inválidos, ausentes, com permissões incorretas ou fora de sincronia com o executável.
 
-### 🧰 Ações Imediatas:
+Este playbook é voltado para **ambientes de produção**, onde tempo e assertividade são críticos.
 
-1. **Verifique se o package está presente**
+---
+
+### 📌 Situações típicas onde o REBIND é necessário com urgência:
+
+- Após deploy, usuários recebem erros `-805`, `-818`, `DSNT201I`, ou o programa trava sem retorno.
+- Pacote foi invalidado após `ALTER TABLE`, `DROP INDEX`, etc.
+- Load module recompilado sem atualização do DBRM.
+- Package foi FREE sem REBIND posterior.
+- Permissão de execução foi revogada acidentalmente.
+
+---
+
+### 🧰 Etapas de Resolução
+
+---
+
+#### 🔹 **Passo 1 – Verifique se o package existe no catálogo**
+
+```sql
+SELECT COLLID, NAME, VERSION 
+FROM SYSIBM.SYSPACKAGE 
+WHERE NAME = 'PROGRAMA';
+```
+
+**Para quê?**  
+Confirma se o package foi bindado corretamente. Se não existir, o erro mais provável será `-805`.
+
+---
+
+#### 🔹 **Passo 2 – Verifique se o package está inválido**
+
+```sql
+SELECT COLLID, NAME, VALID 
+FROM SYSIBM.SYSPACKAGE 
+WHERE NAME = 'PROGRAMA' AND VALID = 'N';
+```
+
+**Para quê?**  
+Um package inválido geralmente resulta em falhas silenciosas ou `DSNT201I`.
+
+---
+
+#### 🔹 **Passo 3 – Efetue o REBIND com parâmetros apropriados**
+
+```sql
+REBIND PACKAGE(COLLID) MEMBER(PROGRAMA) 
+    EXPLAIN(YES) VALIDATE(BIND);
+```
+
+**Detalhes:**
+- `EXPLAIN(YES)` gera novo plano na `PLAN_TABLE`.
+- `VALIDATE(BIND)` força validação completa no momento do REBIND.
+
+---
+
+#### 🔹 **Passo 4 – Se falhar, recompile e rebinde**
+
+**Procedimento completo:**
+
+1. Compile o programa fonte (ex: COBOL ou PL/I).
+2. Gere novo DBRM.
+3. Execute:
    ```sql
-   SELECT * FROM SYSIBM.SYSPACKAGE WHERE NAME = 'PROGRAMA';
+   BIND PACKAGE(COLLID) MEMBER(PROGRAMA) VERSION(V001) ...
    ```
 
-2. **Valide se está marcado como inválido**
-   ```sql
-   SELECT VALID FROM SYSIBM.SYSPACKAGE 
-   WHERE NAME = 'PROGRAMA' AND VALID = 'N';
-   ```
+**Dica:**  
+Garanta que o `VERSION` usado na compilação seja compatível com o BIND.
 
-3. **Efetue REBIND com EXPLAIN**
-   ```sql
-   REBIND PACKAGE(COLLID) MEMBER(PROGRAMA) 
-   EXPLAIN(YES) VALIDATE(BIND);
-   ```
+---
 
-4. **Se ainda falhar, recompile e rebinde**
-   - Compile o fonte COBOL/PL1/Assembler
-   - Gere novo DBRM
-   - Execute BIND PACKAGE
+#### 🔹 **Passo 5 – Corrija permissões de execução**
 
-5. **Verifique e conceda permissão de execução**
-   ```sql
-   GRANT EXECUTE ON PACKAGE COLLID.PROGRAMA TO USER USUARIO;
-   ```
+```sql
+GRANT EXECUTE ON PACKAGE COLLID.PROGRAMA 
+TO USER USUARIO;
+```
 
-6. **Consulte o histórico com COPYID se necessário**
-   ```sql
-   REBIND PACKAGE(COLLID.PROGRAMA) COPY(BKP001);
-   ```
+**Para quê?**  
+Erros como `-922` indicam que o executor perdeu permissão no package. Isso pode ocorrer após DROP/REBIND, ou alteração de OWNER.
+
+---
+
+#### 🔹 **Passo 6 – Restaure versão anterior, se necessário**
+
+```sql
+REBIND PACKAGE(COLLID.PROGRAMA) 
+COPY(BKP001);
+```
+
+**Para quê?**  
+Restaura uma versão funcional previamente salva com `COPY PACKAGE`. Ideal para rollback imediato.
+
+---
+
+#### 🔹 **Passo 7 – Teste funcional após REBIND**
+
+Execute uma transação real (ou job batch) com tracing ativo e monitore:
+
+- Se o erro original foi resolvido
+- Se o plano de acesso gerado é eficiente (`EXPLAIN`)
+- Se estatísticas estão em uso correto (`MATCHCOLS`, `METHOD`)
+
+---
+
+### 📌 Checklist Final:
+
+| Verificação                                 | Status Esperado     |
+|--------------------------------------------|---------------------|
+| Package existe no catálogo?                | Sim                 |
+| VALID = 'Y'?                                | Sim                 |
+| Último REBIND recente?                     | Sim ou justificável |
+| Permissões de execução conferidas?         | Sim                 |
+| Plano de acesso revisado via EXPLAIN?      | Sim                 |
+| COPY PACKAGE de segurança disponível?      | Sim (em produção)   |
+
+---
+
+### 💡 Dicas Profissionais
+
+- Sempre execute `COPY PACKAGE` antes de rebinde em produção:
+  ```sql
+  COPY PACKAGE(COLLID.PROGRAMA) COPYID('PRE-REBIND');
+  ```
+
+- Para rebind em lote, use `DSNTPSMP` ou JCL com `DSNTIAD`.
+
+- Automatize o REBIND com base em eventos de invalidação (`SYSPACKAGE.VALID = 'N'`).
+
+---
+
+> ⚠️ Um REBIND emergencial pode restaurar a funcionalidade, mas deve ser seguido de análise pós-ocorrência para identificar causas-raiz (ex: deploy incompleto, ausência de RUNSTATS, ordem de operações errada).
+
 
 ---
 
