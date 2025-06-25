@@ -1128,7 +1128,7 @@ Temporal Tables são estruturas que **registram automaticamente o histórico de 
 - **Business-Time Temporal Table**: Armazena validade conforme o negócio define.
 - **Bi-Temporal**: Combina os dois anteriores.
 
-🔍 Ver [Capítulo 11 – Temporal Tables](#11-temporal-tables) para entendimento completo da estrutura, sintaxe e usos.
+🔍 Ver informações sobre Temporal Tables para entendimento completo da estrutura, sintaxe e usos.
 
 ---
 
