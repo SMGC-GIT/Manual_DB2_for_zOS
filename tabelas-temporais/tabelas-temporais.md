@@ -16,7 +16,8 @@ Documentação técnica especializada, orientada à implementação, auditoria e
 8. [Boas Práticas e Cuidados Operacionais](#8-boas-práticas-e-cuidados-operacionais)  
 9. [Referências Oficiais e Considerações Finais](#9-referências-oficiais-e-considerações-finais)
 10. [Templates Reutilizáveis – Modelos Prontos com Explicação](#10-templates-reutilizáveis--modelos-prontos-com-explicação)  
-11. [Checklist Operacional – Guia para Implementação e Manutenção](#11-checklist-operacional--guia-para-implementação-e-manutenção)  
+11. [Checklist Operacional – Guia para Implementação e Manutenção](#11-checklist-operacional--guia-para-implementação-e-manutenção)
+12. [Avaliação de Candidatura de Tabelas a Temporal Table](#12-avaliação-de-candidatura-de-tabelas-a-temporal-table)
 
 ---
 
@@ -1110,4 +1111,119 @@ Este checklist ajuda a garantir:
 > **Dica avançada:** Crie scripts automáticos que testem versionamento real com inserts + updates e validem a gravação no histórico. Use JOBs ou JCLs para comparar base x histórico em ambiente de homologação.
 
 ---
-> **Nota:** Este conteúdo será continuamente refinado com base em práticas reais e documentação oficial. O próximo passo é aplicar o mesmo nível de refinamento aos capítulos 4 e 5. Caso queira iniciar por algum item específico, indique e avançamos com precisão.
+
+## 12. Avaliação de Candidatura de Tabelas a Temporal Table
+
+### Objetivo
+
+Esta seção oferece uma abordagem prática e analítica para **avaliar se uma tabela deve ou não ser implementada como Temporal Table**. Fornece critérios técnicos, impactos no modelo físico, recomendações e uma **estrutura interativa com parâmetros para apoiar a decisão de forma padronizada e reutilizável**.
+
+---
+
+### O que são Temporal Tables?
+
+Temporal Tables são estruturas que **registram automaticamente o histórico de alterações de uma tabela base**. No DB2 for z/OS, temos dois tipos principais:
+
+- **System-Time Temporal Table**: Armazena histórico completo controlado pelo sistema.
+- **Business-Time Temporal Table**: Armazena validade conforme o negócio define.
+- **Bi-Temporal**: Combina os dois anteriores.
+
+🔍 Ver [Capítulo 11 – Temporal Tables](#11-temporal-tables) para entendimento completo da estrutura, sintaxe e usos.
+
+---
+
+### Por que avaliar antes de criar?
+
+- Evita **sobrecarga desnecessária** de armazenamento e manutenção.
+- Garante **aderência ao requisito real do negócio**.
+- Mantém a **clareza e legibilidade do modelo de dados**.
+- Assegura que os **recursos do banco (log, buffer pool, performance)** sejam utilizados de maneira eficiente.
+
+---
+
+### Principais Impactos no Ambiente
+
+| Impacto                        | Detalhamento                                                                 |
+|-------------------------------|------------------------------------------------------------------------------|
+| **Espaço em disco**           | A base de histórico pode crescer rapidamente.                               |
+| **Performance**               | Operações de INSERT e UPDATE são mais custosas.                             |
+| **Gerenciamento adicional**   | Exige controle de políticas de retenção e acesso.                           |
+| **Modelo mais complexo**      | Especialmente em Bi-Temporal. Necessita clareza de propósito e uso.         |
+| **Backup/Recuperação**        | As tabelas históricas devem ser incluídas no plano de backup.               |
+
+---
+
+## 🧠 Avaliação de Candidatura – Critérios Técnicos
+
+### Parâmetros a serem informados (Checkpoints)
+
+A seguir estão os **principais critérios** que um DBA deve avaliar para decidir se uma tabela deve ou não ser temporal. Use este guia como **checklist ou formulário de análise técnica/documentação**.
+
+| Parâmetro Técnico                              | Resposta Esperada            | Avaliação / Ação                                                       |
+|-----------------------------------------------|------------------------------|------------------------------------------------------------------------|
+| A tabela possui dados que **sofrem alteração com o tempo**? | (Sim/Não)                    | Se **não**, provavelmente não há necessidade de temporal.              |
+| Há necessidade de **auditar alterações** de forma nativa no banco? | (Sim/Não)                    | Temporal é útil para auditoria nativa.                                |
+| A recuperação de dados **"como estavam em uma data passada"** é um requisito do negócio? | (Sim/Não)                    | Essencial para justificar temporalidade.                              |
+| A tabela participa de **transações OLTP críticas**? | (Sim/Não)                    | Se **sim**, avaliar impacto de performance.                           |
+| Existe ou pode existir **legislação/regulamentação** que exija retenção de histórico? | (Sim/Não)                    | Exemplo: LGPD, auditorias financeiras.                                |
+| Há consumo analítico (BI, relatórios históricos) sobre esta tabela? | (Sim/Não)                    | Pode indicar forte candidato.                                         |
+| Existe risco de **apagamento indesejado** de informações valiosas? | (Sim/Não)                    | Temporal pode mitigar este risco.                                     |
+
+---
+
+### 🧩 Decisão com Base nos Parâmetros
+
+**Recomendação**:  
+✔️ Se **quatro ou mais** critérios forem "Sim", a tabela **é forte candidata** a ser temporal.  
+❌ Se **menos de dois** forem "Sim", **recomenda-se não utilizar temporal** para evitar complexidade desnecessária.
+
+---
+
+### Modelo de Documento de Avaliação (Template)
+
+```plaintext
+📄 Avaliação de Temporal Table – [Nome da Tabela]
+
+1. Tabela: CLIENTE
+2. Responsável pela avaliação: [Nome do DBA]
+3. Data da avaliação: [dd/mm/aaaa]
+
+Critérios avaliados:
+- Sofre alterações com o tempo? → SIM
+- Auditoria requerida? → NÃO
+- Requisitos de recuperação por data? → SIM
+- Uso em OLTP crítico? → SIM
+- Exigência legal/regulatória? → NÃO
+- Consumo analítico histórico? → SIM
+- Risco de perda de dados? → SIM
+
+Total de respostas "SIM": 5
+
+Decisão: IMPLEMENTAR como **System-Time Temporal Table**
+
+Observações:
+→ Analisar criação de índice sobre colunas BUSINESS_START e BUSINESS_END.
+→ Confirmar política de retenção com área de Compliance.
+
+Aprovado por: ______________________
+```
+
+---
+
+### Inserção no Modelo PowerDesigner
+
+> 💡 **Dica de modelagem no PowerDesigner**:
+
+- Criar uma extensão de estereótipo customizado `<<Temporal>>` para destacar tabelas candidatas.
+- Adicionar **campos SYSTEM_TIME_START e SYSTEM_TIME_END** como colunas obrigatórias no modelo físico.
+- Utilizar **diagrama físico com link explícito à tabela histórica**, com descrição clara.
+
+---
+
+### Conclusão
+
+A decisão de tornar uma tabela temporal **não deve ser automática**. Requer reflexão, alinhamento com o negócio, análise de impacto técnico e respaldo normativo. Este modelo ajuda a tomar **decisões conscientes, padronizadas e sustentáveis** ao longo da evolução do modelo de dados da organização.
+
+---
+
+
