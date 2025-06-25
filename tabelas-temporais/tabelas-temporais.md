@@ -14,7 +14,7 @@ Documentação técnica especializada, orientada à implementação, auditoria e
 6. [Consultas Temporais](#6-consultas-temporais)  
 7. [Alterações na Estrutura e Impactos](#7-alterações-na-estrutura-e-impactos)  
 8. [Boas Práticas e Cuidados Operacionais](#8-boas-práticas-e-cuidados-operacionais)  
-9. [Referências Oficiais](#9-referências-oficiais)  
+9. [Referências Oficiais e Considerações Finais](#9-referências-oficiais-e-considerações-finais)  
 
 ---
 
@@ -841,16 +841,71 @@ Neste capítulo, reunimos práticas consolidadas para garantir robustez e confia
 
 ---
 
-## 9. Referências Oficiais
+## 9. Referências Oficiais e Considerações Finais
 
-- [IBM Best Practices - Temporal Data](https://www.ibm.com/docs/en/db2-for-zos/13?topic=data-best-practices-temporal-tables)  
-- [IBM Security & Auditing Guidelines](https://www.ibm.com/docs/en/db2-for-zos/13?topic=security-auditing-db2)  
-- [IBM Redbooks: DB2 Temporal Tables](https://www.redbooks.ibm.com/abstracts/sg248079.html)  
-- [IBM Documentation - DB2 13 for z/OS: System-period temporal tables](https://www.ibm.com/docs/en/db2-for-zos/13?topic=data-system-period-temporal-tables)  
-- [IBM Redbooks: Managing Time-Based Data with Temporal Tables in DB2 for z/OS](https://www.redbooks.ibm.com/abstracts/sg248079.html)  
-- [IBM SQL Reference](https://www.ibm.com/docs/en/db2-for-zos/13?topic=reference-sql-statements)  
-- [Temporal Tables and Bitemporal Data](https://www.ibm.com/docs/en/db2-for-zos/13?topic=data-temporal-tables-bitemporal)
+### 📚 9.1 Referências oficiais IBM
+
+- [IBM Documentation – DB2 for z/OS Temporal Tables (v13)](https://www.ibm.com/docs/en/db2-for-zos/13?topic=data-querying-temporal-tables)
+- [IBM Redbook – Managing Time-Based Data with Temporal Tables](https://www.redbooks.ibm.com/abstracts/sg248079.html)
+- [SQL Reference – Statements Guide](https://www.ibm.com/docs/en/db2-for-zos/13?topic=reference-sql-statements)
+- [DB2 Best Practices for Temporal Data](https://www.ibm.com/docs/en/db2-for-zos/13?topic=data-best-practices-temporal-tables)
+- [DB2 Catalog & Temporal Metadata](https://www.ibm.com/docs/en/db2-for-zos/13?topic=tables-catalog-temporal-table)
 
 ---
 
+### ✅ 9.2 Diretrizes finais para ambientes críticos
+
+| Tema                        | Diretriz prática                                                                 |
+|-----------------------------|----------------------------------------------------------------------------------|
+| Governança                  | Ter política formal sobre dados temporais, com responsáveis e plano de auditoria |
+| Performance                 | Monitorar planos de acesso (`EXPLAIN`), revisar índices, evitar full scans       |
+| Documentação                | Versionar scripts DDL, indicar temporalidade no modelo de dados                  |
+| Segurança e compliance      | Proteger tabelas históricas, controlar alterações estruturais                    |
+| Homologação                 | Testar retroatividade, encerramentos, mudanças múltiplas em tempo                |
+| Auditoria                   | Rastrear qualquer uso de `DROP VERSIONING` e mudanças de período                 |
+| Manutenção do histórico     | Definir retenção, unload de históricos antigos, e arquivamento                   |
+
+---
+
+### 📎 9.3 Recomendações para continuidade
+
+- Criar **catálogo interno de tabelas temporais** no ambiente, com seus tipos, períodos e dependências
+- Manter **checklists operacionais** para:
+  - Criação de tabelas temporais
+  - Alterações seguras (com histórico preservado)
+  - Simulação de testes de vigência e auditoria
+- Usar **extensões no PowerDesigner** para representar explicitamente:
+  - Colunas de vigência
+  - Papel da aplicação na manutenção da vigência
+  - Tabela de histórico associada
+
+---
+
+### 🧠 9.4 Reflexão profissional
+
+O uso de **temporal tables** no DB2 for z/OS é mais do que uma funcionalidade: trata-se de uma **estratégia de arquitetura de dados**, cuja adoção bem planejada entrega:
+
+- Transparência
+- Rastreabilidade
+- Governança
+- Compliance regulatório
+
+> Porém, como toda funcionalidade poderosa, exige responsabilidade, domínio técnico, integração com times de desenvolvimento e validação contínua.
+
+---
+
+### 🏁 9.5 Encerramento
+
+Este material foi projetado para servir como **guia prático, técnico e estratégico** para DBAs e arquitetos de dados que atuam em instituições de grande porte e ambientes críticos.
+
+Siga evoluindo, monitore os lançamentos da IBM, e lembre-se: a **excelência em administração de dados temporais** é uma marca de ambientes maduros e confiáveis.
+
+---
+
+```sql
+-- E lembre-se:
+-- Dados são o novo petróleo. Mas dados temporais bem cuidados são a sua linha do tempo confiável.
+```
+
+---
 > **Nota:** Este conteúdo será continuamente refinado com base em práticas reais e documentação oficial. O próximo passo é aplicar o mesmo nível de refinamento aos capítulos 4 e 5. Caso queira iniciar por algum item específico, indique e avançamos com precisão.
