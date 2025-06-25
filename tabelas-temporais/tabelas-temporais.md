@@ -14,7 +14,9 @@ Documentação técnica especializada, orientada à implementação, auditoria e
 6. [Consultas Temporais](#6-consultas-temporais)  
 7. [Alterações na Estrutura e Impactos](#7-alterações-na-estrutura-e-impactos)  
 8. [Boas Práticas e Cuidados Operacionais](#8-boas-práticas-e-cuidados-operacionais)  
-9. [Referências Oficiais e Considerações Finais](#9-referências-oficiais-e-considerações-finais)  
+9. [Referências Oficiais e Considerações Finais](#9-referências-oficiais-e-considerações-finais)
+10. [Templates Reutilizáveis – Modelos Prontos com Explicação](#10-templates-reutilizáveis--modelos-prontos-com-explicação)  
+11. [Checklist Operacional – Guia para Implementação e Manutenção](#11-checklist-operacional--guia-para-implementação-e-manutenção)  
 
 ---
 
@@ -906,6 +908,206 @@ Siga evoluindo, monitore os lançamentos da IBM, e lembre-se: a **excelência em
 -- E lembre-se:
 -- Dados são o novo petróleo. Mas dados temporais bem cuidados são a sua linha do tempo confiável.
 ```
+
+---
+
+## 10. Templates Reutilizáveis – Modelos Prontos com Explicação
+
+### 🧾 10.1 Por que templates são essenciais?
+
+Em ambientes produtivos e auditáveis, **consistência é tão importante quanto funcionalidade**. Templates reutilizáveis garantem que:
+
+- O versionamento siga um padrão seguro
+- A tabela de histórico esteja sempre compatível
+- A modelagem esteja alinhada ao comportamento esperado
+- O DBA não precise revalidar lógica básica a cada projeto
+
+Cada template a seguir vem com **explicações de uso**, variações possíveis e **orientações para adaptação conforme o cenário**.
+
+---
+
+### 🟩 10.2 System-Time – Histórico automático mantido pelo DB2
+
+```sql
+CREATE TABLE contrato (
+   id_contrato    INTEGER NOT NULL,
+   cliente        VARCHAR(100),
+   valor_mensal   DECIMAL(10,2),
+   row_begin      TIMESTAMP(12) NOT NULL GENERATED ALWAYS AS ROW BEGIN,
+   row_end        TIMESTAMP(12) NOT NULL GENERATED ALWAYS AS ROW END,
+   transaction_id TIMESTAMP(12) GENERATED ALWAYS FOR EACH ROW ON UPDATE AS TRANSACTION START ID,
+   PERIOD SYSTEM_TIME (row_begin, row_end),
+   PRIMARY KEY (id_contrato)
+)
+IN ts_contrato;
+
+CREATE TABLE contrato_hist LIKE contrato
+IN ts_contrato_hist;
+
+ALTER TABLE contrato
+  ADD VERSIONING USE HISTORY TABLE contrato_hist;
+```
+
+🔍 **Explicação:**
+
+- `row_begin` e `row_end` formam o **período de validade sistêmico**
+- O DB2 preenche automaticamente esses campos ao fazer UPDATE ou DELETE
+- A tabela `contrato_hist` armazena todas as versões anteriores da linha
+- Nenhuma lógica de aplicação é necessária para manter o histórico
+
+🔐 **Quando usar:**
+
+- Sempre que se deseja **auditar alterações**
+- Em tabelas de cadastro sensíveis (endereços, contratos, dados pessoais)
+- Para cumprir rastreabilidade legal
+
+---
+
+### 🟦 10.3 Business-Time – Vigência controlada pela aplicação
+
+```sql
+CREATE TABLE tabela_preco (
+   id_produto    INTEGER NOT NULL,
+   preco_unitario DECIMAL(10,2),
+   vig_inicio    DATE NOT NULL,
+   vig_fim       DATE NOT NULL,
+   PERIOD BUSINESS_TIME (vig_inicio, vig_fim),
+   PRIMARY KEY (id_produto, vig_inicio)
+)
+IN ts_vigencia;
+```
+
+🔍 **Explicação:**
+
+- `vig_inicio` e `vig_fim` são datas controladas pela **regra de negócio**
+- O DB2 apenas reconhece o período, mas **não interfere**
+- É a **aplicação** que deve cuidar da inclusão futura, encerramento ou retroatividade
+
+🧠 **Dica:** Use `FOR BUSINESS_TIME AS OF` nas consultas para saber qual valor estava vigente em qualquer data.
+
+🔐 **Quando usar:**
+
+- Tabelas de preços, tributos, regras contratuais com vigência
+- Contextos em que a mudança é **planejada ou retroativa**, e não imediata
+
+---
+
+### 🟨 10.4 Bitemporal – Histórico + Vigência
+
+```sql
+CREATE TABLE tarifa (
+   id_tarifa      INTEGER NOT NULL,
+   descricao      VARCHAR(50),
+   valor          DECIMAL(10,2),
+   vig_inicio     DATE NOT NULL,
+   vig_fim        DATE NOT NULL,
+   row_begin      TIMESTAMP(12) NOT NULL GENERATED ALWAYS AS ROW BEGIN,
+   row_end        TIMESTAMP(12) NOT NULL GENERATED ALWAYS AS ROW END,
+   transaction_id TIMESTAMP(12) GENERATED ALWAYS FOR EACH ROW ON UPDATE AS TRANSACTION START ID,
+   PERIOD SYSTEM_TIME (row_begin, row_end),
+   PERIOD BUSINESS_TIME (vig_inicio, vig_fim),
+   PRIMARY KEY (id_tarifa, vig_inicio)
+)
+IN ts_bitemporal;
+
+CREATE TABLE tarifa_hist LIKE tarifa
+IN ts_bitemporal_hist;
+
+ALTER TABLE tarifa
+  ADD VERSIONING USE HISTORY TABLE tarifa_hist;
+```
+
+🔍 **Explicação:**
+
+- Une o melhor dos dois mundos:
+  - **System-Time** → versionamento técnico automatizado
+  - **Business-Time** → vigência de negócio
+- Ideal para reconstruir **o que estava vigente e conhecido em um ponto no passado**
+
+🧠 Exemplo de consulta poderosa:
+
+```sql
+SELECT * FROM tarifa
+FOR SYSTEM_TIME AS OF CURRENT_TIMESTAMP
+FOR BUSINESS_TIME AS OF DATE('2023-12-01');
+```
+
+🔐 **Quando usar:**
+
+- Contextos regulados onde é necessário saber:
+  - “O que sabíamos que estava vigente na data X?”
+  - “Quando alteramos essa vigência e por quê?”
+
+---
+
+## 11. Checklist Operacional – Guia para Implementação e Manutenção
+
+### 📋 11.1 Por que seguir um checklist?
+
+No ciclo de vida de tabelas temporais, a **falha mais comum está em esquecer alguma etapa crítica**, como:
+
+- Recriar a tabela de histórico após mudança
+- Reativar versionamento corretamente
+- Testar integridade entre base e histórico
+
+Este checklist ajuda a garantir:
+
+- Conformidade com boas práticas
+- Evita perda de histórico
+- Alinha o DBA com desenvolvedores, analistas e auditores
+
+---
+
+### 🧩 11.2 Criação de System-Time
+
+- [ ] Nomear `row_begin` / `row_end` / `transaction_id` com clareza
+- [ ] Usar `TIMESTAMP(12)` para máxima precisão
+- [ ] Criar tabela de histórico `LIKE` da base (sem constraints extras)
+- [ ] Declarar `PERIOD SYSTEM_TIME`
+- [ ] Executar `ALTER TABLE ... ADD VERSIONING`
+- [ ] Validar gravação no histórico com update/delete
+
+---
+
+### 🧩 11.3 Criação de Business-Time
+
+- [ ] Declarar `vig_inicio` e `vig_fim` (DATE ou TIMESTAMP)
+- [ ] Declarar `PERIOD BUSINESS_TIME`
+- [ ] Definir chave primária com `vig_inicio` incluído
+- [ ] Garantir que a aplicação controle encerramentos e retroatividade
+- [ ] Avaliar necessidade de validar sobreposição
+
+---
+
+### 🧩 11.4 Criação de Bitemporal
+
+- [ ] Seguir passos do System-Time e do Business-Time
+- [ ] Garantir compatibilidade entre base e histórico
+- [ ] Testar `FOR SYSTEM_TIME` e `FOR BUSINESS_TIME` combinados
+
+---
+
+### 🛠 11.5 Alterações estruturais
+
+- [ ] Executar `DROP VERSIONING` antes de DDLs
+- [ ] Alterar base e histórico em sincronia
+- [ ] Reativar `ADD VERSIONING` após validação
+- [ ] Documentar mudanças (DDL versionado)
+- [ ] Atualizar modelo no PowerDesigner
+
+---
+
+### 📊 11.6 Testes e Auditoria
+
+- [ ] Testar inserts com datas passadas e futuras
+- [ ] Validar atualização e versionamento no histórico
+- [ ] Executar `EXPLAIN` das queries temporais
+- [ ] Validar integridade temporal (sem buracos ou sobreposições)
+- [ ] Avaliar armazenamento de histórico (retenção e arquivamento)
+
+---
+
+> **Dica avançada:** Crie scripts automáticos que testem versionamento real com inserts + updates e validem a gravação no histórico. Use JOBs ou JCLs para comparar base x histórico em ambiente de homologação.
 
 ---
 > **Nota:** Este conteúdo será continuamente refinado com base em práticas reais e documentação oficial. O próximo passo é aplicar o mesmo nível de refinamento aos capítulos 4 e 5. Caso queira iniciar por algum item específico, indique e avançamos com precisão.
