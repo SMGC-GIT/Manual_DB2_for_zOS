@@ -749,10 +749,41 @@ REBIND PACKAGE('PKGTRANSACOES')
 
 ## 11. Fontes Oficiais IBM
 
+### 📦 Comandos de BIND e REBIND
 - 📖 [BIND PACKAGE - IBM](https://www.ibm.com/docs/en/db2-for-zos/13?topic=commands-bind-package)
 - 📖 [REBIND PACKAGE - IBM](https://www.ibm.com/docs/en/db2-for-zos/13?topic=commands-rebind-package)
-- 📖 [SYSPACKAGE Catalog - IBM](https://www.ibm.com/docs/en/db2-for-zos/13?topic=tables-syspackage)
+- 📖 [COPY PACKAGE - IBM](https://www.ibm.com/docs/en/db2-for-zos/13?topic=commands-copy-package)
+- 📖 [FREE PACKAGE - IBM](https://www.ibm.com/docs/en/db2-for-zos/13?topic=commands-free-package)
+
+### 📊 Planejamento de acesso e performance
+- 📖 [EXPLAIN - IBM](https://www.ibm.com/docs/en/db2-for-zos/13?topic=commands-explain)
+- 📖 [PLAN_TABLE - IBM](https://www.ibm.com/docs/en/db2-for-zos/13?topic=tables-plan-table)
+- 📖 [RUNSTATS - IBM](https://www.ibm.com/docs/en/db2-for-zos/13?topic=commands-runstats)
+- 📖 [REOPT Bind Option - IBM](https://www.ibm.com/docs/en/db2-for-zos/13?topic=reference-reopt)
+
+### 🔐 Segurança, controle e compatibilidade
 - 📖 [APPLCOMPAT - IBM](https://www.ibm.com/docs/en/db2-for-zos/13?topic=reference-applcompat)
+- 📖 [VALIDATE Option - IBM](https://www.ibm.com/docs/en/db2-for-zos/13?topic=reference-validate)
+- 📖 [BIND Privileges and Authorities - IBM](https://www.ibm.com/docs/en/db2-for-zos/13?topic=bind-privileges-authorities)
+
+### 🧩 Tabelas do Catálogo
+- 📖 [SYSPACKAGE - IBM](https://www.ibm.com/docs/en/db2-for-zos/13?topic=tables-syspackage)
+- 📖 [SYSPACKDEP - IBM](https://www.ibm.com/docs/en/db2-for-zos/13?topic=tables-syspackdep)
+- 📖 [SYSPACKAUTH - IBM](https://www.ibm.com/docs/en/db2-for-zos/13?topic=tables-syspackauth)
+- 📖 [SYSPACKSTMT - IBM](https://www.ibm.com/docs/en/db2-for-zos/13?topic=tables-syspackstmt)
+- 📖 [SYSPACKCOPY - IBM](https://www.ibm.com/docs/en/db2-for-zos/13?topic=tables-syspackcopy)
+- 📖 [SYSPACKLIST - IBM](https://www.ibm.com/docs/en/db2-for-zos/13?topic=tables-syspacklist)
+- 📖 [SYSPLAN - IBM](https://www.ibm.com/docs/en/db2-for-zos/13?topic=tables-sysplan)
+
+### ❗ Tratamento de erros e diagnóstico
+- 📖 [SQLCODE -805 - IBM](https://www.ibm.com/docs/en/db2-for-zos/13?topic=sqlcode-805)
+- 📖 [SQLCODE -818 - IBM](https://www.ibm.com/docs/en/db2-for-zos/13?topic=sqlcode-818)
+- 📖 [SQLCODE -4743 - IBM](https://www.ibm.com/docs/en/db2-for-zos/13?topic=sqlcode-4743)
+- 📖 [Diagnosing Package Errors - IBM](https://www.ibm.com/docs/en/db2-for-zos/13?topic=programs-diagnosing-package-errors)
+
+---
+
+> 🔍 Todas as fontes acima são da documentação oficial da IBM, versão DB2 13 for z/OS. Use o índice lateral dos links para explorar tópicos relacionados.
 
 ---
 
