@@ -789,7 +789,15 @@ REBIND PACKAGE('PKGTRANSACOES')
 
 ## 12. Consultas SQL Úteis para Gestão de Packages
 
+Este conjunto de queries auxilia na **auditoria, manutenção, diagnóstico e tuning** de pacotes DB2 em ambientes críticos, como os de produção, homologação e contingência.
+
+> ⚠️ Todas as consultas devem ser utilizadas com cautela e, quando possível, adaptadas por schema (`QUALIFIER`) e collection (`COLLID`) específicos do seu ambiente.
+
+---
+
 ### 🔎 12.1. Pacotes utilizados recentemente
+
+Identifica os packages mais ativos no ambiente, úteis para análise de criticidade e exclusão seletiva posterior.
 
 ```sql
 SELECT COLLID, NAME, VERSION, LASTUSED
@@ -798,45 +806,138 @@ WHERE LASTUSED IS NOT NULL
 ORDER BY LASTUSED DESC;
 ```
 
+---
+
 ### 💤 12.2. Pacotes não utilizados nos últimos 90 dias
+
+Ideal para identificar packages elegíveis para limpeza via `FREE PACKAGE`, desde que validados com as áreas responsáveis.
 
 ```sql
 SELECT COLLID, NAME, VERSION, LASTUSED
 FROM SYSIBM.SYSPACKAGE
-WHERE LASTUSED < CURRENT DATE - 90 DAYS;
+WHERE LASTUSED < CURRENT DATE - 90 DAYS
+  AND LASTUSED IS NOT NULL
+ORDER BY LASTUSED;
 ```
+
+> ✅ Dica: Combine com `VALID = 'Y'` para descartar pacotes inválidos e desatualizados.
+
+---
 
 ### 🚫 12.3. Pacotes com status inválido
 
+Packages com `VALID = 'N'` podem causar falhas em runtime (SQLCODE -805, -818). Devem ser REBINDados ou analisados quanto à causa (ex: DROP de tabela referenciada).
+
 ```sql
-SELECT COLLID, NAME, VALID
+SELECT COLLID, NAME, VERSION, VALID, OPERATIVE
 FROM SYSIBM.SYSPACKAGE
 WHERE VALID = 'N';
 ```
 
-### 🧵 12.4. Listar programas associados a um plano (PKLIST)
+> ⚠️ Verifique colunas como `OPERATIVE`, `VALIDATE`, `OWNER` para análise completa da condição inválida.
+
+---
+
+### 🧵 12.4. Programas associados a um plano (PKLIST)
+
+Consulta packages ligados a um PLAN — abordagem ainda comum em ambientes CICS ou batch legados.
 
 ```sql
-SELECT *
+SELECT BNAME AS PACKAGE_NAME,
+       BQUALIFIER AS COLLID,
+       BTYPE,
+       PLANNAME
 FROM SYSIBM.SYSPLANDEP
-WHERE BNAME = 'NOME_DO_PLAN';
+WHERE PLANNAME = 'NOME_DO_PLAN';
 ```
 
-### 🔗 12.5. Ver dependências de um package
+> 🧩 Útil para identificar impacto de mudanças em PLANs, especialmente em contextos de migração ou reestruturação.
+
+---
+
+### 🔗 12.5. Dependências de um package
+
+Mostra objetos que um package depende diretamente. Essencial antes de ações como DROP, ALTER ou REBIND.
 
 ```sql
-SELECT * 
+SELECT BNAME, BQUALIFIER, BVERSION,
+       DNAME AS OBJETO_REFERENCIADO,
+       DCREATOR, DTYPE
 FROM SYSIBM.SYSPACKDEP
-WHERE COLLID = 'COLECAO' AND NAME = 'PROGRAMA';
+WHERE BQUALIFIER = 'COLECAO'
+  AND BNAME = 'PROGRAMA';
 ```
 
-### 🔐 12.6. Ver permissões concedidas em packages
+> 🔍 Permite avaliar risco de alterações em tabelas, views, UDFs ou triggers.
+
+---
+
+### 🔐 12.6. Permissões concedidas em packages
+
+Controla quem pode executar ou fazer REBIND de um package. Importante para governança e segurança em produção.
 
 ```sql
-SELECT *
+SELECT GRANTEE, GRANTEETYPE, BINDAUTH, EXECUTEAUTH, COLLID, NAME
 FROM SYSIBM.SYSPACKAUTH
 WHERE COLLID = 'COLECAO';
 ```
+
+> 🔐 Considere rotinas de auditoria periódica nos principais packages produtivos.
+
+---
+
+### 📦 12.7. Histórico de cópias de fallback (COPY PACKAGE)
+
+Verifica versões anteriores armazenadas com `COPY PACKAGE`, que podem ser restauradas com `REBIND VERSION`.
+
+```sql
+SELECT COLLID, NAME, COPYID, CREATEDBY, TIMESTAMP
+FROM SYSIBM.SYSPACKCOPY
+WHERE COLLID = 'COLECAO'
+  AND NAME = 'PROGRAMA'
+ORDER BY TIMESTAMP DESC;
+```
+
+> 🆘 Fundamental em ambientes que exigem rollback seguro após REBIND.
+
+---
+
+### 📋 12.8. Detalhes técnicos das instruções SQL bindadas
+
+Permite rastrear e auditar cada instrução SQL do package.
+
+```sql
+SELECT COLLID, NAME, STMTNO, SECTNO, STMTTEXT
+FROM SYSIBM.SYSPACKSTMT
+WHERE COLLID = 'COLECAO'
+  AND NAME = 'PROGRAMA';
+```
+
+> 🧠 Usado para debugging, tuning e validação de planos de acesso específicos.
+
+---
+
+### 🧼 12.9. Identificação de pacotes candidatos à limpeza
+
+Combina múltiplos critérios: uso, validade, tempo de criação, versão e autor.
+
+```sql
+SELECT COLLID, NAME, VERSION, CREATEDBY, LASTUSED, VALID
+FROM SYSIBM.SYSPACKAGE
+WHERE VALID = 'Y'
+  AND LASTUSED < CURRENT DATE - 180 DAYS
+  AND OPERATIVE = 'Y'
+  AND CREATEDBY NOT IN ('SYSADM', 'PROCEDIMENTO_ESPECIAL')
+ORDER BY LASTUSED;
+```
+
+> 🧹 Excelente para apoiar políticas de housekeeping automatizadas, com base em evidência técnica.
+
+---
+
+> ✅ Todas as tabelas do catálogo são mantidas pelo DB2 e exigem privilégios adequados para acesso.  
+> 📚 Para entender as colunas envolvidas, veja a [documentação IBM – SYSPACKAGE](https://www.ibm.com/docs/en/db2-for-zos/12?topic=tables-syspackage).
+
 
 ---
 
