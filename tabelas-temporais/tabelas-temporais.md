@@ -262,44 +262,6 @@ Documentação técnica especializada, orientada à implementação, auditoria e
 
 ---
 
-## Índice
-
-1. [Conceito e Finalidade das Temporal Tables](#1-conceito-e-finalidade-das-temporal-tables)  
-2. [Tipos de Tabelas Temporais](#2-tipos-de-tabelas-temporais)  
-3. [System-Time Temporal Tables](#3-system-time-temporal-tables)  
-4. [Business-Time Temporal Tables](#4-business-time-temporal-tables)  
-5. [Bitemporal Tables (System + Business Time)](#5-bitemporal-tables-system--business-time)  
-6. [Consultas Temporais](#6-consultas-temporais)  
-7. [Alterações na Estrutura e Impactos](#7-alterações-na-estrutura-e-impactos)  
-8. [Boas Práticas e Cuidados Operacionais](#8-boas-práticas-e-cuidados-operacionais)  
-9. [Referências Oficiais](#9-referências-oficiais)  
-
----
-
-## 1. Conceito e Finalidade das Temporal Tables
-
-*(ver capítulo anterior para detalhes)*
-
----
-
-## 2. Types de Tabelas Temporais
-
-*(ver capítulo anterior para detalhes)*
-
----
-
-## 3. System-Time Temporal Tables
-
-*(ver capítulo anterior para versão refinada com explicações, exemplos e modelagem)*
-
----
-
-## 4. Business-Time Temporal Tables
-
-*(ver capítulo anterior para versão refinada com explicações, exemplos e modelagem)*
-
----
-
 ## 5. Bitemporal Tables (System + Business Time)
 
 ### 📌 5.1 O que é?
@@ -452,9 +414,123 @@ FOR BUSINESS_TIME AS OF '2024-07-01';
 
 ---
 
-## 6. Consultas Temporais
+### 🧭 6.2 Cláusulas básicas
 
-(Será reestruturado no próximo ciclo com base neste novo padrão)
+| Cláusula SQL              | Finalidade                                         |
+|---------------------------|----------------------------------------------------|
+| `FOR SYSTEM_TIME AS OF`   | Estado em instante do sistema                      |
+| `FOR SYSTEM_TIME BETWEEN` | Estado entre dois pontos temporais do sistema     |
+| `FOR BUSINESS_TIME AS OF` | Estado com base em vigência negocial              |
+| `FOR SYSTEM_TIME ... FOR BUSINESS_TIME` | Consultas bitemporais cruzadas |
+
+---
+
+### 🧪 6.3 Exemplos com System-Time
+
+#### 🔎 Estado em momento exato do sistema
+
+```sql
+SELECT * FROM cliente
+FOR SYSTEM_TIME AS OF '2025-02-01-10.00.00';
+```
+
+> Retorna os dados **vigentes no sistema** naquele exato instante, incluindo versões anteriores que já foram arquivadas.
+
+---
+
+#### 🔎 Histórico entre dois pontos
+
+```sql
+SELECT * FROM cliente
+FOR SYSTEM_TIME BETWEEN
+   '2024-01-01-00.00.00' AND '2024-12-31-23.59.59';
+```
+
+> Retorna todas as versões do dado que **estiveram vigentes** entre os dois timestamps.
+
+---
+
+#### 🔎 Histórico aberto (desde)
+
+```sql
+SELECT * FROM cliente
+FOR SYSTEM_TIME FROM
+   '2023-01-01-00.00.00' TO CURRENT_TIMESTAMP;
+```
+
+> Útil para investigar mudanças ao longo de um ano ou desde um evento específico.
+
+---
+
+### 🧪 6.4 Exemplos com Business-Time
+
+#### 🔎 Estado de negócio em determinada vigência
+
+```sql
+SELECT * FROM tarifa
+FOR BUSINESS_TIME AS OF DATE('2026-01-01');
+```
+
+> Indica qual valor estava **vigente para o cliente** naquela data, independente de quando foi inserido no sistema.
+
+---
+
+#### 🔎 Período de vigência de valores
+
+```sql
+SELECT * FROM tarifa
+FOR BUSINESS_TIME BETWEEN DATE('2025-01-01') AND DATE('2025-12-31');
+```
+
+> Traz os registros cujas vigências **abrangem** o período.
+
+---
+
+### 🔁 6.5 Consultas Bitemporais
+
+#### 🔎 Estado de negócio, conforme conhecido no passado
+
+```sql
+SELECT * FROM contrato
+FOR SYSTEM_TIME AS OF '2024-03-15-10.00.00'
+FOR BUSINESS_TIME AS OF '2024-07-01';
+```
+
+> Interpretação:
+> *"Com base nas informações que o sistema possuía em 15/03/2024 às 10h, qual era o contrato vigente em 01/07/2024?"*
+
+---
+
+### 📈 6.6 Estratégias de Indexação
+
+#### Por que indexar colunas temporais?
+
+Consultas como `FOR SYSTEM_TIME AS OF` ou `FOR BUSINESS_TIME BETWEEN` podem se tornar **custosas** em tabelas com grandes volumes de histórico. O uso de **índices adequados** reduz significativamente o custo de execução.
+
+| Coluna recomendada          | Tipo de índice           | Observações                                       |
+|-----------------------------|---------------------------|--------------------------------------------------|
+| `row_begin`, `row_end`      | Composto (`row_end`, `row_begin`) | Melhora `AS OF`, `BETWEEN` e `FROM TO`         |
+| `vigencia_ini`, `vigencia_fim` | Composto ou função temporal | Importante para business-time queries            |
+| Colunas de identificação    | Incluir em índices compostos | Ex: `(id_contrato, vig_inicio)`                 |
+
+> 🧠 **Dica técnica**: Sempre validar o plano de acesso (`EXPLAIN`) em ambiente de homologação para evitar full scans indesejados.
+
+---
+
+### 🧯 6.7 Considerações de performance
+
+- Evite misturar `FOR SYSTEM_TIME` com `WHERE` em colunas mal indexadas
+- Considere **materialized query tables (MQTs)** para cenários com volume altíssimo de histórico
+- Utilize **views específicas** para encapsular regras temporais e padronizar o uso pelas aplicações
+
+---
+
+### 📎 6.8 Glossário aplicado
+
+- **FOR SYSTEM_TIME AS OF**: Consulta o estado do dado vigente no sistema naquele instante
+- **FOR BUSINESS_TIME AS OF**: Consulta o que o negócio considera válido para determinada data
+- **Bitemporal Query**: Combinação das duas cláusulas para refletir visão histórica e negocial
+- **Plan Stability**: Estratégia de garantir que o acesso à temporal table continue eficiente mesmo após mudança de dados ou estatísticas
 
 ---
 
@@ -467,35 +543,6 @@ FOR BUSINESS_TIME AS OF '2024-07-01';
 ## 8. Boas Práticas e Cuidados Operacionais
 
 (Será reestruturado no próximo ciclo com base neste novo padrão)
-
----
-
-## 9. Referências Oficiais
-
-- [IBM Documentation - DB2 13 for z/OS: Bitemporal Tables](https://www.ibm.com/docs/en/db2-for-zos/13?topic=data-temporal-tables-bitemporal)  
-- [IBM Redbooks: Managing Time-Based Data with Temporal Tables in DB2 for z/OS](https://www.redbooks.ibm.com/abstracts/sg248079.html)  
-- [Temporal Tables SQL Reference](https://www.ibm.com/docs/en/db2-for-zos/13?topic=reference-sql-statements)  
-
----
-
-> **Nota:** A bitemporalidade representa o estado da arte em controle temporal de dados. Seu uso exige planejamento, compreensão do modelo de negócio e alinhamento entre áreas de dados, auditoria e sistemas. O próximo capítulo detalhará *consultas temporais combinadas e estratégias de indexação para alta performance*.
-
-
-## 6. Consultas Temporais
-
-(Conteúdo será aprimorado no próximo ciclo conforme novo padrão)
-
----
-
-## 7. Alterações na Estrutura e Impactos
-
-(Conteúdo será aprimorado no próximo ciclo conforme novo padrão)
-
----
-
-## 8. Boas Práticas e Cuidados Operacionais
-
-(Conteúdo será aprimorado no próximo ciclo conforme novo padrão)
 
 ---
 
