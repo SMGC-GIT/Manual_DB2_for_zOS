@@ -139,126 +139,158 @@ No PowerDesigner, essa estrutura deve ser representada com:
 
 ## 4. Business-Time Temporal Tables
 
-### 📌 4.1 O que é?
+### 📌 4.1 O que são?
 
-**Business-Time Temporal Table** é um tipo de tabela que registra a **validade de uma informação com base em regras de negócio**, independentemente do momento em que foi inserida ou alterada no banco de dados.
-
-Enquanto as *System-Time Tables* tratam do **quando o dado foi modificado no sistema**, as *Business-Time Tables* tratam do **período em que o dado é considerado válido para fins de negócio**.
-
-### 💡 Exemplos de uso
-
-- Vigência de contratos e cláusulas
-- Alterações tarifárias com data futura
-- Planejamento de tabelas de preços
-- Regras normativas com efeito retroativo
+Business-Time Temporal Tables permitem representar **a vigência de dados sob o ponto de vista do negócio**, independentemente do momento em que foram inseridos ou modificados no sistema. A validade dos registros é controlada por **colunas de data definidas pela aplicação**, e não pelo sistema de banco de dados.
 
 ---
 
-### 🎯 4.2 Por que usar?
+### 🧠 4.2 Diferença entre System-Time e Business-Time
 
-- Permite **antecipar alterações** com data futura
-- Suporta **retificações retroativas** (ex: legislação ou erro)
-- Melhora **conformidade com regras de negócio** e exigências jurídicas
-- Habilita **análises temporais** como "Qual seria o valor em vigor em 01/07/2024?"
+| Aspecto         | System-Time                     | Business-Time                       |
+|------------------|----------------------------------|--------------------------------------|
+| Controlado por   | DB2 automaticamente             | Aplicação ou lógica de negócio       |
+| Para que serve?  | Auditar mudanças físicas        | Representar vigência do mundo real   |
+| Alterado quando? | Sempre que linha for alterada   | Quando vigência de negócio mudar     |
+| Exemplo prático  | Gravar que um valor foi alterado em 20/06/2025 | Representar que o valor vale a partir de 01/01/2026 |
 
 ---
 
-### 🔬 4.3 Como funciona?
+### 🧭 4.3 Casos de uso típicos
 
-#### Intervalo de validade
+- Tabelas de preços com vigência futura
+- Regras contratuais válidas por períodos específicos
+- Mudança de alíquotas de impostos com data planejada
+- Suspensões ou inclusões retroativas em contratos
 
-Duas colunas são utilizadas para indicar a vigência da linha:
+---
 
-| Coluna     | Significado                         |
-|------------|--------------------------------------|
-| `valid_start` | Data de início da vigência da linha |
-| `valid_end`   | Data de fim da vigência da linha    |
+### 🛠️ 4.4 Como funciona?
 
-Essas colunas podem ser **do tipo DATE ou TIMESTAMP**, conforme a granularidade desejada.
+- O DBA define colunas de vigência: `vig_inicio`, `vig_fim`
+- A cláusula `PERIOD BUSINESS_TIME` é usada para informar que essas colunas controlam o período
+- O DB2 valida automaticamente as cláusulas `FOR BUSINESS_TIME` nas queries
+- A responsabilidade de manutenção da vigência é da **aplicação**
 
-#### Declaração temporal
+---
+
+### 🧪 4.5 Exemplo prático
 
 ```sql
-PERIOD BUSINESS_TIME (valid_start, valid_end)
-```
-
-Diferente das system-time, o **banco não preenche nem atualiza os valores** dessas colunas. A **aplicação é responsável** por definir os períodos de validade.
-
----
-
-### 🛠️ 4.4 Exemplo prático
-
-```sql
-CREATE TABLE tarifa (
-   id_tarifa     INTEGER NOT NULL,
-   valor         DECIMAL(10,2),
-   vigencia_ini  DATE NOT NULL,
-   vigencia_fim  DATE NOT NULL,
-   PERIOD BUSINESS_TIME (vigencia_ini, vigencia_fim),
-   PRIMARY KEY (id_tarifa, vigencia_ini)
+CREATE TABLE plano_saude (
+   id_plano       INTEGER NOT NULL,
+   descricao      VARCHAR(100),
+   vig_inicio     DATE NOT NULL,
+   vig_fim        DATE NOT NULL,
+   PERIOD BUSINESS_TIME (vig_inicio, vig_fim),
+   PRIMARY KEY (id_plano, vig_inicio)
 );
 ```
 
-#### Inserções com datas futuras
+A cláusula `PERIOD BUSINESS_TIME` declara o par de colunas que define o tempo de negócio.
+
+---
+
+### ⏳ 4.6 Manipulação de vigência
+
+#### Inclusão futura
 
 ```sql
--- Tarifa em vigor a partir de 2025
-INSERT INTO tarifa VALUES (1, 150.00, '2025-01-01', '9999-12-31');
+INSERT INTO plano_saude
+VALUES (1, 'Plano Ouro', '2026-01-01', '9999-12-31');
 ```
 
-#### Atualização com divisão de vigência
+#### Encerramento parcial
 
 ```sql
--- Atualizar valor a partir de 2026, sem apagar histórico
-UPDATE tarifa
-SET vigencia_fim = '2025-12-31'
-WHERE id_tarifa = 1 AND vigencia_ini = '2025-01-01';
-
-INSERT INTO tarifa VALUES (1, 170.00, '2026-01-01', '9999-12-31');
+UPDATE plano_saude
+SET vig_fim = '2025-12-31'
+WHERE id_plano = 1 AND vig_inicio = '2024-01-01';
 ```
 
----
+#### Correção retroativa
 
-### 🧠 4.5 Como modelar no PowerDesigner
+```sql
+INSERT INTO plano_saude
+VALUES (1, 'Plano Ouro Corrigido', '2023-01-01', '2023-12-31');
+```
 
-Em modelos conceituais e lógicos:
-
-- Criar dois atributos: `vigencia_ini`, `vigencia_fim` ou equivalente
-- Anotar como "Business Validity Period"
-- Definir claramente que a aplicação controlará os valores
-
-No modelo físico:
-
-- Usar `DATE` ou `TIMESTAMP(12)` conforme necessidade
-- Criar **constraints de integridade temporal** (não nativas)
-- Declarar `PERIOD BUSINESS_TIME (...)` no campo "Check Parameters" ou "Table Options"
-- Simular indexação por período, se necessário
+🧠 Aqui, você está **inserindo dados para um período já encerrado**, algo que **só é possível com Business-Time**.
 
 ---
 
-### 🔎 4.6 Considerações técnicas
+### 🧬 4.7 Validação de sobreposição (opcional)
 
-| Aspecto | Observações |
-|--------|-------------|
-| Controle de vigência | Aplicação define. DB2 **não atualiza automaticamente** os períodos |
-| Integridade | Deve-se evitar sobreposição de períodos com chaves compostas ou constraints |
-| Performance | Avaliar uso de **índices compostos** incluindo colunas de vigência |
-| Exposição de dados | Usar views para controlar que apenas registros "vigentes" sejam mostrados |
+O DB2 **não proíbe sobreposição de vigências**, mas você pode implementar lógica customizada via:
 
----
-
-### 📎 4.7 Glossário aplicado
-
-- **Business Time**: Intervalo definido pela aplicação para refletir a validade de uma informação
-- **PERIOD BUSINESS_TIME**: Comando SQL que marca duas colunas como intervalo temporal de negócio
-- **Retroatividade**: Possibilidade de corrigir dados anteriores com nova versão sobreposta
-- **Vigência**: Período em que determinada regra ou valor é válida sob o ponto de vista do negócio
+- Trigger
+- Procedure de validação antes do insert/update
+- Constraint baseada em função temporal (em versões mais recentes)
 
 ---
 
-# Tabelas Temporais no DB2 for z/OS
+### 🧰 4.8 Modelagem no PowerDesigner
 
-Documentação técnica especializada, orientada à implementação, auditoria e diagnóstico em ambientes críticos e regulados. Fundamentada em documentação oficial da IBM, práticas consolidadas e experiência real em produção.
+#### Modelo lógico
+
+- Criar colunas `vig_inicio` e `vig_fim` com semântica clara
+- Marcar como “validity period” ou “business temporal” (via extended attribute)
+- Indicar na documentação que a manutenção é feita pela aplicação
+
+#### Modelo físico
+
+- Declarar explicitamente:
+
+```sql
+PERIOD BUSINESS_TIME (vig_inicio, vig_fim)
+```
+
+- Incluir `vig_inicio` na chave primária ou índice clusterizado, se necessário
+
+---
+
+### 📊 4.9 Consultas com Business-Time
+
+```sql
+SELECT * FROM plano_saude
+FOR BUSINESS_TIME AS OF DATE('2025-07-01');
+```
+
+> Retorna a versão vigente no negócio na data consultada.
+
+```sql
+SELECT * FROM plano_saude
+FOR BUSINESS_TIME BETWEEN DATE('2023-01-01') AND DATE('2024-12-31');
+```
+
+> Consulta que abrange múltiplas vigências.
+
+---
+
+### 🔍 4.10 Considerações técnicas
+
+| Aspecto                   | Detalhe                                                              |
+|----------------------------|----------------------------------------------------------------------|
+| Não possui histórico       | DB2 não armazena versões anteriores automaticamente                  |
+| Requer controle da app     | Inserções e atualizações precisam cuidar da integridade temporal     |
+| Pode conter vigências futuras | Sim, inclusive com datas ainda não iniciadas                        |
+| Aceita sobreposição        | Sim, mas isso pode ser indesejado — controlar via lógica externa     |
+| Chave composta recomendada | PK envolvendo `id` + `vig_inicio` para evitar duplicação de vigência |
+
+---
+
+### 📎 4.11 Glossário aplicado
+
+- **Business-Time**: Linha do tempo que representa a vigência do dado para fins de negócio
+- **Vigência**: Intervalo de início e fim da validade do registro na visão do processo de negócio
+- **Retroatividade**: Inclusão de registros com datas anteriores à data atual
+- **Encerramento parcial**: Terminar um registro vigente antes da data planejada
+- **Correção histórica**: Ajustar períodos anteriores sem apagar o dado original
+
+---
+
+> **Nota:** Tabelas com Business-Time são especialmente úteis em **cenários regulados, contratos públicos e sistemas de benefícios**, onde a rastreabilidade de validade futura e retroativa é mandatória.
+
 
 ---
 
