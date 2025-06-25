@@ -536,8 +536,160 @@ Consultas como `FOR SYSTEM_TIME AS OF` ou `FOR BUSINESS_TIME BETWEEN` podem se t
 
 ## 7. Alterações na Estrutura e Impactos
 
-(Será reestruturado no próximo ciclo com base neste novo padrão)
+### 📌 7.1 Introdução
 
+Alterações em tabelas temporais exigem atenção redobrada por parte do DBA. Diferentemente de tabelas convencionais, as temporal tables estão **acopladas a mecanismos internos do DB2** que gerenciam versionamento, histórico e integridade temporal.
+
+Realizar alterações incorretas pode:
+
+- Invalidar o histórico
+- Quebrar o versionamento automático
+- Impedir consultas temporais
+- Romper conformidade regulatória
+
+---
+
+### 🛠️ 7.2 Tipos de alteração e suas implicações
+
+#### 🔧 Adição de colunas
+
+Permitido **com restrições**:
+
+```sql
+ALTER TABLE cliente ADD COLUMN email VARCHAR(255);
+```
+
+🧠 **Impacto técnico**:
+
+- A nova coluna será **adicionada tanto à tabela base quanto à tabela de histórico**
+- O valor será `NULL` nos registros históricos anteriores à inclusão
+- Não quebra o versionamento
+
+---
+
+#### 🧨 Alteração de tipo de coluna temporal
+
+**NÃO PERMITIDO diretamente** se a coluna estiver declarada em `PERIOD SYSTEM_TIME` ou `PERIOD BUSINESS_TIME`.
+
+Exemplo proibido:
+
+```sql
+ALTER TABLE contrato ALTER COLUMN sys_start SET DATA TYPE TIMESTAMP(6); -- ERRO
+```
+
+🔎 Para alterar:
+
+1. Remover versionamento
+2. Alterar a coluna
+3. Reconfigurar versionamento
+
+⚠️ **Esse processo implica perda de histórico ativo. Precisa ser documentado, versionado e validado.**
+
+---
+
+#### 🔄 Renomear colunas temporais
+
+Permitido apenas se **a coluna for removida do período temporal antes da renomeação.**
+
+Etapas:
+
+```sql
+ALTER TABLE cliente DROP PERIOD SYSTEM_TIME;
+ALTER TABLE cliente RENAME COLUMN row_end TO row_fim;
+ALTER TABLE cliente ADD PERIOD SYSTEM_TIME (row_begin, row_fim);
+```
+
+📌 Atenção:
+- A tabela de histórico deve ser atualizada também
+- Views, procedures e triggers que utilizem essas colunas precisam ser revistos
+
+---
+
+#### ❌ Drop de colunas temporais
+
+Não permitido diretamente.
+
+É necessário primeiro desativar o versionamento:
+
+```sql
+ALTER TABLE cliente DROP VERSIONING;
+ALTER TABLE cliente DROP PERIOD SYSTEM_TIME;
+ALTER TABLE cliente DROP COLUMN row_end;
+```
+
+💡 Dica profissional: **nunca descartar colunas temporais sem backup lógico completo e sem uma política formal de retenção.**
+
+---
+
+### 📂 7.3 Alterações na tabela de histórico
+
+A tabela de histórico deve ser **estruturalmente compatível** com a tabela base.
+
+#### ❗ Restrições
+
+- Não pode ter **constraints adicionais** (PK, FK)
+- Não pode conter **colunas extras** não presentes na base
+- Não pode ter **triggers**
+
+📌 Toda alteração na base deve ser **replicada manualmente** na tabela de histórico.
+
+---
+
+### 🔒 7.4 Versão e proteção de dados históricos
+
+O versionamento é sensível a qualquer alteração de estrutura. Por isso, recomenda-se:
+
+- Criar **procedimentos de auditoria de DDL**
+- Manter **controle de versões de scripts de estrutura**
+- Usar **ferramentas de diff físico/lógico** (como DB2 Administration Tool ou PowerDesigner compare)
+
+---
+
+### 🧠 7.5 Estratégia segura de alteração
+
+```text
+1. Fazer backup lógico da tabela base e da tabela de histórico
+2. Suspender aplicações que gravam na tabela (se necessário)
+3. Desativar versionamento
+4. Realizar alterações desejadas (DDL)
+5. Revalidar integridade temporal
+6. Reconfigurar versionamento
+7. Documentar as alterações no repositório de controle de mudança
+```
+
+---
+
+### 📈 7.6 Impactos no PowerDesigner
+
+No modelo físico:
+
+- Alterações em colunas `row_begin`, `row_end`, `vigencia_ini`, `vigencia_fim` devem ser validadas com dependências
+- PowerDesigner **não replica automaticamente** as alterações na tabela de histórico; o DBA deve manter a consistência
+
+💡 **Recomenda-se associar ambas as tabelas em um sub-modelo "Temporal Set" com documentação cruzada.**
+
+---
+
+### 🧯 7.7 Impactos operacionais e de conformidade
+
+| Área              | Impacto potencial                                          |
+|-------------------|------------------------------------------------------------|
+| Auditoria         | Quebra de histórico pode invalidar evidências              |
+| LGPD / Regulatórios | Perda de rastreabilidade de alterações em dados pessoais  |
+| Diagnóstico        | Impossibilidade de reconstruir eventos passados            |
+| Segurança          | Redução da capacidade de detectar ações suspeitas          |
+| Homologação        | Necessidade de testagem extensiva após mudanças            |
+
+---
+
+### 📎 7.8 Glossário aplicado
+
+- **Versionamento ativo**: Estado em que a tabela está com controle temporal habilitado
+- **DROP VERSIONING**: Comando que desativa o versionamento e desconecta a tabela de histórico
+- **DDL temporal**: Conjunto de operações DDL que afetam a definição de tabelas temporais
+- **Histórico lógico**: Registro contínuo de versões dos dados em conformidade com System-Time
+
+---
 ---
 
 ## 8. Boas Práticas e Cuidados Operacionais
