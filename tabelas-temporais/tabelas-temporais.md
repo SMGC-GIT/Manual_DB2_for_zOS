@@ -256,11 +256,230 @@ No modelo físico:
 
 ---
 
-## 5. Bitemporal Tables (System + Business Time)
+# Tabelas Temporais no DB2 for z/OS
 
-(Conteúdo será aprimorado no próximo ciclo conforme novo padrão)
+Documentação técnica especializada, orientada à implementação, auditoria e diagnóstico em ambientes críticos e regulados. Fundamentada em documentação oficial da IBM, práticas consolidadas e experiência real em produção.
 
 ---
+
+## Índice
+
+1. [Conceito e Finalidade das Temporal Tables](#1-conceito-e-finalidade-das-temporal-tables)  
+2. [Tipos de Tabelas Temporais](#2-tipos-de-tabelas-temporais)  
+3. [System-Time Temporal Tables](#3-system-time-temporal-tables)  
+4. [Business-Time Temporal Tables](#4-business-time-temporal-tables)  
+5. [Bitemporal Tables (System + Business Time)](#5-bitemporal-tables-system--business-time)  
+6. [Consultas Temporais](#6-consultas-temporais)  
+7. [Alterações na Estrutura e Impactos](#7-alterações-na-estrutura-e-impactos)  
+8. [Boas Práticas e Cuidados Operacionais](#8-boas-práticas-e-cuidados-operacionais)  
+9. [Referências Oficiais](#9-referências-oficiais)  
+
+---
+
+## 1. Conceito e Finalidade das Temporal Tables
+
+*(ver capítulo anterior para detalhes)*
+
+---
+
+## 2. Types de Tabelas Temporais
+
+*(ver capítulo anterior para detalhes)*
+
+---
+
+## 3. System-Time Temporal Tables
+
+*(ver capítulo anterior para versão refinada com explicações, exemplos e modelagem)*
+
+---
+
+## 4. Business-Time Temporal Tables
+
+*(ver capítulo anterior para versão refinada com explicações, exemplos e modelagem)*
+
+---
+
+## 5. Bitemporal Tables (System + Business Time)
+
+### 📌 5.1 O que é?
+
+**Bitemporal Table** é uma tabela que combina dois eixos temporais distintos:
+
+1. **System Time** – refere-se ao momento em que os dados foram armazenados ou modificados no sistema (gerenciado automaticamente pelo DB2).
+2. **Business Time** – representa o período em que a informação é válida para o negócio (controlado pela aplicação).
+
+Esse modelo fornece **visibilidade histórica completa**, tanto sob a ótica do **tempo operacional (sistema)** quanto do **tempo de validade negocial**, permitindo análises temporais precisas, comparações e auditorias robustas.
+
+---
+
+### 💡 5.2 Por que usar?
+
+- Permite **consultas de reconstrução total de contexto** (“o que sabíamos em 10/01/2023 sobre o contrato que valia para julho de 2023?”)
+- Suporta **atualizações retroativas** e **vigências futuras**, mantendo integridade dos dois tempos
+- Essencial para compliance em ambientes com exigência de rastreabilidade dupla
+- Evita conflito entre o "valor válido" e o "valor conhecido"
+
+---
+
+### 🔬 5.3 Como funciona?
+
+#### Estrutura da tabela:
+
+| Coluna         | Finalidade                           | Gerenciado por |
+|----------------|--------------------------------------|----------------|
+| `sys_start`    | Início da validade no sistema        | DB2            |
+| `sys_end`      | Fim da validade no sistema           | DB2            |
+| `bus_start`    | Início da validade no negócio        | Aplicação      |
+| `bus_end`      | Fim da validade no negócio           | Aplicação      |
+
+#### Declarações SQL:
+
+```sql
+PERIOD SYSTEM_TIME (sys_start, sys_end),
+PERIOD BUSINESS_TIME (bus_start, bus_end)
+```
+
+- O DB2 cuida automaticamente da manutenção da **System-Time**
+- A aplicação é responsável pela **Business-Time**
+
+---
+
+### 🧪 5.4 Exemplo de criação
+
+```sql
+CREATE TABLE contrato (
+   id_contrato   INTEGER,
+   status        CHAR(1),
+   sys_start     TIMESTAMP(12) GENERATED ALWAYS AS ROW BEGIN,
+   sys_end       TIMESTAMP(12) GENERATED ALWAYS AS ROW END,
+   PERIOD SYSTEM_TIME (sys_start, sys_end),
+   vig_inicio    DATE NOT NULL,
+   vig_fim       DATE NOT NULL,
+   PERIOD BUSINESS_TIME (vig_inicio, vig_fim),
+   PRIMARY KEY (id_contrato, vig_inicio)
+)
+WITH SYSTEM VERSIONING;
+```
+
+#### Histórico:
+
+```sql
+CREATE TABLE contrato_hist LIKE contrato;
+```
+
+#### Ativação do versionamento:
+
+```sql
+ALTER TABLE contrato
+   ADD VERSIONING USE HISTORY TABLE contrato_hist;
+```
+
+---
+
+### 🧠 5.5 Como modelar no PowerDesigner
+
+#### Modelo lógico
+
+- Representar claramente os dois pares de datas:
+  - `sys_start`, `sys_end` (System Time)
+  - `vig_inicio`, `vig_fim` (Business Time)
+- Usar **anotações ou stereotypes** para marcar "system managed" vs "business managed"
+- Atribuir roles nas colunas (`validity period`, `audit period`)
+
+#### Modelo físico
+
+- Usar `TIMESTAMP(12)` para `sys_*`, e `DATE` ou `TIMESTAMP` para `vig_*`
+- Declarar ambas as cláusulas `PERIOD SYSTEM_TIME` e `PERIOD BUSINESS_TIME`
+- Anotar a relação com a tabela de histórico
+- Validar impacto em chaves primárias e índices: incluir `vig_inicio` como parte da PK costuma ser prática recomendada
+
+---
+
+### 🧮 5.6 Exemplo de uso avançado
+
+#### Atualização com vigência futura:
+
+```sql
+-- Termina vigência atual
+UPDATE contrato
+SET vig_fim = '2025-12-31'
+WHERE id_contrato = 100 AND vig_inicio = '2024-01-01';
+
+-- Nova versão válida a partir de 2026
+INSERT INTO contrato VALUES (
+   100, 'A',
+   DEFAULT, DEFAULT, -- sys_start/sys_end
+   '2026-01-01', '9999-12-31'
+);
+```
+
+➡️ O DB2 registrará automaticamente a versão anterior na `contrato_hist` com a data do sistema, enquanto a vigência de negócio é controlada pela aplicação.
+
+---
+
+### 🔍 5.7 Consultas bitemporais
+
+```sql
+SELECT * FROM contrato
+FOR SYSTEM_TIME AS OF '2024-03-15-10.00.00'
+FOR BUSINESS_TIME AS OF '2024-07-01';
+```
+
+🧠 Isso responde:  
+> *"Qual era o status do contrato, que estaria vigente em 01/07/2024, de acordo com o que o sistema conhecia em 15/03/2024 às 10h?"*
+
+---
+
+### 🔎 5.8 Considerações técnicas
+
+| Aspecto                  | Detalhes                                                                 |
+|--------------------------|--------------------------------------------------------------------------|
+| Integridade temporal     | Requer lógica de aplicação ou processos de consistência para evitar sobreposição de períodos |
+| Histórico                | O DB2 grava automaticamente apenas o `SYSTEM_TIME`                      |
+| Views e exposições       | Recomendado encapsular a complexidade com **views temporais**            |
+| Performance              | Índices devem ser avaliados cuidadosamente para colunas temporais       |
+| Diagnóstico              | Pode ser usado para identificar **erros retroativos**, **fraudes**, ou **registros indevidos** |
+
+---
+
+### 📎 5.9 Glossário aplicado
+
+- **Bitemporalidade**: Capacidade de registrar e consultar dados em dois eixos temporais: sistema e negócio
+- **System Time**: Controle automático do DB2 sobre quando os dados foram inseridos ou alterados
+- **Business Time**: Vigência do dado sob a ótica da aplicação ou do negócio
+- **FOR SYSTEM_TIME / FOR BUSINESS_TIME**: Cláusulas SQL que permitem consultas retrospectivas ou hipotéticas
+
+---
+
+## 6. Consultas Temporais
+
+(Será reestruturado no próximo ciclo com base neste novo padrão)
+
+---
+
+## 7. Alterações na Estrutura e Impactos
+
+(Será reestruturado no próximo ciclo com base neste novo padrão)
+
+---
+
+## 8. Boas Práticas e Cuidados Operacionais
+
+(Será reestruturado no próximo ciclo com base neste novo padrão)
+
+---
+
+## 9. Referências Oficiais
+
+- [IBM Documentation - DB2 13 for z/OS: Bitemporal Tables](https://www.ibm.com/docs/en/db2-for-zos/13?topic=data-temporal-tables-bitemporal)  
+- [IBM Redbooks: Managing Time-Based Data with Temporal Tables in DB2 for z/OS](https://www.redbooks.ibm.com/abstracts/sg248079.html)  
+- [Temporal Tables SQL Reference](https://www.ibm.com/docs/en/db2-for-zos/13?topic=reference-sql-statements)  
+
+---
+
+> **Nota:** A bitemporalidade representa o estado da arte em controle temporal de dados. Seu uso exige planejamento, compreensão do modelo de negócio e alinhamento entre áreas de dados, auditoria e sistemas. O próximo capítulo detalhará *consultas temporais combinadas e estratégias de indexação para alta performance*.
+
 
 ## 6. Consultas Temporais
 
