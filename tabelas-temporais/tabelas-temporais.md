@@ -18,6 +18,7 @@ Documentação técnica especializada, orientada à implementação, auditoria e
 10. [Templates Reutilizáveis – Modelos Prontos com Explicação](#10-templates-reutilizáveis--modelos-prontos-com-explicação)  
 11. [Checklist Operacional – Guia para Implementação e Manutenção](#11-checklist-operacional--guia-para-implementação-e-manutenção)
 12. [Avaliação de Candidatura de Tabelas a Temporal Table](#12-avaliação-de-candidatura-de-tabelas-a-temporal-table)
+13. [Verificação Técnica de Temporalidade em Tabelas Existentes](#13-verificação-técnica-de-temporalidade-em-tabelas-existentes)
 
 ---
 
@@ -1226,4 +1227,134 @@ A decisão de tornar uma tabela temporal **não deve ser automática**. Requer r
 
 ---
 
+# 13. Verificação Técnica de Temporalidade em Tabelas Existentes
+
+## Objetivo
+
+Este capítulo apresenta os meios técnicos para identificar se uma tabela do DB2 for z/OS está configurada como temporal. Essa verificação é essencial para:
+
+- Análises de impacto durante alterações de estrutura
+- Auditorias e verificações de rastreabilidade
+- Diagnóstico de performance em queries temporais
+- Atualização do modelo de dados em ferramentas como PowerDesigner
+
+---
+
+## 13.1 Entendimento do Catálogo
+
+O DB2 mantém metadados sobre a temporalidade das tabelas nos catálogos `SYSIBM.SYSTABLES` e `SYSIBM.SYSPERIODS`. As colunas mais relevantes são:
+
+| Coluna           | Tabela                 | Descrição                                                                 |
+|------------------|------------------------|---------------------------------------------------------------------------|
+| `TEMPORALTYPE`   | `SYSIBM.SYSTABLES`     | Indica o tipo de temporalidade (`S`, `B`, `T` ou nulo)                    |
+| `HISTORYTABLE`   | `SYSIBM.SYSTABLES`     | Nome da tabela de histórico (caso System-Time ou Bi-Temporal)             |
+| `PERIODNAME`     | `SYSIBM.SYSPERIODS`    | Nome lógico do período (ex: SYSTEM_TIME, BUSINESS_TIME)                   |
+| `PERIODTYPE`     | `SYSIBM.SYSPERIODS`    | Tipo do período (`S` = System, `B` = Business)                            |
+| `BEGINCOLNAME`   | `SYSIBM.SYSPERIODS`    | Nome da coluna de início do período temporal                             |
+| `ENDCOLNAME`     | `SYSIBM.SYSPERIODS`    | Nome da coluna de fim do período temporal                                |
+
+---
+
+## 13.2 Consulta para Verificar se a Tabela é Temporal
+
+```sql
+-- Consulta principal para detectar se a tabela é temporal
+SELECT name AS tabela,
+       temporaltype,
+       CASE temporaltype
+         WHEN 'S' THEN 'System-Time'
+         WHEN 'B' THEN 'Business-Time'
+         WHEN 'T' THEN 'Bitemporal'
+         ELSE 'Não é temporal'
+       END AS tipo_temporal,
+       historytable
+FROM SYSIBM.SYSTABLES
+WHERE name = 'NOME_DA_TABELA' 
+  AND creator = 'ESQUEMA';
+```
+
+**Interpretação:**
+
+- `temporaltype = 'S'` → System-Time
+- `temporaltype = 'B'` → Business-Time
+- `temporaltype = 'T'` → Bi-Temporal
+- `historytable` → Nome da tabela de histórico associada (apenas para System ou Bi-Temporal)
+
+---
+
+## 13.3 Consulta aos Períodos Declarados
+
+```sql
+-- Consulta para verificar os períodos declarados na tabela
+SELECT tb.name AS tabela,
+       pr.periodname,
+       pr.periodtype,
+       pr.begincolname,
+       pr.endcolname
+FROM SYSIBM.SYSTABLES tb
+JOIN SYSIBM.SYSPERIODS pr 
+  ON tb.creator = pr.tbcreator 
+ AND tb.name = pr.tbname
+WHERE tb.name = 'NOME_DA_TABELA'
+  AND tb.creator = 'ESQUEMA';
+```
+
+**Explicações:**
+
+- `periodtype = 'S'` → Período SYSTEM_TIME (mantido automaticamente)
+- `periodtype = 'B'` → Período BUSINESS_TIME (mantido pela aplicação)
+- `begincolname` e `endcolname` → colunas usadas para registrar os limites do tempo
+
+---
+
+## 13.4 Exemplo Real
+
+```text
+Tabela: CLIENTE
+ESQUEMA: CRMDB
+
+Resultado:
+TABELA  | TEMPORALTYPE | TIPO_TEMPORAL | HISTORYTABLE
+--------|--------------|----------------|---------------
+CLIENTE | T            | Bitemporal     | CLIENTE_HIST
+
+TABELA  | PERIODNAME   | PERIODTYPE | BEGINCOLNAME | ENDCOLNAME
+--------|--------------|------------|---------------|-------------
+CLIENTE | SYSTEM_TIME  | S          | ROW_BEGIN     | ROW_END
+CLIENTE | BUSINESS_TIME| B          | VIG_INICIO    | VIG_FIM
+```
+
+---
+
+## 13.5 Observações Técnicas
+
+- Uma tabela pode conter colunas como `ROW_BEGIN` e `ROW_END`, mas **não ser temporal** se não houver `PERIOD SYSTEM_TIME` declarado.
+- Temporalidade **ativa** exige:
+  - declaração do período (`PERIOD ...`)
+  - ativação explícita com `ALTER TABLE ... ADD VERSIONING`
+- A ausência de `historytable` indica que o **versionamento automático não está em uso**, mesmo que o período exista.
+
+---
+
+## 13.6 Uso em Ferramentas de Modelagem (PowerDesigner)
+
+> 💡 Recomendações para representação:
+
+- Adicione colunas `ROW_BEGIN`, `ROW_END`, `TRANSACTION_ID`, `VIG_INICIO`, `VIG_FIM` explicitamente no Modelo Físico.
+- Use o **estereótipo `<<Temporal>>`** na entidade ou comentário no diagrama lógico.
+- Se desejar destacar visualmente:
+  - Fundo amarelo → Business-Time  
+  - Fundo azul → System-Time  
+  - Fundo verde → Bi-Temporal  
+- Relacione a tabela base à sua tabela de histórico com seta pontilhada (sem FK real).
+
+---
+
+## 13.7 Boas Práticas
+
+- Sempre consulte essas views **antes de alterar tabelas**: DDLs podem exigir `DROP VERSIONING` temporário.
+- Documente tabelas temporais em repositório próprio ou dicionário de dados.
+- Inclua verificações nos scripts de versionamento e pipelines de CI/CD.
+
+---
 
