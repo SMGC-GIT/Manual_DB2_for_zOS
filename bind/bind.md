@@ -711,23 +711,39 @@ REBIND PACKAGE('PKGTRANSACOES')
 
 ## 10. Glossário Técnico
 
-| Termo           | Definição |
-|------------------|----------|
-| **BIND**         | Processo que converte o DBRM em um package executável no DB2 |
-| **DBRM**         | Módulo de solicitação de banco de dados, gerado na pré-compilação |
-| **PACKAGE**      | Unidade modular de execução no DB2, mais moderno que PLAN |
-| **PLAN**         | Objeto legado que agregava DBRMs para execução |
-| **COLLECTION**   | Conjunto lógico de packages agrupados sob um nome comum |
-| **QUALIFIER**    | Esquema substituto usado em tempo de execução no SQL |
-| **APPLCOMPAT**   | Compatibilidade da aplicação com versão do DB2 |
-| **EXPLAIN**      | Recurso que grava o plano de acesso para análise de performance |
-| **RELEASE**      | Define quando os recursos são liberados (COMMIT ou DEALLOCATE) |
-| **ISOLATION**    | Nível de isolamento de transações SQL (CS, RR, UR, RS) |
-| **RUNSTATS**     | Coleta estatísticas das tabelas para o otimizador do DB2 |
-| **REBIND**       | Reprocessa o package para gerar novo plano de acesso |
-| **OWNER**        | Usuário proprietário do objeto BIND |
-| **VALIDATE**     | Modo de verificação de permissões: BIND ou RUN |
-| **LASTUSED**     | Campo que indica a última execução do package |
+| Termo            | Definição |
+|------------------|-----------|
+| **BIND**         | Processo que converte o DBRM em um package executável no DB2. É a etapa em que se gera o plano de acesso estático. |
+| **REBIND**       | Reprocessa um package existente para gerar um novo plano de acesso, sem necessidade de recompilar o programa. |
+| **DBRM**         | Database Request Module – gerado na pré-compilação de programas contendo SQL. Contém as instruções SQL que serão bindadas. |
+| **PACKAGE**      | Unidade modular de execução no DB2. Contém o plano de acesso estático. Substitui o modelo antigo baseado em PLANs. |
+| **PLAN**         | Objeto legado que agregava DBRMs diretamente. Hoje, referencia packages através do `PKLIST`. Ainda usado em ambientes batch ou CICS. |
+| **COLLECTION**   | Conjunto lógico de packages agrupados sob um nome comum. Permite organização por sistema, release ou ambiente. |
+| **QUALIFIER**    | Esquema substituto usado em tempo de execução. Define o schema default para os objetos SQL não totalmente qualificados. |
+| **OWNER**        | Usuário proprietário do package. Controla permissões e auditoria. |
+| **APPLCOMPAT**   | Parâmetro que define a compatibilidade da aplicação com uma versão específica do DB2. Evita regressões e permite uso de novas funcionalidades. |
+| **EXPLAIN**      | Recurso que grava na `PLAN_TABLE` os detalhes do plano de acesso escolhido pelo otimizador. Usado para tuning e auditoria. |
+| **ISOLATION**    | Define o nível de isolamento das transações SQL: `CS` (Cursor Stability), `RR` (Repeatable Read), `UR` (Uncommitted Read), `RS` (Read Stability). |
+| **RELEASE**      | Define quando os locks e recursos são liberados: `COMMIT` (ao fim da transação) ou `DEALLOCATE` (ao fim da thread). |
+| **VALIDATE**     | Controla o momento de validação de permissões: `BIND` (no bind) ou `RUN` (em tempo de execução). |
+| **RUNSTATS**     | Comando que coleta estatísticas de tabelas e índices para o otimizador do DB2. Influencia diretamente o plano gerado no BIND. |
+| **LASTUSED**     | Campo na `SYSPACKAGE` que indica a última data de execução do package. Fundamental para gestão de limpeza e manutenção. |
+| **COPY PACKAGE** | Comando que cria uma cópia do package atual com um `COPYID`. Permite fallback seguro após alterações. |
+| **COPYID**       | Identificador lógico de versões de package geradas com `COPY PACKAGE`. Usado com `REBIND VERSION(COPYID)` para restaurar. |
+| **FREE PACKAGE** | Remove um package (ou versão específica) do catálogo DB2. Usado em políticas de limpeza. |
+| **PKLIST**       | Lista de packages associados a um `PLAN`. Informado durante `BIND PLAN`. |
+| **ACTION(REPLACE)** | Parâmetro que permite sobrescrever um package ou plan existente sem fazer DROP. |
+| **ACQUIRE**      | Define quando os locks são adquiridos: `USE` (conforme necessário) ou `ALLOCATE` (logo no início da execução). |
+| **PLAN_TABLE**   | Tabela usada pelo `EXPLAIN` para armazenar os planos de acesso detalhados. Essencial para tuning e investigação de performance. |
+| **VALID**        | Campo da `SYSPACKAGE` que indica se o package está válido (`Y`) ou inválido (`N`). Pacotes inválidos causam falhas em runtime. |
+| **BINDADD**      | Privilégio que autoriza um usuário a executar comandos `BIND PACKAGE` e `BIND PLAN`. Deve ser concedido com cautela. |
+| **REOPT**        | Parâmetro usado em SQL dinâmico que define quando o otimizador deve reavaliar parâmetros: `ALWAYS`, `ONCE`, `NONE`. |
+| **SYSPACKAGE**   | Tabela do catálogo DB2 que armazena os metadados dos packages (nome, flags, validação, parâmetros, etc.). |
+| **SYSPACKCOPY**  | Tabela que armazena versões anteriores de packages copiadas com `COPY PACKAGE`. Permite rollback. |
+| **SYSPACKDEP**   | Tabela que registra as dependências do package (tabelas, views, índices, aliases, funções, etc.). |
+| **SYSPACKAUTH**  | Define quem pode executar ou fazer bind/rebind de um package. Controla permissões. |
+| **SYSPACKSTMT**  | Contém todas as instruções SQL estáticas do package, com nível de detalhe por statement. |
+| **SYSPACKLIST**  | Mapeia os packages contidos em um `PLAN` (via `PKLIST`). |
 
 ---
 
