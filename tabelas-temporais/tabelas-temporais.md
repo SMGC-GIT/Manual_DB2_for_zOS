@@ -690,16 +690,130 @@ No modelo físico:
 - **Histórico lógico**: Registro contínuo de versões dos dados em conformidade com System-Time
 
 ---
----
 
 ## 8. Boas Práticas e Cuidados Operacionais
 
-(Será reestruturado no próximo ciclo com base neste novo padrão)
+### 📌 8.1 Por que boas práticas são críticas?
+
+Tabelas temporais são **pilares da rastreabilidade e da integridade histórica**. Qualquer falha operacional pode comprometer:
+
+- Conformidade com leis (ex: LGPD, Resolução CMN)
+- Auditorias externas e internas
+- Reconstrução de eventos
+- Diagnóstico técnico em incidentes
+
+Neste capítulo, reunimos práticas consolidadas para garantir robustez e confiabilidade.
+
+---
+
+### 🧱 8.2 Estrutura e Projeto
+
+- 📌 **Planejar a temporalidade na fase de modelagem**
+  - Avaliar se o dado exige controle `SYSTEM`, `BUSINESS`, ou ambos
+  - Indicar explicitamente no PowerDesigner os períodos temporais
+  - Documentar responsabilidade pela manutenção (`DB2` vs `Aplicação`)
+  
+- 🔐 **Separar claramente as tabelas de histórico**
+  - Padronizar nomes: `nome_tabela_hist`
+  - Definir tablespaces e storage classes distintos
+  - Proteger contra escrita direta (ex: revoke insert/update/delete)
+
+- 🧠 **Evitar overuse de temporalidade**
+  - Não tornar "tudo temporal". Use para dados que justificam auditoria, vigência ou reversibilidade.
+  - Avalie alternativas como journaling, CDC ou logs de aplicação
+
+---
+
+### 🚨 8.3 Cuidados com versionamento
+
+- ✅ **Sempre manter a estrutura idêntica entre base e histórico**
+  - Mesmo número, nome e ordem de colunas
+  - Mesmo tipo de dado
+
+- 🛑 **Nunca alterar colunas temporais diretamente com versionamento ativo**
+  - Use DROP VERSIONING + alteração controlada + reativação
+
+- 📋 **Documentar todas as operações DDL e reconfigurações**
+  - Controle de versão de estrutura
+  - Relatórios de alteração em histórico
+
+- 🔁 **Realizar auditoria periódica da consistência do histórico**
+  - Comparar número de versões por chave primária
+  - Verificar datas sobrepostas, nulas ou inconsistentes
+
+---
+
+### 📊 8.4 Performance e indexação
+
+- 🔍 **Indexar colunas de período (`row_end`, `vig_fim`) com inteligência**
+  - Usar índices compostos com chaves de negócio
+  - Validar planos de execução com `EXPLAIN`
+
+- 🚫 **Evitar full scan em histórico desnecessariamente**
+  - Consultas devem ser filtradas por tempo e chave sempre que possível
+
+- 🧮 **Avaliar uso de MQTs (Materialized Query Tables)** para cenários de acesso recorrente e pesado
+
+---
+
+### 🧰 8.5 Operação e manutenção
+
+- 🧯 **Tenha sempre plano de rollback para alterações estruturais**
+  - Export lógico antes de qualquer DROP VERSIONING
+  - Script de recriação da tabela com histórico intacto
+
+- 📦 **Arquivar históricos obsoletos em storage frio**
+  - Retenção pode seguir regra de compliance (ex: 5 anos)
+  - Pode-se particionar por ano ou gerar unloads periódicos
+
+- 🔄 **Automatizar testes de versionamento**
+  - Scripts que inserem, atualizam e validam versionamento ativo
+  - Confirmação da gravação automática no histórico
+
+---
+
+### 🧾 8.6 Auditoria e conformidade
+
+- 📊 **Integrar com ferramentas de data lineage e auditoria**
+  - Registrar quando dados foram modificados e por quem
+  - Temporal Tables + LOG + RACF = rastreabilidade completa
+
+- 🔒 **Controlar acesso à tabela de histórico**
+  - Revoke direto para usuários e aplicações
+  - Acesso apenas via views controladas
+
+- 🧑‍⚖️ **Justificar cada uso de DROP VERSIONING**
+  - Registrar motivo, impacto, responsável e validação posterior
+
+---
+
+### 🔎 8.7 Testes e homologação
+
+- ✅ **Simular casos reais com retroatividade, vigência futura e múltiplas versões**
+- 🧪 **Testar consultas temporais com todas as cláusulas (AS OF, BETWEEN, FROM TO)**
+- 📚 **Reproduzir falhas anteriores e verificar se versão atual mitiga os riscos**
+
+---
+
+### 📎 8.8 Glossário aplicado
+
+- **Versionamento ativo**: Tabela operando com histórico automático gerenciado pelo DB2
+- **Data lineage**: Rastreabilidade de origem e transformações dos dados
+- **Storage frio**: Camada de armazenamento usada para dados acessados com baixa frequência
+- **Rollback temporal**: Capacidade de restaurar o estado de um dado com base em versão anterior
+- **Consistency scan**: Processo de verificação da integridade temporal entre base e histórico
+
+---
+
+> **Nota:** A excelência na operação de temporal tables exige disciplina, padronização e sinergia entre modelagem, desenvolvimento, auditoria e administração de dados. No próximo fechamento, faremos a **análise final do material**, avaliando oportunidades de refinamento nos capítulos anteriores e consolidando diretrizes de uso.
 
 ---
 
 ## 9. Referências Oficiais
 
+- [IBM Best Practices - Temporal Data](https://www.ibm.com/docs/en/db2-for-zos/13?topic=data-best-practices-temporal-tables)  
+- [IBM Security & Auditing Guidelines](https://www.ibm.com/docs/en/db2-for-zos/13?topic=security-auditing-db2)  
+- [IBM Redbooks: DB2 Temporal Tables](https://www.redbooks.ibm.com/abstracts/sg248079.html)  
 - [IBM Documentation - DB2 13 for z/OS: System-period temporal tables](https://www.ibm.com/docs/en/db2-for-zos/13?topic=data-system-period-temporal-tables)  
 - [IBM Redbooks: Managing Time-Based Data with Temporal Tables in DB2 for z/OS](https://www.redbooks.ibm.com/abstracts/sg248079.html)  
 - [IBM SQL Reference](https://www.ibm.com/docs/en/db2-for-zos/13?topic=reference-sql-statements)  
