@@ -1199,6 +1199,76 @@ No painel esquerdo (Browser Tree):
 
 ---
 
+# 11. Visualizando Relacionamentos entre Tabelas
+
+
+### Objetivo
+Entender como o PowerDesigner representa e permite a análise dos relacionamentos entre tabelas no modelo físico (PDM), possibilitando que o DBA visualize a estrutura e navegue entre tabelas relacionadas com clareza.
+
+### Conceito
+
+No PowerDesigner, os relacionamentos entre tabelas (chaves estrangeiras, cardinalidades, dependências) são representados graficamente como linhas conectando entidades. Essas conexões permitem identificar as interações entre dados e são fundamentais para:
+- Validar a integridade referencial.
+- Analisar o impacto de alterações.
+- Navegar no modelo com eficiência.
+
+A correta visualização dos relacionamentos auxilia DBAs na identificação de gargalos, pontos de acoplamento forte e potencial de particionamento.
+
+### Tipos de Relacionamentos Visualizados
+
+- **Identificadores**: Relacionamentos que fazem parte da chave primária.
+- **Não identificadores**: São chaves estrangeiras que não participam da chave primária.
+- **Auto-relacionamentos**: Quando uma tabela se relaciona consigo mesma.
+- **Relacionamentos com cardinalidade 1:N, N:1, e N:N**.
+
+### Navegando pelos Relacionamentos
+
+1. **Expandir relacionamentos**:
+   - No painel de navegação à esquerda (Browser), expanda a seção `References` ou clique com o botão direito em uma tabela e selecione `Go to References`.
+
+2. **Selecionar visualização gráfica**:
+   - No menu superior, vá em **Display Preferences** > **Links**.
+   - Ative ou ajuste a exibição de nomes de constraints, estilo das setas e cardinalidade.
+
+3. **Usar Highlight**:
+   - Clique em uma tabela, pressione `Ctrl` e clique em outra.
+   - Use o botão direito e selecione **Highlight Related Tables** para destacar caminhos de dependência.
+
+4. **Zoom e Pan**:
+   - Utilize a ferramenta de lupa para ampliar regiões densas do modelo.
+   - A ferramenta de `Pan` ajuda na navegação sem perder a referência visual.
+
+### Interpretando os Elementos Visuais
+
+- **Setas sólidas**: Indicam direção do relacionamento (de chave estrangeira para chave primária).
+- **Chave sobre o campo**: Indica que aquele campo é parte da chave primária.
+- **Losangos**: Indicam relacionamentos fracos, geralmente não identificadores.
+- **Cardinalidade 1..1, 0..N, etc.**: Mostram quantos registros podem existir no lado relacionado.
+
+### Sugestões para Ambientes Críticos
+
+- Utilize **cores** para destacar relacionamentos críticos ou sensíveis à performance.
+- Salve **views customizadas** do modelo com diferentes perspectivas: por subsistema, por prioridade, por grau de relacionamento.
+- Ao revisar alterações, sempre reavalie os relacionamentos visuais impactados (Forward Engineering pode alterar ligações inadvertidamente).
+
+### Dica Avançada: Gerando Lista de Relacionamentos
+
+1. Menu `Tools` > `Reports`.
+2. Escolha `List of References`.
+3. Configure os campos: nome da tabela de origem, destino, tipo de relacionamento, etc.
+4. Exporte em formato CSV ou HTML para uso externo.
+
+---
+
+### Links de Referência
+
+```markdown
+- [Documentação oficial do PowerDesigner - Model Relationships](https://www.sap.com/documents/2020/09/9460d77e-8d7b-0010-87a3-c30de2ffd8ff.html)
+- [IBM DB2 for z/OS Concepts - Referential Integrity](https://www.ibm.com/docs/en/db2-for-zos/12?topic=concepts-referential-integrity)
+- [SAP PowerDesigner Tips - Visualizing Table Relationships](https://community.sap.com/topics/powerdesigner)
+- [Relational Modeling Best Practices (IBM Data Management)](https://www.ibm.com/docs/en/datastage/11.5?topic=guide-relational-database-design-best-practices)
+```
+
 
 
 ---
