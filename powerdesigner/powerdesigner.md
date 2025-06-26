@@ -1278,6 +1278,101 @@ No PowerDesigner, a estrutura acima pode ser representada criando uma tabela com
 
 ---
 
+## Capítulo 10 — Alterando Tipos de Dados
+
+Alterar tipos de dados em um modelo físico (PDM) no PowerDesigner exige atenção redobrada, pois envolve tanto aspectos estruturais quanto implicações de compatibilidade com o ambiente de destino (como o DB2 for z/OS). Neste capítulo, abordaremos como realizar alterações seguras, mantendo a integridade do modelo e preparando-o corretamente para sincronização com o banco de dados.
+
+---
+
+### 📌 Objetivo do Capítulo
+
+- Ensinar como localizar e alterar tipos de dados de colunas no modelo físico.
+- Mostrar os impactos da alteração no PDM e como garantir conformidade com DB2 z/OS.
+- Apontar boas práticas e armadilhas comuns.
+
+---
+
+### 🧭 Etapas para Alteração de Tipos de Dados
+
+#### 1. Abrindo o Modelo Físico
+Abra o modelo `.pdm` no PowerDesigner (se já não estiver aberto), conforme descrito no capítulo **4 - Abrindo um Modelo Físico Existente (PDM)**.
+
+#### 2. Navegando até a Tabela Desejada
+No painel esquerdo (Browser Tree):
+- Expanda a seção **Physical Data Model → Tables**.
+- Clique duas vezes na tabela desejada.
+
+#### 3. Localizando o Campo a Ser Alterado
+- Na aba **Columns**, localize a coluna cujo tipo de dado será alterado.
+- Selecione a coluna e clique em **Properties** (botão ou clique com o botão direito > Properties).
+
+#### 4. Alterando o Tipo de Dado
+- Na janela de propriedades da coluna, localize o campo **Data Type**.
+- Escolha o novo tipo de dado desejado.
+- Se o tipo for do DBMS (ex: `CHAR`, `DECIMAL`, `DATE`, etc), selecione diretamente da lista.
+- Em ambientes DB2 z/OS, utilize tipos compatíveis com o zSeries, como:
+  - `CHAR(n)`
+  - `VARCHAR(n)`
+  - `DECIMAL(p,s)`
+  - `INTEGER`
+  - `BIGINT`
+  - `DATE`
+  - `TIMESTAMP`
+
+#### 5. Salvando e Validando
+- Clique em **OK** para aplicar a alteração.
+- Salve o modelo (`Ctrl + S`).
+- Use o menu **Model → Check Model** para validar o impacto da alteração. Corrija qualquer inconsistência apontada.
+
+---
+
+### ⚠️ Impactos e Cuidados
+
+| Consideração Técnica                          | Descrição |
+|----------------------------------------------|-----------|
+| **Conversão de Dados no Banco**              | Alterar tipos de dados pode exigir conversão explícita (CAST) ao aplicar em ambiente real. |
+| **Perda de Precisão ou Truncamento**         | Alterações para tipos menores ou de precisão reduzida devem ser avaliadas com cautela. |
+| **Compatibilidade com Aplicações**           | Sistemas externos que consomem a base podem depender de tipos específicos. |
+| **Script de Deploy**                         | O script SQL gerado (Forward Engineering) refletirá essa alteração. |
+| **Sincronização (Compare Models)**           | Ao comparar modelos para atualizar o banco, o PowerDesigner detectará a alteração e sugerirá os comandos SQL necessários. |
+
+---
+
+### 🧪 Exemplo Prático
+
+**Cenário:** Alterar a coluna `valor_total` de `INTEGER` para `DECIMAL(15,2)` na tabela `FATURAMENTO`.
+
+**Passos:**
+1. Navegue até a tabela `FATURAMENTO`.
+2. Vá para a aba `Columns`.
+3. Selecione `valor_total`, clique em `Properties`.
+4. Altere `Data Type` de `INTEGER` para `DECIMAL(15,2)`.
+5. Clique em `OK` e salve o modelo.
+6. Valide com `Model → Check Model`.
+
+---
+
+### ✅ Boas Práticas
+
+- Sempre valide o modelo após alterações.
+- Documente a alteração (motivo, impacto, dependências).
+- Padronize os tipos de dados para manter coerência no modelo.
+- Em ambientes críticos, envolva times de desenvolvimento e operação antes de promover a alteração para produção.
+- Utilize a funcionalidade **Change History** para rastrear alterações no modelo.
+
+---
+
+### 📚 Referências
+
+```markdown
+- [IBM DB2 for z/OS 13 - Data Types](https://www.ibm.com/docs/en/db2-for-zos/13?topic=columns-data-types)
+- [PowerDesigner Help - Column Properties](https://doc.ispirer.com/sqlways/sybase-powerdesigner-column-properties)
+- [Model Validation - PowerDesigner](https://www.sap.com/documents/2017/04/444402ba-497c-0010-82c7-eda71af511fa.html)
+```
+
+---
+
+
 
 
 
