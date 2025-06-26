@@ -141,7 +141,7 @@ Mesmo não sendo uma ferramenta de uso exclusivo do DBA, o PowerDesigner é **in
 
 ---
 
-# 2. Conceitos Básicos de Modelagem (Visão para DBAs)
+# 2. Conceitos Básicos de Modelagem
 
 ## 2.1 Objetivo do Capítulo
 
@@ -294,7 +294,7 @@ A partir dos próximos capítulos, veremos **na prática** como abrir um modelo 
 
 ---
 
-# 3. Instalação e Configuração Inicial do PowerDesigner
+# 3. Instalação e Configuração Inicial
 
 ## 3.1 Objetivo do Capítulo
 
@@ -417,11 +417,9 @@ Organize seus arquivos em uma pasta padrão como:
 
 ---
 
-
 E salve cada modelo com nome claro e versão:
 
 ---
-
 
 > 📁 Isso facilita controle de versões locais antes de envio ao repositório oficial (se houver).
 
@@ -609,102 +607,7 @@ Nos próximos capítulos, você aprenderá como adicionar colunas, criar índice
 
 ---
 
-### Capítulo 4 — Abrindo um Modelo Físico Existente (PDM)
-
-Neste capítulo, aprenderemos a abrir um modelo físico existente (Physical Data Model - PDM) no PowerDesigner, uma tarefa essencial para qualquer DBA que precise analisar estruturas de tabelas em ambientes críticos, como em bancos de dados DB2 for z/OS. O foco será sempre em uma atuação voltada à manutenção, ajustes e avaliação do modelo, e não na modelagem conceitual.
-
----
-
-#### O que é um PDM (Physical Data Model)
-
-O PDM é a representação mais próxima da estrutura que será implementada no banco de dados físico. Ele descreve tabelas, colunas, tipos de dados, índices, chaves primárias e estrangeiras, além de configurações específicas do SGBD (neste caso, DB2 for z/OS).
-
-Por que isso importa para um DBA?
-
-- Permite visualizar o impacto de alterações;
-- Auxilia em tuning, criação de índices, particionamento e reorganizações;
-- Facilita discussões técnicas com analistas de negócio e desenvolvedores;
-- Garante alinhamento entre o modelo e o banco real.
-
----
-
-#### Como abrir um PDM no PowerDesigner
-
-1. **Iniciar o PowerDesigner**
-   - Abra o PowerDesigner a partir do menu Iniciar ou atalho da área de trabalho.
-
-2. **Menu File > Open**
-   - Vá em: `File > Open...`
-   - Ou utilize o atalho: `Ctrl + O`.
-
-3. **Selecionar o arquivo `.pdm`**
-   - Navegue até o diretório onde o modelo está salvo.
-   - Exemplo de nomes: `Modelo_Fisico_DB2.pdm`, `TB_CLIENTES_V1.pdm`
-   - Clique em **Open**.
-
-4. **Confirmar o DBMS correto**
-   - Após abrir o modelo, verifique se o DBMS atribuído é `IBM DB2 for z/OS`.
-   - Caso não esteja, vá em `Model > Properties > DBMS` e selecione o correto.
-
----
-
-#### Recomendações técnicas para DBAs
-
-- **Nunca altere o modelo original diretamente.** Faça sempre uma cópia com o sufixo `_ANALISE`, `_DEV` ou `_V1`, por exemplo.
-- **Desative validações automáticas temporariamente**, se necessário, para abrir modelos antigos sem interrupções:
-  `Tools > General Options > Dialog Boxes > [ ] Enable automatic model validation`
-- **Salve frequentemente** em versões incrementais com data ou número.
-
----
-
-#### Navegação dentro do modelo aberto
-
-- Use o **Object Browser** (F12) para visualizar a estrutura completa do modelo.
-  - Tabelas (Tables)
-  - Índices (Indexes)
-  - Views, Procedures, etc.
-- Pressione **Ctrl + F** para localizar rapidamente uma tabela por nome.
-- Dê dois cliques sobre uma tabela para abrir suas propriedades e visualizar colunas, chaves, índices e restrições.
-
----
-
-#### Dicas para análise visual
-
-- Use `Tools > Layout > Auto Layout` para reorganizar visualmente as tabelas.
-- Use `Display Preferences` no botão direito do diagrama para:
-  - Mostrar nomes físicos das tabelas.
-  - Exibir tipos de dados nas colunas.
-- Para zoom e navegação visual, utilize o `Model Overview` em `View > Workspace > Overview`.
-
----
-
-#### Validações comuns que o DBA pode realizar
-
-- Nome das tabelas e colunas seguem padrão corporativo?
-- Chave primária está definida corretamente?
-- Há índices aplicáveis às consultas mais frequentes?
-- Existe relacionamento (FK) com tabelas de domínio ou lookup?
-- Campos estão devidamente classificados como `NOT NULL` ou `NULLABLE`?
-- Há evidências de necessidade de particionamento?
-
----
-
-#### Conclusão
-
-Abrir corretamente um PDM é o primeiro passo para qualquer análise técnica no PowerDesigner. A partir dele, o DBA pode visualizar a estrutura física do banco de dados com clareza e segurança, antecipando decisões que impactarão diretamente o desempenho e a estabilidade do ambiente. No próximo capítulo, veremos em detalhes a **interface do PowerDesigner**, com foco nos elementos que o DBA deve conhecer para ganhar agilidade e confiança no uso da ferramenta.
-
----
-
-#### Referências
-
-- https://help.sap.com/viewer/product/SAP_POWERDESIGNER/16.7/en-US
-- https://www.ibm.com/docs/en/db2-for-zos
-- https://wiki.scn.sap.com/wiki/display/SYBPDS/PowerDesigner+Physical+Data+Model
-- https://help.sap.com/doc/product/PowerDesigner/16.7/en-US/InstallationGuide.pdf
-
----
-
-### Capítulo 5 — Visão Geral da Interface do PowerDesigner
+# 5. Visão Geral da Interface do PowerDesigner
 
 Neste capítulo, apresentamos uma visão completa da interface do PowerDesigner, com foco na navegação eficiente e nos recursos relevantes para a atuação técnica do DBA. O objetivo é garantir familiaridade com os principais painéis e menus, permitindo que qualquer profissional identifique rapidamente tabelas, colunas, índices, relacionamentos e configurações específicas do DB2 for z/OS.
 
@@ -834,83 +737,7 @@ No próximo capítulo, abordaremos a **análise detalhada das tabelas DB2 no mod
 
 ---
 
-### Capítulo 5 — Visão Geral da Interface do PowerDesigner
-[Voltar ao Índice](#índice)
-
-Neste capítulo, você conhecerá a interface do PowerDesigner em detalhes. A familiaridade com cada elemento da tela permitirá que você navegue com segurança pelos modelos e desempenhe tarefas comuns de análise e manutenção de tabelas DB2 for z/OS.
-
----
-
-#### 🧭 Painéis Principais da Interface
-
-Ao abrir o PowerDesigner e carregar um modelo físico (PDM), você encontrará os seguintes componentes principais:
-
-| Painel                       | Descrição                                                                 |
-|-----------------------------|---------------------------------------------------------------------------|
-| **Model Explorer**          | Estrutura hierárquica com todos os objetos do modelo (tabelas, views etc).|
-| **Diagram Area**            | Espaço gráfico onde as entidades e relacionamentos são visualizados.     |
-| **Properties (Object Inspector)** | Mostra os detalhes do objeto selecionado no diagrama.                   |
-| **Toolbox**                 | Conjunto de ferramentas para criação e edição de objetos.                 |
-| **Output/Log Window**       | Exibe logs, mensagens de erro e progresso de tarefas.                     |
-
----
-
-#### 🖱️ Navegação Básica
-
-- **Duplo clique em uma tabela no Model Explorer** abre suas propriedades.
-- **Clique com o botão direito** sobre objetos no diagrama ou na árvore permite acesso rápido a comandos como “Edit”, “Delete”, “Generate SQL”, etc.
-- **Rolagem e Zoom** no diagrama: use o mouse com `Ctrl` para zoom ou `Shift` para navegação lateral.
-
----
-
-#### 🎨 Personalização de Visualização
-
-Você pode ajustar como os objetos aparecem:
-
-- Vá em **Tools > Display Preferences**.
-- Na aba **Table**, selecione os atributos visíveis (nome, colunas, PK, FK).
-- Configure fontes, cores e ícones conforme necessidade.
-
----
-
-#### 🧩 Barra de Menus e Comandos Relevantes
-
-- **File**: Abrir/Salvar modelos.
-- **Edit**: Cortar, copiar, colar objetos.
-- **Model**: Operações de verificação e sincronização com banco.
-- **Database**: Gerar scripts DDL, configurar target DBMS.
-- **Tools**: Preferências, validação e recursos adicionais.
-- **Window**: Gerenciar janelas abertas.
-- **Help**: Acesso à ajuda local e online.
-
----
-
-#### 🔄 Alternando entre Modelos
-
-- PowerDesigner permite manter múltiplos modelos abertos simultaneamente.
-- Cada modelo físico (PDM) será uma aba independente.
-- Os objetos entre modelos não são sincronizados automaticamente.
-
----
-
-#### 💡Dicas de Especialista
-
-- **Organize o diagrama**: use `Ctrl + Shift + A` para auto-layout.
-- **Use o recurso "Go To" (Ctrl+G)** para localizar rapidamente objetos pelo nome.
-- **Crie Workspaces** salvos com sua organização favorita da interface e janelas.
-
----
-
-#### 📚 Referências e Leitura Complementar
-
-- Documentação Oficial do PowerDesigner Interface Overview:  
-  https://docspaces.sap.com/sap-powerdesigner-interface
-- SAP Help Portal – Interface Walkthrough:  
-  https://help.sap.com/viewer/product/SAP_POWERDESIGNER
-
----
-
-### Capítulo 6 — Analisando Tabelas DB2 no Modelo
+# 6. Analisando Tabelas DB2 no Modelo
 [Voltar ao Índice](#índice)
 
 Este capítulo apresenta as técnicas de inspeção, leitura e análise das tabelas DB2 for z/OS já existentes no modelo físico (PDM), garantindo melhor compreensão da estrutura atual antes de qualquer alteração.
@@ -987,7 +814,7 @@ Ao abrir as propriedades de uma tabela, observe as seguintes abas:
 
 ---
 
-### Capítulo 7 — Adicionando Campos a Tabelas Existentes
+# 7. Adicionando Campos a Tabelas Existentes
 [Voltar ao Índice](#índice)
 
 Este capítulo orienta como adicionar colunas (campos) a tabelas já existentes no modelo físico (PDM), com foco na análise técnica do impacto e nas práticas seguras para ambientes críticos que utilizam DB2 for z/OS. Adicionar uma coluna pode parecer simples, mas exige atenção ao tipo de dado, nullability, posicionamento e convenções do ambiente.
