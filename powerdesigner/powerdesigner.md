@@ -913,7 +913,7 @@ Antes de incluir um campo, avalie:
 
 ---
 
-### Capítulo 8 — Criando Índices (Indexes)
+# 8. Criando Índices (Indexes)
 
 #### Objetivo
 Neste capítulo, abordaremos como criar índices no PowerDesigner, com foco em bancos de dados críticos, como DB2 for z/OS. Índices são estruturas fundamentais para garantir desempenho adequado nas consultas, especialmente em tabelas com grande volume de dados.
@@ -1011,7 +1011,7 @@ Após criar o índice:
 
 ---
 
-## Capítulo 9 — Configurando Particionamento (Partitioning)
+# 9. Configurando Particionamento (Partitioning)
 
 A técnica de particionamento é essencial em ambientes críticos e de grande volume de dados, como os encontrados em bancos corporativos. No PowerDesigner, é possível representar a estrutura de particionamento no modelo físico (PDM), permitindo uma visão clara da estratégia de distribuição de dados adotada no banco de dados.
 
@@ -1105,7 +1105,7 @@ No PowerDesigner, a estrutura acima pode ser representada criando uma tabela com
 
 ---
 
-## Capítulo 10 — Alterando Tipos de Dados
+# 10. Alterando Tipos de Dados
 
 Alterar tipos de dados em um modelo físico (PDM) no PowerDesigner exige atenção redobrada, pois envolve tanto aspectos estruturais quanto implicações de compatibilidade com o ambiente de destino (como o DB2 for z/OS). Neste capítulo, abordaremos como realizar alterações seguras, mantendo a integridade do modelo e preparando-o corretamente para sincronização com o banco de dados.
 
@@ -1196,6 +1196,10 @@ No painel esquerdo (Browser Tree):
 - [PowerDesigner Help - Column Properties](https://doc.ispirer.com/sqlways/sybase-powerdesigner-column-properties)
 - [Model Validation - PowerDesigner](https://www.sap.com/documents/2017/04/444402ba-497c-0010-82c7-eda71af511fa.html)
 ```
+
+---
+
+
 
 ---
 
