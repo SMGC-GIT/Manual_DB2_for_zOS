@@ -293,3 +293,320 @@ A partir dos próximos capítulos, veremos **na prática** como abrir um modelo 
 - IBM Redbooks - DB2 Fundamentals
 
 ---
+
+# 3. Instalação e Configuração Inicial do PowerDesigner
+
+## 3.1 Objetivo do Capítulo
+
+Este capítulo apresenta um passo a passo detalhado para instalação e configuração inicial do **SAP PowerDesigner**, com foco no uso do **modelo físico (PDM)** para **DB2 for z/OS**.
+
+> 📌 Indicado para DBAs que **nunca usaram o PowerDesigner** e precisam começar pela base: instalar, configurar e abrir um projeto com segurança.
+
+---
+
+## 3.2 Pré-requisitos
+
+Antes de iniciar, verifique os seguintes requisitos no seu ambiente:
+
+| Requisito                     | Descrição                                               |
+|------------------------------|---------------------------------------------------------|
+| Sistema Operacional          | Windows 10 ou superior (64 bits)                        |
+| Permissão de instalação      | Acesso de administrador na máquina local                |
+| Software necessário          | PowerDesigner (versão 16.6 SP05 ou superior)            |
+| Licença                      | Licença local ou por servidor (fornecida pela empresa)  |
+| Conexão à internet (opcional)| Para acessar ajuda online e updates                     |
+
+---
+
+## 3.3 Onde baixar o PowerDesigner?
+
+O PowerDesigner é um software proprietário da SAP. O download deve ser feito por meio do portal de software da empresa ou com apoio da área de arquitetura/suporte técnico da organização.
+
+### Caso não tenha acesso:
+Solicite à equipe responsável o **instalador da versão corporativa em uso no ambiente**, geralmente no formato:
+
+---
+
+
+> 🔐 Atenção: Não há versão gratuita ou trial pública. O uso é sempre licenciado.
+
+---
+
+## 3.4 Etapas da Instalação
+
+### 1. Executar o instalador como administrador
+Clique com o botão direito sobre o arquivo `.exe` e selecione **"Executar como administrador"**.
+
+### 2. Aceitar termos da SAP
+Marque a opção de aceitação da licença de uso.
+
+### 3. Escolher tipo de instalação
+Selecione:
+
+- `Typical Installation` (recomendada para iniciantes)
+
+### 4. Definir caminho de instalação
+Use o padrão sugerido ou altere conforme políticas da empresa:
+
+---
+
+
+### 5. Finalizar e reiniciar
+Conclua a instalação e reinicie o computador para garantir que todas as dependências sejam ativadas corretamente.
+
+---
+
+## 3.5 Primeira execução
+
+Ao abrir o PowerDesigner pela primeira vez:
+
+- Será solicitado o tipo de licença:
+  - **Local License File**: apontar para o arquivo `.lic`
+  - **License Server**: apontar para o servidor corporativo de licenças SAP
+
+> 🧠 Caso não saiba qual utilizar, consulte a equipe de suporte de TI ou arquitetura de dados.
+
+---
+
+## 3.6 Ajuste de Idioma para Português (opcional)
+
+Por padrão, o PowerDesigner é instalado em **inglês**. Para facilitar a leitura por novos usuários:
+
+1. Acesse o menu `Tools` → `General Options`
+2. Vá até a aba `General`
+3. Em **Language**, selecione `Portuguese (Brazil)`
+4. Reinicie o PowerDesigner
+
+> 🌐 Observação: Algumas expressões técnicas podem continuar em inglês mesmo após a troca de idioma, pois são termos técnicos universais.
+
+---
+
+## 3.7 Ativando suporte ao DB2 for z/OS
+
+O PowerDesigner suporta múltiplos bancos. Para trabalhar com DB2 for z/OS:
+
+1. Menu: `File` → `New Model`
+2. Selecione: **Physical Data Model (PDM)**
+3. Na tela seguinte, selecione o **DBMS desejado**:
+
+---
+
+
+4. Clique em **OK**
+
+> ✅ A partir daqui, todos os objetos criados ou analisados seguirão as regras sintáticas, estruturas e limitações do DB2 for z/OS, incluindo partições, buffer pools e naming conventions.
+
+---
+
+## 3.8 Configurações recomendadas para DBAs
+
+Ajustes simples para tornar o ambiente mais prático para análise técnica:
+
+| Ajuste                                   | Caminho                                          | Motivo                                                                 |
+|------------------------------------------|--------------------------------------------------|------------------------------------------------------------------------|
+| Exibir nomes físicos nos diagramas       | `Tools` → `Display Preferences` → `Table`        | Permite ver nomes reais das tabelas e colunas usadas no banco         |
+| Ativar exibição de constraints e índices | `Display Preferences` → `Constraints/Indexes`    | Facilita visualização de chaves, PK, FK, índices diretamente no diagrama |
+| Mostrar tipo de dado                     | `Display Preferences` → `Column` → `Datatype`    | Útil para avaliar tamanhos, tipos e ajustes necessários                |
+| Salvar em backup automático              | `Tools` → `General Options` → `Files`            | Garante segurança no trabalho em modelos grandes                      |
+
+---
+
+## 3.9 Criar pasta de trabalho local (boa prática)
+
+Organize seus arquivos em uma pasta padrão como:
+
+---
+
+
+E salve cada modelo com nome claro e versão:
+
+---
+
+
+> 📁 Isso facilita controle de versões locais antes de envio ao repositório oficial (se houver).
+
+---
+
+## 3.10 Conclusão
+
+Com essa configuração inicial completa, o DBA está apto a **abrir modelos existentes, visualizar objetos físicos e navegar pela estrutura com confiança**. Não é necessário ser modelador para compreender o conteúdo de um `.pdm` — basta conhecer os conceitos e saber onde olhar.
+
+Nos próximos capítulos, veremos como **abrir modelos físicos prontos**, navegar entre objetos, localizar tabelas, criar índices e fazer pequenas alterações com segurança e domínio técnico.
+
+---
+
+## 3.11 Referências
+
+- SAP PowerDesigner Installation Guide  
+  [https://help.sap.com/docs/POWERDESIGNER](https://help.sap.com/docs/POWERDESIGNER)
+- IBM DB2 for z/OS Documentation  
+  [https://www.ibm.com/docs/en/db2-for-zos/](https://www.ibm.com/docs/en/db2-for-zos/)
+
+---
+
+# 4. Abrindo um Modelo Físico Existente (PDM)
+
+## 4.1 Objetivo do Capítulo
+
+Neste capítulo, você aprenderá como **abrir um modelo físico (.pdm)** no PowerDesigner e **navegar entre os principais objetos** do banco de dados, como tabelas, colunas, índices e relacionamentos — sem precisar ser modelador.
+
+> 🎯 Ideal para DBAs que precisam avaliar tabelas do DB2, localizar objetos específicos, entender a estrutura de dados ou preparar ajustes simples como criação de índices ou campos.
+
+---
+
+## 4.2 O que é um arquivo `.pdm`?
+
+O arquivo com extensão `.pdm` representa um **Physical Data Model** — ou modelo físico de dados. Nele estão armazenadas todas as definições da estrutura real de um banco de dados:
+
+- Tabelas, colunas, domínios
+- Índices, constraints, PK/FK
+- Partições, views, procedures
+- Estrutura de armazenamento (tablespaces, buffer pools)
+- Comentários técnicos e semânticos
+
+> 💡 Este é o **tipo de modelo que o DBA mais utiliza** para realizar validações técnicas, ajustes e gerar DDLs para aplicação no DB2 for z/OS.
+
+---
+
+## 4.3 Como abrir um modelo `.pdm`
+
+### Passo a Passo:
+
+1. Abra o PowerDesigner
+2. Vá até o menu: `File` → `Open`
+3. Navegue até o diretório onde está o modelo e selecione o arquivo `.pdm`
+
+> 📁 Dica: crie uma estrutura de pastas organizada, como `C:\PowerDesigner\Modelos\DB2\`.
+
+---
+
+## 4.4 Tela principal do modelo aberto
+
+Após abrir o arquivo `.pdm`, você verá uma **área central com o diagrama visual**, e uma **barra lateral esquerda chamada Browser**.
+
+### Principais áreas:
+
+| Área                   | Função                                                    |
+|------------------------|-----------------------------------------------------------|
+| **Diagram (centro)**   | Visualização gráfica das tabelas e relacionamentos        |
+| **Browser (esquerda)** | Lista hierárquica de todos os objetos do modelo           |
+| **Properties (baixo)** | Mostra os detalhes do objeto selecionado                  |
+
+---
+
+## 4.5 Navegando pelas tabelas
+
+### Opção 1 – Pelo Diagrama
+Clique sobre a tabela desejada no diagrama. Os campos e índices aparecem na parte inferior (aba `Properties`).
+
+### Opção 2 – Pelo Browser
+No painel esquerdo (Browser):
+1. Expanda `Physical Data Model`
+2. Expanda `Tables`
+3. Clique com o botão direito sobre a tabela desejada e selecione `Properties`
+
+> 📌 Use o campo de busca no topo do Browser para localizar rapidamente uma tabela pelo nome.
+
+---
+
+## 4.6 Visualizando as colunas de uma tabela
+
+Ao abrir a janela de propriedades da tabela (`Properties`):
+
+1. Vá até a aba `Columns`
+2. Veja:
+   - Nome da coluna
+   - Tipo de dado (`INTEGER`, `CHAR(10)`, `DECIMAL(15,2)`, etc.)
+   - Regras de obrigatoriedade (`NULL`, `NOT NULL`)
+   - Valor padrão (`DEFAULT`)
+   - Comentário semântico da coluna
+
+> 🧠 Valide se os tipos de dados estão compatíveis com as boas práticas para DB2 for z/OS.
+
+---
+
+## 4.7 Verificando a chave primária
+
+Na aba `Keys`:
+
+1. Verifique se há uma chave marcada como **Primary**
+2. Clique para ver quais colunas compõem a PK
+3. Confirme se está indexada corretamente (a PK geralmente gera um índice automaticamente)
+
+---
+
+## 4.8 Avaliando os índices existentes
+
+Aba `Indexes`:
+
+1. Veja todos os índices definidos na tabela
+2. Observe:
+   - Nome do índice (`IX_TB_CLIENTE_01`)
+   - Colunas utilizadas
+   - Tipo: `Unique` ou `Non-Unique`
+   - Ordem (`ASC`, `DESC`)
+   - Clustered (DB2 usa `CLUSTER` em alguns casos)
+
+> 🧩 Verifique se os índices atendem às principais consultas (`WHERE`, `JOIN`, `ORDER BY`).
+
+---
+
+## 4.9 Analisando relacionamentos (PK/FK)
+
+No diagrama visual (ou aba `References` da tabela):
+
+- Relacionamentos aparecem como **linhas entre tabelas**
+- O PowerDesigner mostra se a relação é:
+  - **Identifying (PK incorporada na FK)**
+  - **Non-identifying (FK separada)**
+- Clique na linha do relacionamento para ver:
+  - Tabela de origem e destino
+  - Colunas envolvidas
+  - Regra de integridade (cascade, restrict, etc.)
+
+---
+
+## 4.10 Dica: Mostrar nomes físicos no diagrama
+
+Por padrão, o PowerDesigner pode exibir **nomes lógicos** nos diagramas. Para mudar para **nomes reais (físicos)**:
+
+1. Clique com o botão direito no diagrama
+2. Selecione: `Display Preferences`
+3. Em `Table`, marque a opção: **Show Physical Name**
+4. Clique em OK
+
+> 🔎 Isso facilita a vida do DBA, que trabalha com nomes reais no banco (ex: `TB_TRANSACAO_FINANCEIRA`).
+
+---
+
+## 4.11 Conclusão
+
+Você já está apto a abrir modelos físicos no PowerDesigner, localizar e interpretar as tabelas, colunas, índices e relacionamentos — tudo o que um DBA precisa para analisar ou iniciar um ajuste pontual em ambientes críticos que utilizam DB2 for z/OS.
+
+Nos próximos capítulos, você aprenderá como adicionar colunas, criar índices, avaliar particionamentos e gerar scripts DDL.
+
+---
+
+## 4.12 Referências (para este e capítulos anteriores)
+
+```markdown
+# Referências Técnicas Oficiais
+
+- SAP PowerDesigner – Documentação Geral  
+  https://help.sap.com/viewer/product/POWERDESIGNER/
+
+- IBM Documentation – DB2 for z/OS  
+  https://www.ibm.com/docs/en/db2-for-zos/
+
+- IBM Redbooks – Data Modeling Techniques for DB2  
+  https://www.redbooks.ibm.com/abstracts/sg247467.html
+
+- SAP Community – PowerDesigner PDM Tips  
+  https://community.sap.com/topics/powerdesigner
+
+- SAP Note – Supported DBMS List  
+  https://launchpad.support.sap.com/#/notes/1844496
+
+---
+
+
