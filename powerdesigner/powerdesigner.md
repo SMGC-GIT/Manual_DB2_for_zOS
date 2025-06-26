@@ -1269,9 +1269,77 @@ A correta visualização dos relacionamentos auxilia DBAs na identificação de 
 - [Relational Modeling Best Practices (IBM Data Management)](https://www.ibm.com/docs/en/datastage/11.5?topic=guide-relational-database-design-best-practices)
 ```
 
+---
 
+# 12. Sincronização entre Modelo e Banco (Reverse/Forward Engineering)
+
+
+A sincronização entre o modelo físico no PowerDesigner e o banco de dados real é um recurso essencial para ambientes críticos, garantindo que a documentação esteja alinhada com a realidade da implementação.
+
+O PowerDesigner oferece dois mecanismos principais:
+
+- **Reverse Engineering**: importar a estrutura do banco existente para gerar ou atualizar um modelo.
+- **Forward Engineering**: gerar scripts SQL a partir do modelo para implementar alterações no banco de dados.
 
 ---
+
+### ✅ Reverse Engineering (RE) – Importando o Banco para o Modelo
+
+O objetivo do RE é obter um modelo físico a partir de um banco de dados já existente. Essa funcionalidade é útil para manter a documentação atualizada ou quando se deseja iniciar o trabalho de modelagem com base no ambiente atual.
+
+**Passo a passo:**
+
+1. **Abra o PowerDesigner.**
+2. No menu principal, selecione `File > Reverse Engineer > Database…`
+3. Na janela que se abrir, configure:
+   - **DBMS**: selecione *IBM DB2 for z/OS*.
+   - **Connection Profile**: configure ou selecione uma conexão ODBC válida.
+   - **Scope**: selecione quais objetos deseja importar (tabelas, índices, views etc.).
+4. Avance, revise as opções e conclua o processo.
+
+> 💡 Ao final, o PowerDesigner criará um novo modelo físico (PDM) com os objetos existentes no banco de dados.
+
+---
+
+### ✅ Forward Engineering (FE) – Exportando Script do Modelo para o Banco
+
+O FE permite gerar um script SQL contendo as alterações realizadas no modelo, para posterior aplicação no banco de dados.
+
+**Passo a passo:**
+
+1. Com o modelo físico aberto, acesse `Database > Generate Database…`
+2. Na aba **Generation Options**, configure:
+   - **Script Name**: defina o nome e caminho do script.
+   - **Target DBMS**: selecione *IBM DB2 for z/OS*.
+   - Marque **Generate DROP statements** se desejar incluir comandos para eliminar objetos existentes.
+3. Use a aba **Preview** para revisar o script antes da exportação.
+4. Clique em **OK** para gerar o arquivo.
+
+> 💡 Scripts gerados podem ser aplicados com ferramentas como SPUFI, DSNTEP2, QMF ou via utilitários automatizados.
+
+---
+
+### ⚖️ Considerações Técnicas e Cuidados
+
+| Situação | Ação Recomendada |
+|---------|------------------|
+| Alterações em produção | Validar e versionar scripts gerados. |
+| Ambientes integrados (Dev/QA/Prod) | Manter controle de versão e checklist de deploy. |
+| Campos alterados ou renomeados | Analisar impacto em procedures, views e aplicações. |
+| Reverse após alterações manuais | Gerar novo modelo e comparar com versão anterior. |
+
+---
+
+### 📌 Dicas para Ambientes Críticos
+
+- Evite aplicar **Forward Engineering direto em produção**. Sempre exporte o script e submeta à validação.
+- Utilize ferramentas de comparação de modelos (PowerDesigner > Tools > Compare Models…) para revisar o que foi alterado.
+- Configure logs de auditoria para rastrear mudanças no modelo ao longo do tempo.
+- Sempre mantenha backup do modelo original antes de executar um RE ou FE.
+
+---
+
+
 
 
 
