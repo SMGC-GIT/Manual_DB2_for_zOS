@@ -834,4 +834,80 @@ No próximo capítulo, abordaremos a **análise detalhada das tabelas DB2 no mod
 
 ---
 
+### Capítulo 5 — Visão Geral da Interface do PowerDesigner
+[Voltar ao Índice](#índice)
+
+Neste capítulo, você conhecerá a interface do PowerDesigner em detalhes. A familiaridade com cada elemento da tela permitirá que você navegue com segurança pelos modelos e desempenhe tarefas comuns de análise e manutenção de tabelas DB2 for z/OS.
+
+---
+
+#### 🧭 Painéis Principais da Interface
+
+Ao abrir o PowerDesigner e carregar um modelo físico (PDM), você encontrará os seguintes componentes principais:
+
+| Painel                       | Descrição                                                                 |
+|-----------------------------|---------------------------------------------------------------------------|
+| **Model Explorer**          | Estrutura hierárquica com todos os objetos do modelo (tabelas, views etc).|
+| **Diagram Area**            | Espaço gráfico onde as entidades e relacionamentos são visualizados.     |
+| **Properties (Object Inspector)** | Mostra os detalhes do objeto selecionado no diagrama.                   |
+| **Toolbox**                 | Conjunto de ferramentas para criação e edição de objetos.                 |
+| **Output/Log Window**       | Exibe logs, mensagens de erro e progresso de tarefas.                     |
+
+---
+
+#### 🖱️ Navegação Básica
+
+- **Duplo clique em uma tabela no Model Explorer** abre suas propriedades.
+- **Clique com o botão direito** sobre objetos no diagrama ou na árvore permite acesso rápido a comandos como “Edit”, “Delete”, “Generate SQL”, etc.
+- **Rolagem e Zoom** no diagrama: use o mouse com `Ctrl` para zoom ou `Shift` para navegação lateral.
+
+---
+
+#### 🎨 Personalização de Visualização
+
+Você pode ajustar como os objetos aparecem:
+
+- Vá em **Tools > Display Preferences**.
+- Na aba **Table**, selecione os atributos visíveis (nome, colunas, PK, FK).
+- Configure fontes, cores e ícones conforme necessidade.
+
+---
+
+#### 🧩 Barra de Menus e Comandos Relevantes
+
+- **File**: Abrir/Salvar modelos.
+- **Edit**: Cortar, copiar, colar objetos.
+- **Model**: Operações de verificação e sincronização com banco.
+- **Database**: Gerar scripts DDL, configurar target DBMS.
+- **Tools**: Preferências, validação e recursos adicionais.
+- **Window**: Gerenciar janelas abertas.
+- **Help**: Acesso à ajuda local e online.
+
+---
+
+#### 🔄 Alternando entre Modelos
+
+- PowerDesigner permite manter múltiplos modelos abertos simultaneamente.
+- Cada modelo físico (PDM) será uma aba independente.
+- Os objetos entre modelos não são sincronizados automaticamente.
+
+---
+
+#### 💡Dicas de Especialista
+
+- **Organize o diagrama**: use `Ctrl + Shift + A` para auto-layout.
+- **Use o recurso "Go To" (Ctrl+G)** para localizar rapidamente objetos pelo nome.
+- **Crie Workspaces** salvos com sua organização favorita da interface e janelas.
+
+---
+
+#### 📚 Referências e Leitura Complementar
+
+- Documentação Oficial do PowerDesigner Interface Overview:  
+  https://docspaces.sap.com/sap-powerdesigner-interface
+- SAP Help Portal – Interface Walkthrough:  
+  https://help.sap.com/viewer/product/SAP_POWERDESIGNER
+
+---
+
 
