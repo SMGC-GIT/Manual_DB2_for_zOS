@@ -987,5 +987,104 @@ Ao abrir as propriedades de uma tabela, observe as seguintes abas:
 
 ---
 
+### Capítulo 7 — Adicionando Campos a Tabelas Existentes
+[Voltar ao Índice](#índice)
+
+Este capítulo orienta como adicionar colunas (campos) a tabelas já existentes no modelo físico (PDM), com foco na análise técnica do impacto e nas práticas seguras para ambientes críticos que utilizam DB2 for z/OS. Adicionar uma coluna pode parecer simples, mas exige atenção ao tipo de dado, nullability, posicionamento e convenções do ambiente.
+
+---
+
+#### 🎯 Quando adicionar uma nova coluna?
+
+- Inclusão de novos dados exigidos por regras de negócio.
+- Evolução natural do modelo (novos processos, integrações).
+- Criação de campos auxiliares para rastreio, controle ou auditoria.
+- Atendimentos a requisitos de conformidade ou segurança.
+
+---
+
+#### 📌 Como adicionar um campo a uma tabela
+
+1. **Abrir as propriedades da tabela**
+   - Duplo clique sobre a tabela no diagrama, ou
+   - Clicar com o botão direito no Model Explorer > `Properties`.
+
+2. **Ir até a aba “Columns”**
+   - Clique no botão **Add** (ícone de “+”).
+
+3. **Preencher os dados da nova coluna**
+   - **Name**: nome físico da coluna (ex: `CD_TIPO_CONTA`)
+   - **Data Type**: selecione o tipo compatível com DB2 z/OS.
+     - Exemplo: `CHAR(3)`, `DECIMAL(15,2)`, `DATE`, `TIMESTAMP`.
+   - **Nullable**: defina se a coluna aceita valores nulos.
+   - **Default Value**: (opcional) valor padrão para novos registros.
+
+4. **(Opcional) Ajustar a ordem das colunas**
+   - Use os botões de “Move Up / Move Down” para posicionar a nova coluna onde for mais adequado (embora no DB2 a ordem física não tenha impacto funcional, pode facilitar leitura).
+
+5. **Salvar as alterações**
+   - Clique em OK para confirmar a edição.
+
+---
+
+#### 🛑 Cuidados importantes
+
+- **Campos NOT NULL exigem DEFAULT**: caso contrário, a criação do campo em uma tabela já populada pode falhar na geração do script SQL.
+- **Evite colunas genéricas** como `OBS`, `DADO1`, `VALORX`. Use nomes descritivos e padronizados.
+- **Evite campos multiuso** (um campo para mais de um significado). Isso compromete a integridade e legibilidade.
+
+---
+
+#### 🧠 Análise de impacto para DBAs
+
+Antes de incluir um campo, avalie:
+
+| Fator | Avaliação |
+|-------|-----------|
+| Volume de dados existente | Há impacto de espaço ou performance? |
+| Índices existentes | O novo campo será indexado no futuro? |
+| Procedimentos armazenados | Algum programa ou processo dependerá desse campo? |
+| Views dependentes | Há visualizações que precisam ser ajustadas? |
+| Carga inicial | A coluna deve vir preenchida para registros já existentes? |
+
+---
+
+#### 📘 Observações sobre DB2 for z/OS
+
+- O PowerDesigner pode gerar **ALTER TABLE ADD COLUMN** no script final.
+- Em versões DB2 mais antigas, a adição de colunas NOT NULL sem default não é permitida.
+- Em tabelas particionadas, certifique-se de que o campo novo não interfere na lógica de particionamento.
+
+---
+
+#### 🧩 Convenções de nomenclatura (exemplos)
+
+| Tipo de Dado       | Prefixo recomendado |
+|--------------------|---------------------|
+| Código numérico    | `CD_`               |
+| Descrição textual  | `DS_`               |
+| Datas              | `DT_`               |
+| Flags e status     | `IN_` ou `ST_`      |
+| Identificadores PK | `ID_`               |
+
+---
+
+#### ✅ Boas práticas ao adicionar colunas
+
+- Registre a justificativa da inclusão no campo **Comment** da coluna.
+- Marque visualmente a coluna com cor (Display Preferences) para revisão técnica.
+- Gere o script SQL com a opção **Alter Statements** para simular a aplicação incremental.
+
+---
+
+#### 📚 Referências
+
+- https://help.sap.com/viewer/product/SAP_POWERDESIGNER
+- https://www.ibm.com/docs/en/db2-for-zos
+- https://help.sap.com/docs/SAP_POWERDESIGNER/column-properties
+- https://www.ibm.com/docs/en/db2-for-zos/12?topic=statements-alter-table
+
+---
+
 
 
