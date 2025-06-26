@@ -910,4 +910,82 @@ Você pode ajustar como os objetos aparecem:
 
 ---
 
+### Capítulo 6 — Analisando Tabelas DB2 no Modelo
+[Voltar ao Índice](#índice)
+
+Este capítulo apresenta as técnicas de inspeção, leitura e análise das tabelas DB2 for z/OS já existentes no modelo físico (PDM), garantindo melhor compreensão da estrutura atual antes de qualquer alteração.
+
+---
+
+#### 🔍 Acessando as Tabelas no Modelo
+
+1. **Via Model Explorer**  
+   - Expanda o nó **PhysicalDataModel_1** > **Tables**.  
+   - Todas as tabelas estão listadas em ordem alfabética.
+   - Clique com o botão direito em uma tabela > **Properties**.
+
+2. **Via Diagrama**  
+   - Dê **duplo clique** em qualquer tabela no espaço gráfico para abrir as propriedades.
+
+---
+
+#### 📑 Propriedades das Tabelas
+
+Ao abrir as propriedades de uma tabela, observe as seguintes abas:
+
+| Aba             | Conteúdo                                                                 |
+|------------------|--------------------------------------------------------------------------|
+| **General**      | Nome lógico e físico, owner, comentários.                                |
+| **Columns**      | Lista de colunas, tipos de dados, PK, Not Null, Default, etc.            |
+| **Keys**         | Definição de chaves primárias e alternativas.                            |
+| **Indexes**      | Índices criados sobre a tabela, incluindo índice de clustering.          |
+| **Triggers**     | Triggers associadas (caso utilizadas).                                   |
+| **Check**        | Restrições CHECK.                                                        |
+| **Rules**        | Regras aplicadas via domínio.                                            |
+
+---
+
+#### 🧠 Interpretação Técnica
+
+- A presença de colunas `LAST_UPD_TS`, `INCLUSAO_USUARIO`, `DATA_ALTERACAO` pode indicar governança temporal.
+- Tabelas sem PK definidas devem ser avaliadas — podem causar problemas em replicações e acessos.
+- Avalie se a combinação de colunas da PK faz sentido com o negócio (ex: natural keys vs surrogate keys).
+- Verifique o uso de `CHAR` fixo vs `VARCHAR` e os impactos de alocação no armazenamento.
+
+---
+
+#### 📎 Observações sobre Nomenclatura e Padrões
+
+- Nomes de tabelas devem seguir convenções previamente definidas (ex: prefixos por domínio).
+- Campos de auditoria e controle (usuário, timestamps) devem ter nomes padronizados.
+- Tabelas técnicas ou de apoio (ex: parâmetros, conversões) devem estar identificadas.
+
+---
+
+#### ⚠️ Itens Críticos a Avaliar em Ambientes de Alta Confiabilidade
+
+- Ausência de **índices** em tabelas com grande volume de leitura.
+- **Check constraints** não utilizados em tabelas com dados sensíveis.
+- **Campos obrigatórios** mal definidos (`Nullable = True` onde deveria ser `False`).
+- Uso incorreto de **tipos numéricos**, como `DECIMAL` com precisão inadequada.
+- Presença de colunas **reservadas para evolução futura**, mas sem uso definido.
+
+---
+
+#### 🛠️ Boas Práticas de Análise
+
+- Utilize o botão **Preview DDL** para visualizar a geração do script da tabela.
+- Registre observações e inconsistências diretamente nas propriedades (campo **Comment**).
+- Utilize **Model Check** (menu Model > Check Model) para validar estrutura e integridade.
+
+---
+
+#### 📚 Referências e Leitura Complementar
+
+- SAP PowerDesigner Help – Table Properties:  
+  https://help.sap.com/viewer/product/SAP_POWERDESIGNER
+
+---
+
+
 
