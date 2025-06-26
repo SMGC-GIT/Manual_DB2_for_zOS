@@ -703,3 +703,135 @@ Abrir corretamente um PDM é o primeiro passo para qualquer análise técnica no
 - https://help.sap.com/doc/product/PowerDesigner/16.7/en-US/InstallationGuide.pdf
 
 ---
+
+### Capítulo 5 — Visão Geral da Interface do PowerDesigner
+
+Neste capítulo, apresentamos uma visão completa da interface do PowerDesigner, com foco na navegação eficiente e nos recursos relevantes para a atuação técnica do DBA. O objetivo é garantir familiaridade com os principais painéis e menus, permitindo que qualquer profissional identifique rapidamente tabelas, colunas, índices, relacionamentos e configurações específicas do DB2 for z/OS.
+
+---
+
+#### Elementos principais da interface
+
+Ao abrir um modelo PDM, a interface do PowerDesigner está dividida em áreas funcionais que interagem entre si:
+
+| Área | Descrição |
+|------|-----------|
+| **Workspace (Centro)** | Área onde diagramas são exibidos visualmente. Cada aba corresponde a um modelo ou submodelo aberto. |
+| **Object Browser (Esquerda)** | Estrutura hierárquica dos objetos do modelo. Permite navegação rápida por tabelas, índices, views, domínios, triggers, etc. |
+| **Properties (Inferior ou janela flutuante)** | Exibe as propriedades do objeto selecionado: colunas, chaves, índices, tipo de dado, entre outros. |
+| **Toolbox (Direita)** | Usado principalmente por modeladores para criar objetos (não será o foco do DBA). |
+| **Output (Inferior, aba opcional)** | Mostra logs, mensagens de validação, geração de scripts, entre outros eventos. |
+
+---
+
+#### Menu principal — itens mais relevantes para DBAs
+
+- `File`: abrir, salvar, exportar e importar modelos.
+- `Edit`: localizar objetos, renomear, buscar dependências.
+- `View`: habilitar/desabilitar painéis como o Object Browser, Output e Overview.
+- `Model`: acessar propriedades do modelo, alterar DBMS, configurar opções.
+- `Database`: menu exclusivo para geração de scripts SQL, engenharia reversa, comparação de modelos (veremos nos capítulos futuros).
+- `Tools`: opções de layout, validação de modelo, formatação e preferências.
+
+---
+
+#### Navegação por painéis
+
+##### 1. Object Browser (Painel esquerdo)
+
+Permite expandir estruturas e navegar pelos principais componentes físicos:
+
+- **Tables**: lista todas as tabelas do modelo.
+- **Indexes**: permite ver todos os índices definidos (inclusive os que não estão em tabelas visíveis no diagrama).
+- **References**: mostra os relacionamentos entre tabelas (FKs).
+- **Views, Users, Domains, Procedures**: outros objetos que podem ser incluídos no modelo.
+
+Use o campo de busca para localizar rapidamente um objeto pelo nome.
+
+##### 2. Diagram Workspace (Centro)
+
+- Mostra as entidades (tabelas) e os relacionamentos em forma gráfica.
+- Permite movimentar objetos para melhor visualização.
+- Útil para validar chaves estrangeiras e dependências.
+
+##### 3. Properties (Janela flutuante ou inferior)
+
+Clicando duas vezes em qualquer objeto (tabela, coluna, índice, relacionamento), será aberta a janela de propriedades correspondente.
+
+Principais abas para o DBA:
+- `Columns`: definição de colunas, tipos de dados, nullability, default.
+- `Keys`: chaves primárias e alternativas.
+- `Indexes`: índice físico associado.
+- `Triggers` (se houver).
+- `Rules and Checks`: constraints e regras aplicadas.
+
+---
+
+#### Personalizações recomendadas
+
+##### Ativando nomes físicos no diagrama
+
+1. Clique com o botão direito sobre uma área em branco do diagrama.
+2. Selecione: `Display Preferences`.
+3. Vá até a aba `Table`.
+4. Marque:
+   - “Show Physical Name”
+   - “Show Column Data Types”
+5. Clique em OK.
+
+##### Ajustando a ordem das colunas exibidas
+
+Por padrão, as colunas podem aparecer organizadas pela ordem lógica de criação. Para visualizar como no banco:
+
+1. Abra a tabela.
+2. Vá em `Columns`.
+3. Use os botões de ordenação para reorganizar conforme a ordem física esperada.
+
+---
+
+#### Validações que podem ser feitas via interface
+
+- Identificação de colunas sem tipo definido.
+- Tabelas sem chave primária.
+- Índices não associados a nenhuma constraint.
+- Campos com nomes fora do padrão.
+- Tabelas sem relacionamento com outras (tabelas órfãs).
+
+Use:
+```
+Tools > Check Model
+```
+para gerar uma lista completa de problemas, alertas e sugestões.
+
+---
+
+#### Comandos rápidos para DBAs
+
+| Ação | Caminho |
+|------|---------|
+| Localizar tabela | Ctrl + F |
+| Exibir propriedades da tabela | Duplo clique ou botão direito > Properties |
+| Reorganizar visualmente o diagrama | Tools > Layout > Auto Layout |
+| Ver miniatura geral do modelo | View > Workspace > Overview |
+| Gerar script DDL | Database > Generate Database... (veremos no Capítulo 13) |
+
+---
+
+#### Conclusão
+
+A interface do PowerDesigner é altamente configurável, mas sua navegação pode ser dominada rapidamente por DBAs que se concentrem nos elementos corretos: Object Browser, Properties, Diagram e Model Options. Essa familiaridade tornará o trabalho de revisão, validação e preparação de alterações muito mais ágil e seguro.
+
+No próximo capítulo, abordaremos a **análise detalhada das tabelas DB2 no modelo**, com foco em avaliação de colunas, constraints, nomes e estrutura.
+
+---
+
+#### Referências
+
+- https://help.sap.com/viewer/product/SAP_POWERDESIGNER/16.7/en-US
+- https://www.ibm.com/docs/en/db2-for-zos
+- https://wiki.scn.sap.com/wiki/display/SYBPDS/PowerDesigner+User+Interface
+- https://help.sap.com/docs/SAP_POWERDESIGNER/interactive-diagram-options
+
+---
+
+
