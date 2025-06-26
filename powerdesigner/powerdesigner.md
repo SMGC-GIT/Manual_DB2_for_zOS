@@ -1086,5 +1086,199 @@ Antes de incluir um campo, avalie:
 
 ---
 
+### Capítulo 8 — Criando Índices (Indexes)
+
+#### Objetivo
+Neste capítulo, abordaremos como criar índices no PowerDesigner, com foco em bancos de dados críticos, como DB2 for z/OS. Índices são estruturas fundamentais para garantir desempenho adequado nas consultas, especialmente em tabelas com grande volume de dados.
+
+---
+
+#### Conceito de Índices
+Um **índice** é uma estrutura auxiliar de dados associada a uma ou mais colunas de uma tabela, usada para acelerar a recuperação de linhas. Em ambientes críticos, o uso adequado de índices pode reduzir significativamente o custo de acesso aos dados.
+
+Existem vários tipos de índices, entre os mais comuns:
+
+- **Índice primário (Primary Index)**: geralmente criado automaticamente para a **Primary Key**.
+- **Índice único (Unique Index)**: garante que os valores em uma ou mais colunas sejam únicos.
+- **Índice composto (Composite Index)**: abrange múltiplas colunas.
+- **Índice de clusterização (Clustering Index)**: define a ordenação física dos dados no disco (no DB2 for z/OS, chamado de **CLUSTER**).
+- **Índice de partição (Partitioned Index)**: usado em tabelas particionadas, respeitando regras específicas do banco.
+
+---
+
+#### Criando Índices no PowerDesigner
+
+1. **Abrir o Modelo PDM**
+   - Com seu modelo físico (PDM) aberto, selecione a tabela desejada.
+
+2. **Criar um Novo Índice**
+   - Clique com o botão direito sobre a tabela > `New > Index`.
+   - Ou, vá até a aba **Indexes** dentro das propriedades da tabela.
+
+3. **Definir o Nome e Tipo do Índice**
+   - No campo `Name`, defina um nome padronizado (ex: `IX_CLIENTE_NOME`).
+   - Marque `Unique` se o índice for único.
+   - Marque `Cluster` para indicar que é um índice de clusterização.
+
+4. **Selecionar as Colunas**
+   - Na aba `Columns`, clique em `Add...` para incluir uma ou mais colunas.
+   - Defina a **ordem** e se será em ordem ascendente ou descendente (se suportado).
+
+5. **Configurar Propriedades Avançadas**
+   - Na aba `General`, é possível incluir:
+     - Comentários descritivos
+     - Propriedades específicas do SGBD (usando `DBMS Properties` se necessário)
+
+---
+
+#### Considerações Importantes
+
+- Em ambientes críticos, **evite criar índices desnecessários**, pois eles impactam diretamente nas operações de inserção e atualização.
+- Analise os **plano de acesso (Access Path)** periodicamente para decidir sobre a criação, remoção ou ajuste de índices.
+- Em tabelas muito acessadas com filtros por múltiplas colunas, **índices compostos** podem ser mais eficazes.
+- **Índices exclusivos** devem refletir restrições reais de negócio.
+
+---
+
+#### Exemplo Ilustrativo
+
+Vamos considerar a criação de um índice composto para a tabela `CLIENTES` com as colunas `NOME` e `CIDADE`:
+
+- Nome do índice: `IX_CLIENTES_NOME_CIDADE`
+- Tipo: Não exclusivo
+- Cluster: Não
+
+```sql
+CREATE INDEX IX_CLIENTES_NOME_CIDADE 
+ON CLIENTES (NOME ASC, CIDADE ASC);
+```
+
+---
+
+#### Validação e Geração do Script
+
+Após criar o índice:
+
+1. **Valide o modelo** clicando em `Tools > Check Model`.
+2. **Gere o script SQL** clicando em `Database > Generate Database...`, certificando-se de marcar a opção `Indexes`.
+
+---
+
+#### Recomendações de Padronização
+
+- Prefixos: `IX_` para índices não exclusivos, `UX_` para exclusivos.
+- Nomes descritivos, preferencialmente com até 30 caracteres.
+- Alinhamento com convenções adotadas na organização.
+
+---
+
+#### Links Úteis
+
+```markdown
+- [Modelagem Física no PowerDesigner – IBM DB2 for z/OS](https://www.ibm.com/docs/en/db2-for-zos)
+- [SQL Reference – DB2 z/OS Índices](https://www.ibm.com/docs/en/db2-for-zos/latest?topic=reference-sql-statements)
+- [Documentação PowerDesigner Oficial – Índices](https://doc.sap.com/documents/sap?current=sap-powerdesigner)
+- [DB2 Performance Index Guidelines (IBM)](https://www.ibm.com/docs/en/db2-for-zos/latest?topic=indexes-guidelines-creating)
+```
+
+
+---
+
+## Capítulo 9 — Configurando Particionamento (Partitioning)
+
+A técnica de particionamento é essencial em ambientes críticos e de grande volume de dados, como os encontrados em bancos corporativos. No PowerDesigner, é possível representar a estrutura de particionamento no modelo físico (PDM), permitindo uma visão clara da estratégia de distribuição de dados adotada no banco de dados.
+
+---
+
+### 📌 O que é Particionamento?
+
+Particionamento é o processo de dividir fisicamente uma tabela ou índice em partes menores chamadas de partições, que podem ser armazenadas em diferentes espaços de armazenamento (tablespaces). Isso traz benefícios como:
+
+- Melhor desempenho nas consultas, principalmente quando as partições são acessadas de forma seletiva.
+- Redução de contenção de I/O.
+- Facilidade de manutenção, como exclusão ou carregamento de dados por partição.
+
+---
+
+### 🎯 Tipos de Particionamento no DB2 for z/OS
+
+Os principais tipos de particionamento suportados pelo DB2 e que podem ser modelados no PowerDesigner são:
+
+- **Particionamento por Intervalo (Range Partitioning):** divide os dados com base em intervalos de valores de uma coluna (ex: datas).
+- **Particionamento por Lista (List Partitioning):** divide os dados com base em valores discretos de uma coluna.
+- **Particionamento por Hash:** baseado em funções de hashing.
+- **Particionamento Composto (Composite Partitioning):** combinação de dois tipos, como intervalo e hash.
+
+---
+
+### 🧩 Representando Particionamento no PowerDesigner
+
+#### Etapas para configurar:
+
+1. **Abra o modelo físico (PDM).**
+2. Selecione a tabela desejada.
+3. Clique com o botão direito > **Properties**.
+4. Acesse a aba `Partition` (ou `Storage` se estiver em modo simplificado).
+5. Habilite a opção **Partitioned Table**.
+6. Escolha o tipo de particionamento (Range, List etc.).
+7. Configure as colunas de particionamento e os valores ou regras.
+
+> 💡 **Dica**: para DB2 z/OS, o particionamento é geralmente feito via `PARTITION BY RANGE(...)` associado a tablespaces particionadas.
+
+---
+
+### 🛠️ Exemplo Prático
+
+Suponha uma tabela de movimentações financeiras (`MOVIMENTACOES`) particionada por ano:
+
+```sql
+CREATE TABLE MOVIMENTACOES (
+    ID_MOV INT NOT NULL,
+    ANO INT NOT NULL,
+    VALOR DECIMAL(15,2),
+    PRIMARY KEY (ID_MOV)
+)
+PARTITION BY RANGE (ANO) (
+    PARTITION P_2022 VALUES LESS THAN (2023),
+    PARTITION P_2023 VALUES LESS THAN (2024),
+    PARTITION P_MAX  VALUES LESS THAN (MAXVALUE)
+);
+```
+
+No PowerDesigner, a estrutura acima pode ser representada criando uma tabela com `Partition Strategy: Range` e definindo `ANO` como a coluna de particionamento, com os respectivos valores limites.
+
+---
+
+### 🎯 Considerações Importantes
+
+- **Chave Primária**: deve conter a coluna de particionamento.
+- **Índices**: podem ser locais (por partição) ou globais (cobrindo toda a tabela).
+- **Constraints**: verifique a compatibilidade com o particionamento.
+- **Limitações**: nem todos os tipos de particionamento são implementáveis em todas as versões do DB2 z/OS — consulte a documentação oficial.
+
+---
+
+### 🧠 Boas Práticas
+
+- Sempre documente no modelo os critérios de particionamento.
+- Avalie o volume de dados e os padrões de acesso para escolher o tipo ideal.
+- Verifique a possibilidade de manutenção isolada por partição.
+- Use **nomenclatura padrão** nas partições (ex: `P_2024`, `P_MAX`) para facilitar manutenção e leitura.
+
+---
+
+### 📚 Referências
+
+```markdown
+- IBM Documentation - DB2 for z/OS Partitioning: https://www.ibm.com/docs/en/db2-for-zos/13?topic=databases-table-partitioning
+- IBM - Best Practices for Table Design: https://www.ibm.com/docs/en/db2-for-zos/13?topic=design-best-practices-table
+- IBM - CREATE TABLE (DB2 13): https://www.ibm.com/docs/en/db2-for-zos/13?topic=statements-create-table
+- PowerDesigner Help - Partitioning Tables: https://www.sap.com/documents/2019/11/3f3fdb6e-c77d-0010-87a3-c30de2ffd8ff.html
+```
+
+---
+
+
+
 
 
