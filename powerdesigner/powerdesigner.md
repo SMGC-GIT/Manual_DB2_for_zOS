@@ -1339,10 +1339,61 @@ O FE permite gerar um script SQL contendo as alterações realizadas no modelo, 
 
 ---
 
+# Capítulo 13 — Exportando Script SQL para DB2 z/OS
 
+## Objetivo
 
+Neste capítulo, você aprenderá a gerar scripts SQL a partir de um modelo físico no PowerDesigner, com foco específico em ambientes críticos que utilizam o DB2 for z/OS. A geração precisa do script é essencial para garantir consistência entre o modelo e a implementação no banco de dados.
 
+## Contexto
 
+Depois de realizar alterações em um Physical Data Model (PDM), é necessário refletir essas modificações no banco de dados. O PowerDesigner permite a exportação automatizada dos comandos SQL (Data Definition Language — DDL), alinhando o modelo às estruturas físicas do banco.
 
+## Passos para gerar o script SQL
 
+### 1. Abrir o modelo físico (PDM)
+
+Certifique-se de estar com o modelo físico aberto e com todas as alterações devidamente salvas.
+
+### 2. Configurar o DBMS alvo
+
+1. No menu principal, acesse:  
+   **Database > Edit Current DBMS…**
+2. Confirme que o DBMS configurado é compatível com **DB2 for z/OS** (Ex: `DB2 UDB for z/OS 11.1`).
+3. Ajuste as opções de geração SQL, se necessário, como por exemplo o uso de **STOGROUP**, **BUFFERPOOL**, **PARTITIONING**, etc.
+
+> 🔧 Recomenda-se manter uma versão personalizada do DBMS, caso regras corporativas exijam sintaxes específicas ou extensões proprietárias.
+
+### 3. Gerar o script SQL
+
+1. Vá em:  
+   **Database > Generate Database…**
+2. Na janela que se abre:
+   - Marque a opção **Generate Database**.
+   - Defina o **Output File**, onde o script será salvo.
+   - Certifique-se de que a opção **Generate DROP Statements** esteja configurada corretamente.
+   - Marque **Check Model** para validar o modelo antes da geração.
+3. Clique em **OK** para gerar o script.
+
+### 4. Avaliar o script gerado
+
+Revise manualmente o script gerado para validar:
+- Uso correto de **schemas**.
+- Definições de **tabelas, índices e constraints**.
+- **Sintaxe compatível com o DB2 z/OS**, considerando o nível de compatibilidade da sua versão do DBMS.
+
+### 5. Executar o script no ambiente de homologação
+
+Nunca execute diretamente em produção. Antes:
+- Teste integral do script em ambiente de homologação.
+- Validação por pares (code review).
+- Verificação de impacto nas estatísticas e objetos existentes.
+
+## Considerações adicionais
+
+- **Segmentação por objetos**: o PowerDesigner permite gerar scripts parciais, por tipo de objeto (somente tabelas, somente índices, etc.).
+- **Agendamento e automação**: scripts gerados podem ser incorporados em pipelines de DevOps com controle de versão.
+- **Geração incremental**: se você utilizou a funcionalidade de comparação (como vimos no capítulo anterior), é possível gerar apenas os deltas (diferenças).
+
+---
 
