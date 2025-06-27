@@ -11,6 +11,7 @@ Este repositório é um guia técnico e prático para profissionais que atuam co
 | Módulo | Descrição |
 |--------|-----------|
 | [📁 Dimensionamento Tabelas DB2](dimensionamento/dimensionamento.md) | Dimensionamento do tamanho das Tabelas no DB2 for z/OS |
+| [📁 Dimensionamento Tabelas DB2 - Completo](dimensionamento-compl/dimensionamento-compl.md) | Dimensionamento do tamanho das Tabelas no DB2 for z/OS |
 | [📁 Catálogo DB2](catalogo/catalogo-db2.md) | Estrutura, tabelas e queries úteis do catálogo do sistema |
 | [📁 Tablespaces](tablespaces/tablespaces.md) | Organização física dos dados e segmentação |
 | [📁 Tables](tables/tables.md) | Organização dentro do tablespace |
