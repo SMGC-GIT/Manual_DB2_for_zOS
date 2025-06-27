@@ -1477,6 +1477,7 @@ Neste capítulo, reunimos recomendações e boas práticas voltadas à atuação
 - SAP PowerDesigner Best Practices Guide: https://help.sap.com/docs/powerdesigner
 - Naming Standards (SAP Community): https://community.sap.com/topics/powerdesigner
 - Guia de Engenharia Reversa e Sincronização: https://help.sap.com/viewer/product/POWERDESIGNER
+```
 
 ---
 
