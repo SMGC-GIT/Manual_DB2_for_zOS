@@ -1339,7 +1339,7 @@ O FE permite gerar um script SQL contendo as alterações realizadas no modelo, 
 
 ---
 
-# Capítulo 13 — Exportando Script SQL para DB2 z/OS
+# 13. Exportando Script SQL para DB2 z/OS
 
 ## Objetivo
 
@@ -1397,3 +1397,83 @@ Nunca execute diretamente em produção. Antes:
 
 ---
 
+# 14. Boas Práticas para DBAs em Modelos PowerDesigner
+
+Neste capítulo, reunimos recomendações e boas práticas voltadas à atuação de DBAs em ambientes críticos que utilizam o PowerDesigner para modelagem física de banco de dados. As orientações aqui apresentadas visam garantir a consistência, integridade e facilidade de manutenção dos modelos ao longo do ciclo de vida do banco.
+
+---
+
+## 🛠️ Organização do Modelo
+
+- **Use uma convenção de nomes padronizada** para entidades, colunas, índices e domínios. Ex: `TBL_CLIENTES`, `IDX_CLIENTES_CPF`.
+- **Separe objetos por áreas funcionais** usando diagramas ou layouts temáticos dentro do PDM.
+- Utilize **descrições completas nos objetos** (tabelas, colunas, índices), aproveitando os campos de “comment” disponíveis.
+- Configure o **nome lógico** (Logical Name) e o **nome físico** (Code) de forma coerente.
+
+---
+
+## 🔍 Documentação e Anotações
+
+- Utilize **Notes e Extended Notes** para registrar decisões de modelagem, regras de negócio e dependências.
+- Inclua **anotações visuais** nos diagramas para destacar áreas críticas, status de validação ou sugestões futuras.
+
+---
+
+## 🧪 Validação e Revisão de Modelos
+
+- Realize **validações automáticas** frequentes (`Tools > Check Model`) para identificar inconsistências ou objetos incompletos.
+- Promova **revisões periódicas de modelo entre DBAs e analistas**, documentando os pontos discutidos.
+
+---
+
+## ♻️ Reutilização e Padronização
+
+- Crie **Domain Types** (Domínios) reutilizáveis para padronizar tipos de dados (ex: `CPF_DOM`, `DATA_DOM`).
+- Defina **naming standards templates** dentro do PowerDesigner e compartilhe com a equipe.
+
+---
+
+## 🔄 Integração com o Banco de Dados
+
+- Use o recurso de **Reverse Engineering** com responsabilidade, validando o conteúdo trazido do banco.
+- Realize o **Forward Engineering** com scripts controlados e versionados — nunca aplique diretamente em produção sem validação.
+
+---
+
+## 🗂️ Controle de Versões
+
+- Armazene os arquivos `.pdm` em **sistemas de versionamento (ex: Git)**.
+- Adote nomenclaturas consistentes para os arquivos: `modelo_fisico_v1.0.pdm`, `modelo_fisico_v1.1_rev.pdm`.
+- Considere utilizar comentários nos commits com os principais ajustes realizados no modelo.
+
+---
+
+## 🔐 Segurança e Responsabilidades
+
+- Proteja os arquivos de modelo com permissões adequadas.
+- Restrinja alterações críticas apenas a DBAs ou modeladores responsáveis.
+- Documente quem alterou o quê e por qual motivo.
+
+---
+
+## ✅ Checklist de Qualidade para DBAs
+
+| Item                                                        | Verificado? |
+|-------------------------------------------------------------|-------------|
+| Convenção de nomes aplicada                                 | ☐           |
+| Todos os objetos com comentários preenchidos                | ☐           |
+| Domínios aplicados aos campos principais                    | ☐           |
+| Validação automática do modelo sem erros                    | ☐           |
+| Versão e data registradas na documentação                   | ☐           |
+| Relacionamentos visualmente compreensíveis no diagrama      | ☐           |
+| Script de Forward Engineering revisado                      | ☐           |
+
+---
+
+## 📘 Referências e Materiais de Apoio
+
+```markdown
+- Documentação oficial do PowerDesigner: https://support.sap.com/powerdesigner
+- SAP PowerDesigner Best Practices Guide: https://help.sap.com/docs/powerdesigner
+- Naming Standards (SAP Community): https://community.sap.com/topics/powerdesigner
+- Guia de Engenharia Reversa e Sincronização: https://help.sap.com/viewer/product/POWERDESIGNER
