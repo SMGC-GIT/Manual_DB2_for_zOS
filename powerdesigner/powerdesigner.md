@@ -1533,3 +1533,63 @@ Outras fontes complementares também são recomendadas:
 
 ---
 
+# 16. Referências Oficiais e Documentações
+
+Manter-se alinhado com a documentação oficial da SAP é fundamental para o uso seguro, eficaz e atualizado do PowerDesigner, especialmente em ambientes corporativos e de missão crítica, como o DB2 for z/OS.
+
+#### 16.1. SAP Help Portal
+
+O SAP Help Portal é a principal fonte oficial de documentação da SAP. Por meio dele, é possível encontrar materiais organizados por produto, versão e idioma.
+
+- 📌 Acesse: [SAP Help Portal — PowerDesigner](https://help.sap.com/docs/powerdesigner)
+- Permite navegar por tópicos como:
+  - Instalação e configuração
+  - Modelagem de dados (PDM, LDM, CDM)
+  - Engenharia reversa e sincronização
+  - Customização de metamodelo
+  - Automação com scripts e macros
+
+#### 16.2. Guias Técnicos em PDF
+
+Para quem prefere documentação offline ou indexação por arquivo, os guias técnicos em PDF podem ser baixados diretamente:
+
+- 📄 [PowerDesigner Core Features Guide](https://help.sap.com/doc/35f61f57101e4c16b8ba3c258e88d8cb/16.7/en-US/Core_Features_Guide.pdf)
+- 📄 [PowerDesigner Data Modeling Guide](https://help.sap.com/doc/cc5e6f2d6b8e4cb08ac74c09d78e5f5f/16.7/en-US/Data_Modeling_Guide.pdf)
+- 📄 [PowerDesigner Web Portal Guide](https://help.sap.com/doc/39b9a3f9aa9b4c49b41d2c9cb54f77b9/16.7/en-US/Web_Portal_Guide.pdf)
+
+Esses materiais abrangem desde noções básicas até recursos avançados utilizados por DBAs e Arquitetos de Dados.
+
+#### 16.3. Comunidade SAP e Fóruns Técnicos
+
+Interagir com outros profissionais e consultar dúvidas frequentes ajuda a resolver problemas práticos e descobrir novas funcionalidades.
+
+- 💬 [SAP Community — PowerDesigner](https://community.sap.com/topics/powerdesigner)
+- 💡 [Stack Overflow — PowerDesigner](https://stackoverflow.com/questions/tagged/powerdesigner)
+
+Essas plataformas fornecem insights de usuários experientes, exemplos de uso e soluções reais.
+
+#### 16.4. Fontes Complementares
+
+Além da documentação oficial, outras fontes confiáveis e complementares são indicadas:
+
+- Cursos atualizados em plataformas como Udemy e Coursera
+- Repositórios no GitHub com exemplos de scripts VBS, macros e metamodelos
+- Blogs técnicos de DBAs que documentam boas práticas e experiências com PowerDesigner em ambientes DB2
+
+---
+
+### 🔗 Links Diretos Reunidos
+
+> Para facilitar a consulta futura, todos os principais links mencionados estão reunidos abaixo:
+
+```markdown
+- SAP Help Portal: https://help.sap.com/docs/powerdesigner
+- Core Features Guide PDF: https://help.sap.com/doc/35f61f57101e4c16b8ba3c258e88d8cb/16.7/en-US/Core_Features_Guide.pdf
+- Data Modeling Guide PDF: https://help.sap.com/doc/cc5e6f2d6b8e4cb08ac74c09d78e5f5f/16.7/en-US/Data_Modeling_Guide.pdf
+- Web Portal Guide PDF: https://help.sap.com/doc/39b9a3f9aa9b4c49b41d2c9cb54f77b9/16.7/en-US/Web_Portal_Guide.pdf
+- SAP Community PowerDesigner: https://community.sap.com/topics/powerdesigner
+- Stack Overflow PowerDesigner: https://stackoverflow.com/questions/tagged/powerdesigner
+```
+
+---
+
