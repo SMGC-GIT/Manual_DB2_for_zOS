@@ -4,14 +4,14 @@
 
 ## Índice
 
-1. [Introdução](#introdução)  
-2. [Conceitos Fundamentais](#conceitos-fundamentais)  
-3. [Como Calcular o Tamanho da Linha](#como-calcular-o-tamanho-da-linha)  
-4. [Simulação Prática: Exemplo de Cálculo](#simulação-prática-exemplo-de-cálculo)  
-5. [Simulação Avançada: Tabela com LOBs](#simulação-avançada-tabela-com-lobs)  
-6. [Explicações Técnicas Importantes](#explicações-técnicas-importantes)  
-7. [Boas Práticas de Dimensionamento](#boas-práticas-de-dimensionamento)  
-8. [Referências Oficiais IBM](#referências-oficiais-ibm)  
+1. [Introdução](#1-introdução)  
+2. [Conceitos Fundamentais](#2-conceitos-fundamentais)  
+3. [Como Calcular o Tamanho da Linha](#3-como-calcular-o-tamanho-da-linha)  
+4. [Simulação Prática: Exemplo de Cálculo](#4-simulação-prática-exemplo-de-cálculo)  
+5. [Simulação Avançada: Tabela com LOBs](#5-simulação-avançada-tabela-com-lobs)  
+6. [Explicações Técnicas Importantes](#6-explicações-técnicas-importantes)  
+7. [Boas Práticas de Dimensionamento](#7-boas-práticas-de-dimensionamento)  
+8. [Referências Oficiais IBM](#8-referências-oficiais-ibm)  
 
 ---
 
