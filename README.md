@@ -15,6 +15,7 @@ Este repositório é um guia técnico e prático para profissionais que atuam co
 | [📁 Catálogo DB2](catalogo/catalogo-db2.md) | Estrutura, tabelas e queries úteis do catálogo do sistema |
 | [📁 Tablespaces](tablespaces/tablespaces.md) | Organização física dos dados e segmentação |
 | [📁 Tables](tables/tables.md) | Organização dentro do tablespace |
+| [📁 SEQUENCE](sequence/sequence.md) | SEQUENCE |
 | [📁 Estatísticas e Otimizador](estatisticas/estatisticas.md) | Uso de RUNSTATS, estatísticas e tuning do otimizador |
 | [📁 Escopo Inicial de Performance](escopo-inicial_performance/escopo-inicial-performance.md) | ESCOPO INICIAL – Diagnóstico Performance de Query ambiente produtivo |
 | [📁 Diagnóstico com base em RUNSTATS](runstats/runstats.md) | Diagnóstico com foco em RUNSTATS |
