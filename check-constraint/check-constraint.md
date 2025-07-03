@@ -89,12 +89,30 @@ Relaciona as colunas envolvidas nos CHECKs.
 SELECT NAME, TBNAME, TEXT
 FROM SYSIBM.SYSCHECKS
 WHERE TBNAME = 'CLIENTE';
+```
 
+#### Resultado esperado:
+
+| NAME              | TBNAME   | TEXT                   |
+|-------------------|----------|------------------------|
+| CK_IDADE_MINIMA   | CLIENTE  | (IDADE >= 18)          |
+| CK_RENDA_POSITIVA | CLIENTE  | (RENDA >= 0)           |
+
+---
+
+```sql
 -- Lista colunas associadas a cada CHECK
 SELECT CHKNAME, TBNAME, NAME AS COLUNA
 FROM SYSIBM.SYSCHECKDEP
 WHERE TBNAME = 'CLIENTE';
 ```
+
+#### Resultado esperado:
+
+| CHKNAME           | TBNAME   | COLUNA         |
+|-------------------|----------|----------------|
+| CK_IDADE_MINIMA   | CLIENTE  | IDADE          |
+| CK_RENDA_POSITIVA | CLIENTE  | RENDA          |
 
 ---
 
@@ -130,16 +148,21 @@ CHECK (
 -- OK
 INSERT INTO CLIENTE (CPF, IDADE, RENDA)
 VALUES ('12345678901', 25, 5000.00);
+```
 
+```sql
 -- Violação da constraint
 INSERT INTO CLIENTE (CPF, IDADE, RENDA)
 VALUES ('12345678901', 16, 5000.00);
-
--- Retorno:
--- SQLCODE = -543
--- SQLSTATE = 23513
--- Motivo: Violation of CHECK constraint 'CK_IDADE_MINIMA'
 ```
+
+#### Resultado esperado:
+
+| Mensagem técnica                                     |
+|-----------------------------------------------------|
+| SQLCODE = -543                                      |
+| SQLSTATE = 23513                                    |
+| Motivo: Violation of CHECK constraint 'CK_IDADE_MINIMA' |
 
 ---
 
@@ -169,6 +192,13 @@ FROM SYSIBM.SYSCHECKS C
 WHERE C.TYPE = 'C'
 ORDER BY C.TBNAME, C.NAME;
 ```
+
+#### Resultado esperado (exemplo):
+
+| TBNAME   | CHECK_NAME         | DEFINITION          |
+|----------|--------------------|---------------------|
+| CLIENTE  | CK_IDADE_MINIMA    | (IDADE >= 18)       |
+| CLIENTE  | CK_RENDA_POSITIVA  | (RENDA >= 0)        |
 
 ---
 
