@@ -313,9 +313,58 @@ SELECT *
 FROM SYSIBM.SYSCHECKS 
 WHERE TBNAME = 'NOME_DA_TABELA';
 ```
-Use em conjunto com `SYSIBM.SYSCST` para obter o tipo da constraint (`CHECK`, `PRIMARY KEY`, etc.).
+OBS.:
+Você pode consultar as constraints `CHECK` definidas para uma tabela no DB2 for z/OS unindo as tabelas de catálogo `SYSIBM.SYSCHECKS` e `SYSIBM.SYSCST`.
+
+#### 🧠 Consulta SQL sugerida:
+
+```sql
+SELECT 
+    C.TBNAME       AS NOME_TABELA,
+    C.CHECKNAME    AS NOME_CONSTRAINT,
+    S.TYPE         AS TIPO_CONSTRAINT,
+    C.TEXT         AS CONDICAO_CHECK
+FROM 
+    SYSIBM.SYSCHECKS C
+JOIN 
+    SYSIBM.SYSCST S
+    ON C.CHECKNAME = S.NAME
+WHERE 
+    C.TBNAME = 'NOME_DA_TABELA'
+    AND S.TYPE = 'K'; -- Apenas CHECK constraints
+```
+
+> 💡 **Explicação dos campos:**
+> - `C.TBNAME`: nome da tabela alvo do `CHECK`
+> - `C.CHECKNAME`: identificador da constraint
+> - `S.TYPE`: tipo da constraint (K = CHECK, P = PRIMARY KEY, F = FOREIGN KEY, U = UNIQUE)
+> - `C.TEXT`: condição lógica aplicada via `CHECK`
 
 ---
+
+### 🧾 Exemplo Simulado do Resultado
+
+| NOME_TABELA | NOME_CONSTRAINT | TIPO_CONSTRAINT | CONDICAO_CHECK                   |
+|-------------|------------------|------------------|----------------------------------|
+| CLIENTES    | CK_CLIENTES_IDADE| K                | IDADE >= 18                      |
+| CLIENTES    | CK_CLIENTES_SEXO | K                | SEXO IN ('M', 'F')               |
+| PEDIDOS     | CK_PEDIDOS_VALOR | K                | VALOR_TOTAL >= 0                |
+
+> Esses resultados indicam que a tabela `CLIENTES` possui duas constraints `CHECK`, uma para validar que a idade mínima é 18 e outra para restringir os valores possíveis para o sexo. A tabela `PEDIDOS` valida que o valor total do pedido não pode ser negativo.
+
+---
+
+**🔎 Observação Importante:**  
+O campo `S.TYPE` identifica o tipo da constraint:
+- `'K'` = CHECK  
+- `'P'` = PRIMARY KEY  
+- `'F'` = FOREIGN KEY  
+- `'U'` = UNIQUE  
+
+Se desejar listar *todos os tipos de constraints* da tabela, **remova a cláusula `AND S.TYPE = 'K'`** da `WHERE`.
+
+---
+
 
 ### Observações:
 
