@@ -355,7 +355,7 @@ WHERE
 ---
 
 **🔎 Observação Importante:**  
-O campo `S.TYPE` identifica o tipo da constraint:
+O campo `TYPE` da `SYSIBM.SYSCST` identifica o tipo da constraint:
 - `'K'` = CHECK  
 - `'P'` = PRIMARY KEY  
 - `'F'` = FOREIGN KEY  
