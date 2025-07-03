@@ -280,10 +280,40 @@ CREATE TABLE PRODUTO (
 
 ## 12. Fontes Oficiais e Referências IBM
 
-- [IBM DB2 for z/OS SQL Reference](https://www.ibm.com/docs/en/db2-for-zos/12?topic=reference-sql-statements)  
-- [IBM Knowledge Center – SYSCHECKS Table](https://www.ibm.com/docs/en/db2-for-zos/12?topic=catalog-syschecks)  
-- [IBM Redbooks – DB2 for z/OS: The Database Administrator’s Guide](https://www.redbooks.ibm.com/)  
-- [IBM DB2 Performance and Tuning Guidelines](https://www.ibm.com/support/pages/db2-zos-performance-tuning-guidelines)  
+### Documentação Oficial IBM (DB2 for z/OS)
+
+- 📘 **Check Constraints - Conceito e Funcionamento**  
+  [IBM Docs – Check constraints for column values (Db2 12)](https://www.ibm.com/docs/en/db2-for-zos/12.0.0?topic=columns-check-constraints-column-values)  
+  Explica como o DB2 aplica condições de verificação (`CHECK`) a cada linha de uma tabela, incluindo regras e comportamentos durante a inserção e atualização de dados.
+
+- ⚠️ **Considerações sobre Check Constraints**  
+  [IBM Docs – Check constraint considerations](https://www.ibm.com/docs/en/db2-for-zos/12.0.0?topic=integrity-check-constraints)  
+  Detalha limitações dos `CHECK constraints`, como o tratamento de valores `NULL`, uso em tabelas particionadas, e implicações durante comandos como `LOAD`.
+
+- 🔗 **Integridade Referencial e Constraints de Chave Estrangeira**  
+  [IBM Docs – Referential constraints](https://www.ibm.com/docs/en/db2-for-zos/12.0.0?topic=constraints-referential)  
+  Aborda como funcionam os `FOREIGN KEY constraints` e permite comparação com os `CHECK constraints` quanto à manutenção da integridade dos dados.
+
+- 🧩 **Tabelas de Catálogo e Metadados de Constraints**  
+  [IBM Docs – Db2 catalog tables](https://www.ibm.com/docs/en/db2-for-zos/12.0.0?topic=db2-catalog-tables)  
+  Lista todas as tabelas de catálogo do DB2. Destacam-se as seguintes para análise de constraints:
+  - `SYSIBM.SYSCHECKS` → contém os predicados das constraints do tipo `CHECK`
+  - `SYSIBM.SYSCHECKDEP` → dependências (ex: colunas envolvidas)
+  - `SYSIBM.SYSCST` e `SYSIBM.SYSCSTCOL` → visão geral de todas as constraints definidas
+
+- 📄 **Manual SQL Completo (PDF)**  
+  [IBM PDF – Db2 13 for z/OS SQL Reference Manual](https://www.ibm.com/docs/en/SSEPEK_13.0.0/pdf/db2z_13_sqlrefbook.pdf)  
+  Manual em PDF com conteúdo completo e atualizado, ideal para estudo offline e buscas rápidas. Inclui todas as instruções SQL, sintaxes, exemplos e detalhes técnicos de constraints.
+
+---
+
+**Dica:** Para consultas diretas em ambiente z/OS, utilize:
+```sql
+SELECT * 
+FROM SYSIBM.SYSCHECKS 
+WHERE TBNAME = 'NOME_DA_TABELA';
+```
+Use em conjunto com `SYSIBM.SYSCST` para obter o tipo da constraint (`CHECK`, `PRIMARY KEY`, etc.).
 
 ---
 
