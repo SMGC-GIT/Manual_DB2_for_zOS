@@ -17,7 +17,7 @@ Este repositório é um guia técnico e prático para profissionais que atuam co
 | [📁 Tablespaces](tablespaces/tablespaces.md) | Organização física dos dados e segmentação |
 | [📁 Tables](tables/tables.md) | Organização dentro do tablespace |
 | [📁 SEQUENCE](sequence/sequence.md) | SEQUENCE |
-| [📁 SEQUENCE - Complementar1](sequence1/sequence1.md) | SEQUENCE Informações Complementares |
+| [📁 SEQUENCE - Complementar1](sequence-compl1/sequence-compl1.md) | SEQUENCE Informações Complementares |
 | [📁 Check Constraint](check-constraint/check-constraint.md) | CHECK CONSTRAINT |
 | [📁 Estatísticas e Otimizador](estatisticas/estatisticas.md) | Uso de RUNSTATS, estatísticas e tuning do otimizador |
 | [📁 Escopo Inicial de Performance](escopo-inicial_performance/escopo-inicial-performance.md) | ESCOPO INICIAL – Diagnóstico Performance de Query ambiente produtivo |
