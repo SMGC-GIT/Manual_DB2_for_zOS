@@ -810,6 +810,31 @@ VALUES (NEXT VALUE FOR SEQ_CLIENTE_ID, 'SILVIA');
 
 ---
 
+#### Simulação de Resultados
+
+```sql
+-- Suponha que a sequência foi criada com START WITH 1000, INCREMENT BY 1
+
+SELECT NEXT VALUE FOR DBATEST.SEQ_PEDIDO_ID FROM SYSIBM.SYSDUMMY1;
+-- Resultado: 1000
+
+SELECT NEXT VALUE FOR DBATEST.SEQ_PEDIDO_ID FROM SYSIBM.SYSDUMMY1;
+-- Resultado: 1001
+
+-- Inserção
+INSERT INTO TB_PEDIDOS VALUES (NEXT VALUE FOR DBATEST.SEQ_PEDIDO_ID, 'Cliente A', CURRENT DATE);
+-- ID_PEDIDO inserido: 1002
+
+-- Após ROLLBACK
+ROLLBACK;
+-- Próximo valor não volta: continua em 1003
+
+SELECT NEXT VALUE FOR DBATEST.SEQ_PEDIDO_ID FROM SYSIBM.SYSDUMMY1;
+-- Resultado: 1003
+```
+
+---
+
 ### 10. Gerenciamento de Memória e Cache
 
 #### Cache no SEQUENCE: o que é?
