@@ -783,12 +783,144 @@ END;
 
 ---
 
-## 9. Boas Práticas e Estratégias de Produção
 
-### A) Nomenclatura Padronizada
+### 9. Boas Práticas e Estratégias de Produção
+
+- **Use sempre um nome padronizado para SEQUENCEs**, como `SEQ_<TABELA>_<COLUNA>` para facilitar rastreabilidade.
+- **Evite o uso de `NO CYCLE` sem planejamento.** Isso pode causar falha silenciosa quando o valor máximo for atingido.
+- **Avalie o uso de CACHE com cautela.** Pode melhorar performance, mas em caso de falha, valores são "perdidos" (não gerados novamente).
+- **Documente o SEQUENCE associado à tabela e coluna.** Isso é importante pois SEQUENCE é um objeto separado da tabela.
+
+#### Exemplo de criação com padrão recomendado:
 
 ```sql
--- Padrão recomendado: SEQ_[SCHEMA_]TABELA_CAMPO
-CREATE SEQUENCE DBATEST.SEQ_CLIENTE_ID;        -- Básico
-CREATE SEQUENCE DBATEST.SEQ_PEDIDO_NUMERO;     -- Pedidos
-CREATE SEQUENCE DBATEST.
+CREATE SEQUENCE SEQ_CLIENTE_ID
+  START WITH 1
+  INCREMENT BY 1
+  NO CYCLE
+  CACHE 20;
+```
+
+#### Estratégia para gerar valor e inserir:
+
+```sql
+INSERT INTO CLIENTES (ID, NOME)
+VALUES (NEXT VALUE FOR SEQ_CLIENTE_ID, 'SILVIA');
+```
+
+---
+
+### 10. Gerenciamento de Memória e Cache
+
+#### Cache no SEQUENCE: o que é?
+
+O **CACHE** permite ao DB2 manter valores de SEQUENCE em memória, evitando I/Os para cada chamada.
+
+```sql
+CREATE SEQUENCE SEQ_PEDIDO_ID
+  START WITH 1000
+  INCREMENT BY 1
+  CACHE 50;
+```
+
+#### Benefícios:
+- Aumenta a performance em operações intensivas.
+- Reduz contention entre tarefas.
+
+#### Cuidados:
+- Se o DB2 for reiniciado ou a instância falhar, os valores no cache são **perdidos**, mas isso **não compromete a unicidade**.
+- Para ambientes críticos de auditoria ou com exigência de valores sequenciais exatos, prefira `NOCACHE`.
+
+#### Simulação de perda de valores:
+
+1. Crie com CACHE:
+```sql
+CREATE SEQUENCE SEQ_EXEMPLO CACHE 10;
+```
+
+2. Gere valores até o 5º:
+```sql
+SELECT NEXT VALUE FOR SEQ_EXEMPLO FROM SYSIBM.SYSDUMMY1;
+```
+
+3. Simule um *crash*. Na volta, o valor continua do 11 (caso os 10 estivessem em cache e DB2 não persistiu os intermediários).
+
+---
+
+### 11. Troubleshooting e Resolução de Problemas
+
+#### Verificar o status de uma SEQUENCE:
+
+```sql
+SELECT *
+FROM SYSIBM.SYSSEQUENCES
+WHERE NAME = 'SEQ_CLIENTE_ID';
+```
+
+#### Problemas comuns:
+- **Erro -803 (duplicate key)** ao usar SEQUENCE com `INSERT` automático → pode indicar falha de sincronismo SEQUENCE vs dados existentes.
+- **SEQUENCE pulando valores:** normal com CACHE ou rollback de transações após `NEXT VALUE`.
+- **Valor final atingido (`MAXVALUE`)** → Verificar na `SYSSEQUENCES` os limites definidos.
+
+#### Correção prática: reiniciar SEQUENCE
+
+```sql
+ALTER SEQUENCE SEQ_CLIENTE_ID RESTART WITH 10000;
+```
+
+---
+
+### 12. Migração de IDENTITY para SEQUENCE
+
+#### Por que migrar?
+- Maior controle.
+- Possibilidade de reutilizar o mesmo SEQUENCE entre tabelas.
+- Compatível com replicações, particionamentos e scripts multiambiente.
+
+#### Comparação rápida:
+
+| Recurso                   | IDENTITY     | SEQUENCE       |
+|---------------------------|--------------|----------------|
+| Associação à Tabela       | Implícita     | Independente   |
+| Reutilização              | Não           | Sim            |
+| Cache configurável        | Sim           | Sim            |
+| Alteração posterior       | Limitada      | Ampla          |
+| Utilização em múltiplas tabelas | Não     | Sim            |
+
+#### Exemplo de migração:
+
+1. Tabela com IDENTITY:
+```sql
+CREATE TABLE CLIENTES (
+  ID INTEGER GENERATED ALWAYS AS IDENTITY,
+  NOME VARCHAR(100)
+);
+```
+
+2. Novo modelo com SEQUENCE:
+```sql
+CREATE SEQUENCE SEQ_CLIENTE_ID START WITH 1 INCREMENT BY 1;
+
+CREATE TABLE CLIENTES (
+  ID INTEGER NOT NULL,
+  NOME VARCHAR(100)
+);
+```
+
+3. Uso:
+```sql
+INSERT INTO CLIENTES (ID, NOME)
+VALUES (NEXT VALUE FOR SEQ_CLIENTE_ID, 'MARIA');
+```
+
+---
+
+### 13. Referências Oficiais IBM
+
+- 📘 [IBM DB2 for z/OS - CREATE SEQUENCE (SQL)](https://www.ibm.com/docs/en/db2-for-zos/13?topic=statements-create-sequence)
+- 📘 [IBM DB2 for z/OS - SYSIBM.SYSSEQUENCES catalog](https://www.ibm.com/docs/en/db2-for-zos/13?topic=catalogs-syssequences)
+- 📘 [IBM Redbooks - DB2 12 for z/OS Technical Overview](https://www.redbooks.ibm.com/redbooks/pdfs/sg248383.pdf)
+- 📘 [IBM Documentation Navigator](https://www.ibm.com/docs/en)
+
+---
+
