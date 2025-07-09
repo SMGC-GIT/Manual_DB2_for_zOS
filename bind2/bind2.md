@@ -56,9 +56,21 @@ Com os pacotes gerados pelo BIND, o programa pode ser executado. Durante a execu
 
 O comando BIND é utilizado para associar um programa a um banco de dados pela primeira vez ou quando há alterações significativas no programa ou no banco de dados. Durante o BIND, é possível especificar diversas opções que influenciam o comportamento da aplicação, como nível de isolamento, cache de autorização e protocolos de conexão.
 
+O comando **`BIND PACKAGE ... ACTION(ADD|REPLACE)`** é usado para:  
+- **ADD**: primeiro vínculo de um pacote.  
+- **REPLACE**: substituir um pacote existente por novo DBRM ou pacote atualizado.  
+As opções incluem isolamento, cache, CICS, proprietário etc.
+
 ### 4.2 REBIND
 
 O comando REBIND é utilizado para reavaliar os planos de acesso de um pacote existente sem alterar o programa ou o banco de dados. Isso é útil quando há mudanças no banco de dados, como a adição de índices ou a execução de estatísticas, que podem afetar a eficiência dos planos de acesso. O REBIND permite que o DB2 atualize os planos de acesso para refletir essas mudanças, mantendo a eficiência da aplicação.
+
+Utiliza-se **`REBIND PACKAGE`** quando apenas estatísticas foram atualizadas (ex.: novos índices, RUNSTATS). O REBIND:
+
+- Regera o plano de acesso sem alterar SQL;
+- Pode ser realizado com `PLANMGMT(EXTENDED)` para **phase-in**, permitindo que threads ativas continuem usando o pacote antigo enquanto o novo é carregado 
+
+Rebind é mais eficiente que um novo bind, pois evita recompilar o SQL.
 
 ---
 
@@ -91,6 +103,18 @@ Onde:
 
 Para mais detalhes sobre as opções do comando BIND, consulte a documentação oficial da IBM. (flylib.com)
 
+### REBIND PACKAGE
+
+```sql
+REBIND PACKAGE (colecao.nome_pacote)
+     PLANMGMT(EXTENDED)
+     APREUSE(WARN | NONE | ERROR)
+     ...
+```
+
+Use quando o ambiente muda (ex.: novos índices, estatísticas atualizadas)
+
+
 ---
 
 ## Considerações Adicionais
@@ -102,11 +126,7 @@ Para mais detalhes sobre as opções do comando BIND, consulte a documentação 
 
 ## Referências
 
-- *DB2 for z/OS Version 8 DBA Certification Guide*  
-- *IBM Db2 for z/OS connection | IBM Cloud Pak for Data as a Service*  
-- *DB2 Connect User's Guide*  
-- *Application Building Guide*  
-- *DB2 DBA For z/OS: BIND & REBIND in DB2*  
-- *How to Generate BIND statements using the Db2 Administration Tool*  
-- *Binding applications and utilities (DB2 Connect)*  
-- *What exactly is binding in DB2?*
+1. [BIND PACKAGE subcommand (DSN)](https://www.ibm.com/docs/en/db2-for-zos/12.0.0?topic=commands-bind-package-dsn)  
+2. [BIND and REBIND options for packages, plans, services](https://www.ibm.com/docs/en/db2-for-zos/12.0.0?topic=commands-bind-rebind-options-packages-plans-services)  
+3. [REBIND PACKAGE subcommand (DSN)](https://www.ibm.com/docs/en/db2-for-zos/12.0.0?topic=commands-rebind-package-dsn)  
+4. [Phase-in REBIND details (PLANMGMT)](https://www.ibm.com/docs/en/db2-for-zos/12.0.0?topic=commands-rebind-package-dsn#phase-in)
