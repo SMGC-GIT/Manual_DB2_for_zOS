@@ -491,6 +491,98 @@ SELECT NAME AS TABELA,
 ---
 
 
+# Consulta para Identificar Tabelas que Contêm um Determinado Campo no DB2 for z/OS
+
+## 🎯 Objetivo
+
+Localizar todas as **tabelas base** (tipo `'T'`) que possuem um ou mais **campos com nome específico ou padrão**, usando as tabelas de catálogo do DB2:
+
+- `SYSIBM.SYSCOLUMNS`
+- `SYSIBM.SYSTABLES`
+
+---
+
+## 🧠 Consulta Base (Campo Específico)
+
+```sql
+SELECT 
+    C.TBCREATOR     AS TABLE_SCHEMA,
+    C.TBNAME        AS TABLE_NAME,
+    C.NAME          AS COLUMN_NAME,
+    C.COLNO         AS COLUMN_POSITION,
+    C.COLTYPE       AS DATA_TYPE,
+    C.LENGTH        AS COLUMN_LENGTH
+FROM SYSIBM.SYSCOLUMNS C
+JOIN SYSIBM.SYSTABLES T
+  ON C.TBCREATOR = T.CREATOR
+ AND C.TBNAME    = T.NAME
+WHERE T.TYPE = 'T'
+  AND UPPER(C.NAME) = 'COD_CLIENTE'
+ORDER BY C.TBCREATOR, C.TBNAME, C.COLNO;
+```
+
+---
+
+## 🔁 Variação com Lista de Campos
+
+```sql
+WHERE UPPER(C.NAME) IN ('COD_CLIENTE', 'ID_CLIENTE', 'CPF')
+```
+
+---
+
+## 🔍 Variação com Padrão `LIKE`
+
+```sql
+WHERE UPPER(C.NAME) LIKE '%ID%'
+```
+
+---
+
+## ⚙️ Otimizações Recomendadas
+
+- **Filtrar por schemas específicos** (opcional):
+  ```sql
+  AND C.TBCREATOR IN ('SCHEMA1', 'SCHEMA2')
+  ```
+
+- **Amostragem controlada**:
+  ```sql
+  FETCH FIRST 50 ROWS ONLY
+  ```
+
+- **Evite LIKE com coringa à esquerda** (`%nome`) se não houver índice.
+
+---
+
+## 📦 Exemplo de Resultado Esperado
+
+| TABLE_SCHEMA | TABLE_NAME | COLUMN_NAME | COLUMN_POSITION | DATA_TYPE | COLUMN_LENGTH |
+|--------------|------------|-------------|------------------|-----------|----------------|
+| CLIENTES     | PESSOA     | COD_CLIENTE | 1                | INTEGER   | 4              |
+| CLIENTES     | CONTRATO   | COD_CLIENTE | 3                | INTEGER   | 4              |
+
+---
+
+## 🧩 Tabelas Envolvidas
+
+- `SYSIBM.SYSCOLUMNS`: Contém metadados das colunas.  
+- `SYSIBM.SYSTABLES`: Contém metadados das tabelas, incluindo tipo (`T`, `V`, etc.).
+
+---
+
+## ✅ Uso Recomendado
+
+Essa consulta é ideal para:
+
+- Levantamento de impacto antes de alteração de campos.
+- Refatoração de tabelas.
+- Análise de padronização de nomenclatura.
+- Identificação de redundâncias ou uso indevido de campos.
+
+---
+---
+
 ## ✅ Boas Práticas de Execução
 
 - Sempre utilize `WITH UR` em ambientes produtivos para evitar locks desnecessários.
