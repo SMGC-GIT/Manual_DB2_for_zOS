@@ -10,6 +10,7 @@ Este repositório é um guia técnico e prático para profissionais que atuam co
 
 | Módulo | Descrição |
 |--------|-----------|
+| [📁 Análise de Abend](abend/abend.md) | Análise de Abend em programas DB2 |
 | [📁 Dimensionamento Tabelas DB2](dimensionamento/dimensionamento.md) | Dimensionamento do tamanho das Tabelas no DB2 for z/OS |
 | [📁 Dimensionamento Tabelas DB2 - 1](dimensionamento-compl/dimensionamento-compl.md) | Dimensionamento do tamanho das Tabelas no DB2 for z/OS |
 | [📁 Dimensionamento Tabelas DB2 - 2](dimensionamento-compl2/dimensionamento-2.md) | Dimensionamento do tamanho das Tabelas no DB2 for z/OS |
