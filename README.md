@@ -41,6 +41,7 @@ Este repositório é um guia técnico e prático para profissionais que atuam co
 | [📁 HPU – High Performance Unload](hpu/hpu.md) | Descarregamento rápido de dados com HPU, exemplos e tuning |
 | [📁 HPU2 – High Performance Unload](hpu2/hpu2.md) | Informações Gerais HPU |
 | [📁 Tabelas Temporais](tabelas-temporais/tabelas-temporais.md) | Tabelas Temporais (Temporal Tables) no DB2 for z/OS |
+| [📁 DFSORT](dfsort/dfsort.md) | Manual Dfsort |
 | [📁 PowerDesigner](powerdesigner/powerdesigner.md) | Manual PowerDesigner para DBAs |
 | [📁 Lista de IA's](ia/ia-para-dba.md) | Lista de IA's para consultas pelos DBA's | 
 
