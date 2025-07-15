@@ -47,6 +47,8 @@ Este repositório é um guia técnico e prático para profissionais que atuam co
 | [📁 DFSORT](dfsort/dfsort.md) | Manual Dfsort |
 | [📁 PowerDesigner](powerdesigner/powerdesigner.md) | Manual PowerDesigner para DBAs |
 | [📁 Lista de IA's](ia/ia-para-dba.md) | Lista de IA's para consultas pelos DBA's | 
+| [📁 CAIXA - ORDENACAO](caixa-ordenacao/caixa-ordenacao.md) | Esboço para uma proposta de Ordenação | 
+
 
 
 ---
