@@ -72,12 +72,26 @@ CREATE TABLE FUNCIONARIOS (
 
 ## ⚠️ 5. Cuidados e Desvantagens
 
-- ❗ Não se aplica a registros já existentes; só afeta novos `INSERT`
-- ⚠️ Uso indiscriminado pode ocultar falhas de lógica na aplicação
-- ❗ Pode gerar falsa sensação de que o campo foi preenchido intencionalmente
-- ⚠️ Alterações de DEFAULT em tabelas com muitos dados devem ser planejadas (verifique locks e impactos)
-- 🚫 Não aceita expressões complexas nem funções definidas pelo usuário (`UDF`)
-- ❗ Em `MERGE`, o DEFAULT pode ou não ser aplicado dependendo da lógica do `WHEN NOT MATCHED`
+- ❗ **Não se aplica a registros já existentes:**  
+  O valor DEFAULT só é considerado durante a execução de comandos `INSERT` em que a coluna não é explicitamente referenciada. Dados já existentes na tabela **não são alterados retroativamente**, mesmo após uma mudança no valor default. Portanto, **não espere que os registros antigos sejam atualizados automaticamente** — qualquer alteração exigirá um `UPDATE` manual.
+
+- ⚠️ **Uso indiscriminado pode ocultar falhas de lógica na aplicação:**  
+  Aplicar defaults sem validação pode **mascarar erros** de entrada de dados. Por exemplo, uma coluna `STATUS CHAR(1) DEFAULT 'A'` pode acabar armazenando `'A'` indevidamente em casos onde o status deveria ter sido informado pela lógica do sistema. Isso pode comprometer a integridade de processos e relatórios.
+
+- ❗ **Pode gerar falsa sensação de que o campo foi preenchido intencionalmente:**  
+  Quando se consulta um campo com valor default preenchido automaticamente, é difícil saber se o valor foi realmente fornecido pela aplicação ou se foi apenas herdado por omissão. Isso pode afetar a **auditoria de dados** e a **compreensão do comportamento dos usuários ou sistemas**.
+
+- ⚠️ **Alterações de DEFAULT em tabelas com muitos dados devem ser planejadas:**  
+  Embora a alteração de um valor default não modifique registros existentes, a instrução `ALTER TABLE` pode causar **impactos em tempo de execução**, especialmente em ambientes com grande volume de dados ou alta concorrência. Dependendo da estrutura da tabela, tipo de tablespace e versionamento, o comando pode:
+  - exigir uma nova versão da tabela;
+  - bloquear recursos;
+  - demandar rebinds de packages que utilizam a tabela.
+
+- 🚫 **Não aceita expressões complexas nem funções definidas pelo usuário (UDF):**  
+  O DB2 for z/OS restringe os valores default a **literais constantes** ou **funções built-in permitidas** (como `CURRENT DATE`, `CURRENT TIMESTAMP`). **Não é permitido** usar expressões aritméticas (`SALARIO * 1.1`), `CASE`, `COALESCE`, subqueries ou funções criadas pelo usuário (`UDFs`). Isso limita a lógica embutida nos defaults e exige que tais cálculos sejam feitos na aplicação ou via trigger.
+
+- ❗ **Em instruções MERGE, o DEFAULT pode não ser aplicado conforme esperado:**  
+  No contexto de um `MERGE INTO`, o uso de DEFAULT pode ser inconsistente, especialmente se os campos não forem explicitamente omitidos no `INSERT` dentro da cláusula `WHEN NOT MATCHED`. É essencial **testar cuidadosamente** a lógica do `MERGE` para garantir que o default será aplicado corretamente, caso a inserção ocorra.
 
 ---
 
