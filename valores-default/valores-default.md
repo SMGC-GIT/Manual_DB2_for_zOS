@@ -1,4 +1,9 @@
+```markdown
 # DEFAULT em Colunas no DB2 for z/OS
+
+> Seção do Manual DBA de Desenvolvimento – DB2 for z/OS  
+> Última atualização: julho/2025  
+> Autora: Silvia Guimarães
 
 ---
 
@@ -11,7 +16,9 @@
 - [⚠️ 5. Cuidados e Desvantagens](#️-5-cuidados-e-desvantagens)
 - [📈 6. Performance e Impactos](#-6-performance-e-impactos)
 - [🔄 7. Inclusão, Alteração e Drop](#-7-inclusão-alteração-e-drop)
-- [📚 8. Referências Oficiais IBM](#-8-referências-oficiais-ibm)
+- [📌 8. Adendo: NOT NULL WITH DEFAULT vs NULL WITH DEFAULT](#-8-adendo-not-null-with-default-vs-null-with-default)
+- [📚 9. Referências Oficiais IBM](#-9-referências-oficiais-ibm)
+- [✅ 10. Considerações Finais](#-10-considerações-finais)
 
 ---
 
@@ -113,7 +120,49 @@ ALTER TABLE CLIENTES ALTER COLUMN SITUACAO DROP DEFAULT;
 
 ---
 
-## 📚 8. Referências Oficiais IBM
+## 📌 8. Adendo: NOT NULL WITH DEFAULT vs NULL WITH DEFAULT
+
+### 🔹 `NOT NULL WITH DEFAULT`
+
+- A coluna **nunca aceita NULL** e **sempre terá um valor padrão** se nenhum for informado.
+- Usado para garantir **consistência rígida** nos dados.
+- O valor default será automaticamente inserido se o campo for omitido.
+- **Ideal para:** flags (`'S'`/`'N'`), indicadores (`'A'`, `'I'`), datas de controle (`CURRENT DATE`).
+
+### 🔹 `NULL WITH DEFAULT`
+
+- A coluna **aceita NULLs**, mas pode receber um valor default **caso omitida no INSERT**.
+- Se explicitamente informada como `NULL`, ela **permanece como NULL**.
+- **Ideal para:** campos que podem ser preenchidos parcialmente ou futuramente (ex: `data_demissao`, `observacoes`).
+
+### 🧾 Comportamento por Tipo com `NOT NULL WITH DEFAULT`
+
+| Tipo         | Valor Default Implícito |
+|--------------|--------------------------|
+| INTEGER      | `0`                      |
+| DECIMAL(10,2)| `0.00`                   |
+| CHAR(1)      | `' '`                    |
+| VARCHAR(50)  | `''` (string vazia)      |
+| DATE         | `'0001-01-01'` (dependendo do SGBD) ou erro |
+| TIMESTAMP    | `CURRENT TIMESTAMP` se explicitado |
+| TIME         | `'00:00:00'` se suportado |
+
+### 🧾 Comportamento por Tipo com `NULL WITH DEFAULT`
+
+| Tipo         | Valor Default se omitido | Valor se informado NULL |
+|--------------|--------------------------|--------------------------|
+| INTEGER      | `0`                      | `NULL`                  |
+| CHAR(1)      | `' '`                    | `NULL`                  |
+| DATE         | `CURRENT DATE` (se definido) | `NULL`             |
+| VARCHAR      | `''`                     | `NULL`                  |
+
+📍 **Resumo prático:**  
+- `NOT NULL WITH DEFAULT`: proteção + consistência  
+- `NULL WITH DEFAULT`: flexibilidade + controle opcional
+
+---
+
+## 📚 9. Referências Oficiais IBM
 
 - 🔗 [CREATE TABLE - IBM DB2 13 for z/OS](https://www.ibm.com/docs/en/db2-for-zos/13?topic=statements-create-table)
 - 🔗 [ALTER TABLE - IBM DB2 13 for z/OS](https://www.ibm.com/docs/en/db2-for-zos/13?topic=statements-alter-table)
@@ -122,9 +171,9 @@ ALTER TABLE CLIENTES ALTER COLUMN SITUACAO DROP DEFAULT;
 
 ---
 
-## ✅ Considerações Finais
+## ✅ 10. Considerações Finais
 
-Utilize `DEFAULT` para definir comportamentos padronizados de negócio, facilitando inserções e garantindo consistência. Porém, planeje bem seu uso para evitar que campos críticos fiquem com valores não intencionais. Alterações em produção devem ser testadas previamente, principalmente em grandes tabelas ou ambientes com alta concorrência.
+Utilize `DEFAULT` para definir comportamentos padronizados de negócio, facilitando inserções e garantindo consistência. Porém, planeje bem seu uso para evitar que campos críticos fiquem com valores não intencionais. Analise sempre a necessidade de `NOT NULL WITH DEFAULT` versus `NULL WITH DEFAULT`, considerando a semântica da aplicação.
 
 ---
 ```
