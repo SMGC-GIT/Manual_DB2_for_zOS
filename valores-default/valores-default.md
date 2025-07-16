@@ -1,9 +1,4 @@
-```markdown
 # DEFAULT em Colunas no DB2 for z/OS
-
-> Seção do Manual DBA de Desenvolvimento – DB2 for z/OS  
-> Última atualização: julho/2025  
-> Autora: Silvia Guimarães
 
 ---
 
