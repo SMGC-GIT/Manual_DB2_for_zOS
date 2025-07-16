@@ -1,4 +1,3 @@
-```markdown
 # DEFAULT em Colunas no DB2 for z/OS
 
 ---
