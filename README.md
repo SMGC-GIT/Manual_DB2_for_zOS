@@ -43,6 +43,9 @@ Este repositório é um guia técnico e prático para profissionais que atuam co
 | [📁 JCL](jcl/jcl.md) | JCL ( JOB CONTROL LANGUAGE ) |
 | [📁 CONTROL-M ](controlm/controlm.md) | Tabelas do CONTROL-M |
 | [📁 STROBE ](strobe/strobe.md) | STROBE - ferramenta de análise de desempenho em ambiente z/OS |
+| [📁 IBM OMEGAMON ](omegamon/omegamon.md) | IBM OMEGAMON - suíte de ferramentas de monitoramento para ambientes z/OS |
+| [📁 MainView ](mainview/mainview.md) | MainView - suíte de ferramentas de monitoramento para ambientes z/OS |
+| [📁 SMF Analyzers ](smf-analyzers/smf-analyzers.md) | SMF Analyzers - suíte de ferramentas de monitoramento para ambientes z/OS |
 | [📁 HPU – High Performance Unload](hpu/hpu.md) | Descarregamento rápido de dados com HPU, exemplos e tuning |
 | [📁 HPU2 – High Performance Unload](hpu2/hpu2.md) | Informações Gerais HPU |
 | [📁 Tabelas Temporais](tabelas-temporais/tabelas-temporais.md) | Tabelas Temporais (Temporal Tables) no DB2 for z/OS |
