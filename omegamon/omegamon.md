@@ -145,5 +145,55 @@ O módulo **OMEGAMON for DB2 Performance Expert** fornece visibilidade detalhada
 
 ### Acesso à Enhanced 3270 UI:
 
-```text
 TSO KOBSTART
+
+### Navegação básica:
+
+- `KDPTHR` → Threads ativas no DB2  
+- `KDPLOCK` → Locks e waits  
+- `KDPSTMT` → Top SQLs executadas  
+- `KDPBP` → Buffer Pools overview  
+- `KDPUTIL` → Utilities em andamento  
+
+### Exemplos de comandos:
+
+F OMEGAMON,KDPTHR               ← Exibe threads DB2  
+F OMEGAMON,KDPBP                ← Exibe estatísticas de buffer pool
+
+---
+
+## 9. Integração com outras ferramentas
+
+| Ferramenta          | Integração com OMEGAMON                          |
+|----------------------|--------------------------------------------------|
+| **STROBE**           | Validação cruzada de SQLs lentos                 |
+| **MainView**         | Monitoramento de subsistemas em paralelo         |
+| **SMF Analyzers**    | Geração de relatórios históricos                 |
+| **Tivoli Enterprise**| Gerenciamento centralizado e automações          |
+| **NetView**          | Automação de ações baseadas em eventos           |
+
+---
+
+## 10. Links úteis e documentação oficial
+
+- 📘 IBM OMEGAMON for DB2 Performance Expert:  
+  https://www.ibm.com/products/omegamon-db2-performance
+
+- 📘 IBM Documentation – OMEGAMON family:  
+  https://www.ibm.com/docs/en/om-db2-pe/
+
+- 📘 IBM Redbooks (Performance and Tuning):  
+  https://www.redbooks.ibm.com/abstracts/sg248177.html
+
+- 📘 IBM Knowledge Center – z/OS Monitoring:  
+  https://www.ibm.com/docs/en/zos/2.5.0?topic=tools-monitoring-performance
+
+- 📘 IBM OMEGAMON Enhanced 3270 UI:  
+  https://www.ibm.com/docs/en/om-db2-pe/5.5.0?topic=features-enhanced-3270-user-interface
+
+---
+
+> 💡 **Dica de ouro**: Use o OMEGAMON para criar uma baseline da performance e comparar sempre que ocorrerem incidentes, migrações ou grandes mudanças de volume de dados.
+
+---
+
